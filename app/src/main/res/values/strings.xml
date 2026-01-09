@@ -5,4 +5,5 @@
     <string name="result_default">결과가 여기에 표시됩니다.</string>
     <string name="no_input">입력된 메모가 없습니다.</string>
     <string name="saved">저장됨: %1$s</string>
+    <string name="loading">loading</string>
 </resources>
