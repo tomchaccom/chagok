@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+화면 목적:
+- 메모 입력
+- 저장 버튼 클릭
+- 결과 메시지 표시
+
+구성:
+- EditText (메모 입력)
+- Button (저장)
+- TextView (결과)
+-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    tools:context=".MainActivity">
+
+    <!-- EditText: 메모 입력 -->
+    <EditText
+        android:id="@+id/etMemo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/hint_memo"
+        android:inputType="textMultiLine"
+        android:autofillHints="fullText"
+        android:minLines="3"
+        android:padding="12dp"
+        android:layout_marginTop="8dp" />
+
+    <!-- Button: 저장 -->
+    <Button
+        android:id="@+id/btnSave"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/btn_save"
+        android:layout_gravity="end"
+        android:layout_marginTop="12dp" />
+
+    <!-- TextView: 결과 메시지 표시 -->
+    <TextView
+        android:id="@+id/tvResult"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/result_default"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:padding="12dp"
+        android:layout_marginTop="16dp" />
+
+</LinearLayout>

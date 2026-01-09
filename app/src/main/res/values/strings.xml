@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">My Application</string>
+    <string name="hint_memo">메모를 입력하세요</string>
+    <string name="btn_save">저장</string>
+    <string name="result_default">결과가 여기에 표시됩니다.</string>
+    <string name="no_input">입력된 메모가 없습니다.</string>
+    <string name="saved">저장됨: %1$s</string>
 </resources>
