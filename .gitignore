@@ -1,17 +1,29 @@
+# =====================
+# IntelliJ / Android Studio
+# =====================
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+
+# =====================
+# Copilot / AI tools
+# =====================
+.idea/copilot.*
+.idea/**/copilot.*
+
+# =====================
+# Gradle
+# =====================
+.gradle/
+build/
+
+# =====================
+# Android
+# =====================
+*.apk
+*.aab
 local.properties
 
-.idea/copilot.data.migration.*
+# =====================
+# OS
+# =====================
+.DS_Store
