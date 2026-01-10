@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Future 탭 십자버튼 색상 -->
-    <color name="mint_100">#E6F7F1</color>
-    <color name="green_600">#1FAF7A</color>
-
     <!-- Brand & Accent -->
     <color name="primary_brand">#6E6A5F</color>
-    <color name="primary">#6E6A5F</color>
     <color name="secondary_accent">#2E7D32</color>
-    <color name="error">#D32F2F</color>
 
     <!-- UI Surfaces -->
     <color name="surface">#FFFFFF</color>
