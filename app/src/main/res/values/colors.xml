@@ -2,7 +2,9 @@
 <resources>
     <!-- Brand & Accent -->
     <color name="primary_brand">#6E6A5F</color>
+    <color name="primary">#6E6A5F</color>
     <color name="secondary_accent">#2E7D32</color>
+    <color name="error">#D32F2F</color>
 
     <!-- UI Surfaces -->
     <color name="surface">#FFFFFF</color>
