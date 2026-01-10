@@ -35,6 +35,27 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         observeErrorState()
     }
 
+    override fun onResume() {
+        super.onResume()
+        // Fragment가 다시 보일 때마다 버튼 보이기
+        binding.createMomentButton.visibility = View.VISIBLE
+        binding.addRecordIcon.visibility = View.VISIBLE
+
+        // CreateMomentFragment에서 돌아올 때 데이터 갱신
+        refreshRecordsList()
+    }
+
+    private fun refreshRecordsList() {
+        // CreateMomentViewModel에서 저장된 기록들을 다시 로드하여 RecordAdapter 갱신
+        val savedRecords = CreateMomentViewModel.getSavedRecords()
+        if (savedRecords.isNotEmpty()) {
+            binding.emptyRecordCard.visibility = View.GONE
+            binding.recordsCarousel.visibility = View.VISIBLE
+            binding.recordsIndicator.visibility = View.VISIBLE
+            recordAdapter.submitList(savedRecords.toList())
+        }
+    }
+
     private fun setupRecyclerViews() {
         practiceAdapter = PracticeAdapter { practice, isAchieved ->
             viewModel.onPracticeStateChanged(practice.id, isAchieved)
@@ -72,13 +93,15 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
                         practicesLeftBadge.text = "${uiState.practicesLeft}개 남음"
                         practiceAdapter.submitList(uiState.practices)
 
-                        val hasRecords = uiState.dailyRecords.isNotEmpty()
+                        // CreateMomentViewModel에서 저장된 기록들을 가져옴
+                        val savedRecords = CreateMomentViewModel.getSavedRecords()
+                        val hasRecords = savedRecords.isNotEmpty()
                         emptyRecordCard.isVisible = !hasRecords
                         recordsCarousel.isVisible = hasRecords
                         recordsIndicator.isVisible = hasRecords
 
                         if (hasRecords) {
-                            recordAdapter.submitList(uiState.dailyRecords)
+                            recordAdapter.submitList(savedRecords)
                         }
                     }
                 }
