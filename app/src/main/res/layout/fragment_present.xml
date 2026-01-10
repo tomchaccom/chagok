@@ -9,7 +9,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="24dp">
+        android:paddingBottom="32dp">
 
         <!-- ===== Header ===== -->
 
@@ -98,7 +98,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="16dp"
-            android:layout_marginTop="28dp"
+            android:layout_marginTop="32dp"
             android:text="오늘의 기록"
             android:textColor="@color/text_primary"
             android:textSize="22sp"
@@ -106,7 +106,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/practices_recycler_view" />
 
-        <!-- Empty State Card -->
+        <!-- Empty State Card (기록 없을 때만 Fragment에서 보이게) -->
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/empty_record_card"
@@ -125,8 +125,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="24dp">
-
-                <!-- ➕ addRecordIcon (복구됨) -->
 
                 <ImageView
                     android:id="@+id/add_record_icon"
@@ -163,20 +161,10 @@
                     app:layout_constraintTop_toBottomOf="@id/empty_record_title"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
-
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- ⭐ 기준선 역할 Barrier -->
-
-        <androidx.constraintlayout.widget.Barrier
-            android:id="@+id/record_anchor_barrier"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:barrierDirection="bottom"
-            app:constraint_referenced_ids="records_title,empty_record_card" />
-
-        <!-- ⭐ 기록하기 버튼 (항상 고정 위치) -->
+        <!-- 기록하기 버튼 (항상 같은 위치) -->
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/create_moment_button"
@@ -189,25 +177,23 @@
             android:textColor="@color/surface"
             android:backgroundTint="@color/secondary_accent"
             app:cornerRadius="14dp"
-            app:layout_constraintTop_toBottomOf="@id/record_anchor_barrier"
+            app:layout_constraintTop_toBottomOf="@id/empty_record_card"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- ⭐ 저장된 기억은 버튼 아래 -->
+        <!-- ⭐ 저장된 기록 (절대 GONE 하지 않음) -->
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/records_carousel"
             android:layout_width="match_parent"
             android:layout_height="220dp"
             android:layout_marginTop="16dp"
-            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/create_moment_button" />
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/records_indicator"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/records_carousel"
             app:tabIndicatorHeight="0dp"
             app:tabGravity="center" />

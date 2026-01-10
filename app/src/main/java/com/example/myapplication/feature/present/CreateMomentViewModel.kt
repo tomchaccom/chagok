@@ -153,5 +153,12 @@ class CreateMomentViewModel : ViewModel() {
     fun resetSavedState() {
         _uiState.update { it.copy(savedSuccessfully = false) }
     }
+
+    fun setFeatured(isFeatured: Boolean) {
+        _uiState.update {
+            it.copy(isFeatured = isFeatured)
+        }
+    }
+
 }
 
