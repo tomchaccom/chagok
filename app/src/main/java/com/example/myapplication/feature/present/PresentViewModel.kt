@@ -62,7 +62,7 @@ class PresentViewModel(private val repository: PresentRepository) : ViewModel() 
         viewModelScope.launch {
             try {
                 repository.addPractice(text)
-                loadPresentData() // Refresh list
+                // loadPresentData() // Refresh list
             } catch (e: Exception) {
                 Log.e("PresentViewModel", "Error adding practice: ${e.message}", e)
                 _errorMessage.value = "실천 추가에 실패했습니다"
