@@ -24,13 +24,17 @@
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fabAdd"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_alignParentEnd="true"
-            android:layout_centerVertical="true"
-            app:srcCompat="@android:drawable/ic_input_add"
-            app:tint="@android:color/white"
-            app:backgroundTint="@color/teal_200" />
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="12dp"
+
+            app:fabCustomSize="40dp"
+            app:srcCompat="@drawable/ic_add_24"
+            app:tint="@color/green_600"
+            app:backgroundTint="@color/mint_100"
+            app:elevation="2dp" />
     </RelativeLayout>
 
     <!-- 목록 영역 -->
