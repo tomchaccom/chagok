@@ -10,11 +10,6 @@ class PresentRepository(private val presentApi: PresentApi) {
     suspend fun getPresentData(): PresentUiState {
         return try {
             val dto = presentApi.getPresentData()
-
-            Log.d(
-                "PresentRepository",
-                "SERVER PRACTICES = ${dto.practices.map { it.id to it.title }}"
-            )
             PresentUiState(
                 userProfile = UserProfile(dto.userProfile.greeting, dto.userProfile.prompt),
                 practices = dto.practices.map { Practice(it.id, it.title, it.subtitle, it.isAchieved) },
