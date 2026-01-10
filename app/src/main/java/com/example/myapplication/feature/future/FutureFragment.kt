@@ -64,7 +64,7 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showAddDialog() {
         val ctx = requireContext()
-        val dlgView = layoutInflater.inflate(R.layout.dialog_add_goal, null)
+        val dlgView = layoutInflater.inflate(R.layout.dialog_add_goal_future, null)
         val etTitle = dlgView.findViewById<EditText>(R.id.etTitle)
         val tvDate = dlgView.findViewById<TextView>(R.id.tvDate)
         val btnPick = dlgView.findViewById<Button>(R.id.btnPickDate)

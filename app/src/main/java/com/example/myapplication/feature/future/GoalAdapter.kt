@@ -9,7 +9,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
-import java.text.SimpleDateFormat
 import java.util.*
 import java.time.format.DateTimeFormatter
 
@@ -27,7 +26,7 @@ class GoalAdapter : RecyclerView.Adapter<GoalAdapter.VH>() {
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_goal, parent, false)
+        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_goal_future, parent, false)
         return VH(v)
     }
 
