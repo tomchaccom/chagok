@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/baseRoot"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context="com.example.myapplication.core.base.BaseActivity">
+
+    <!--
+        Single container for hosting feature fragments.
+        - Fragment transactions should replace this container (id = container).
+    -->
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Simple full-screen loading overlay. Visibility controlled by BaseActivity.setLoadingVisibility -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:contentDescription="@string/loading" />
+
+</FrameLayout>
