@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="Theme.MyApplication" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary_brand</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/secondary_accent</item>
 
-    <style name="Theme.MyApplication"
-        parent="Theme.AppCompat.Light.NoActionBar" />
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:windowLightStatusBar">true</item>
 
+        <!-- Customize your theme here. -->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
 </resources>

@@ -45,11 +45,10 @@ abstract class BaseFragment<VB : androidx.viewbinding.ViewBinding> : Fragment() 
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View {
         _binding = inflateBinding(inflater, container)
-        // Avoid direct binding.root access which some static analyzers may confuse with unrelated 'File.root'.
-        val rootView = (_binding as? androidx.viewbinding.ViewBinding)?.root
-        return rootView as? View
+        // Inflate한 binding의 root는 null이 될 수 없으므로 안전하게 반환합니다.
+        return binding.root
     }
 
     override fun onDestroyView() {

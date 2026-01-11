@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!--
+    외부 캐시 디렉토리 (App-specific directory)
+    - 권한 불필요 (Android 4.4 이상 자동으로 격리됨)
+    - 앱 제거 시 자동 삭제
+    - getExternalCacheDir()에서 생성한 파일 저장
+    -->
+    <external-cache-path
+        name="external_cache"
+        path="/" />
+</paths>
+
+
+
