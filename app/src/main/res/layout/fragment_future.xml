@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:paddingTop="24dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- 헤더: "미래 목표"와 오른쪽 상단 + 버튼 -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp">
+
+        <TextView
+            android:id="@+id/headerTitle"
+            android:text="미래 목표"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/black"/>
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabAdd"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_marginEnd="4dp"
+            android:layout_marginTop="12dp"
+
+            app:fabCustomSize="40dp"
+            app:srcCompat="@drawable/ic_add_24"
+            app:tint="@color/green_600"
+            app:backgroundTint="@color/mint_100"
+            app:elevation="2dp" />
+    </RelativeLayout>
+
+    <!-- 목록 영역 -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerGoals"
+        android:layout_marginTop="72dp"
+        android:clipToPadding="false"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingBottom="16dp"/>
+
+</FrameLayout>
