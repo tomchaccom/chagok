@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
@@ -17,37 +18,30 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.google.android.material.textfield.TextInputEditText
 import java.util.*
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import androidx.appcompat.view.ContextThemeWrapper
 
 class FutureFragment : Fragment(R.layout.fragment_future) {
 
     private val vm: FutureViewModel by viewModels()
     private lateinit var adapter: GoalAdapter
-    @RequiresApi(Build.VERSION_CODES.O)
-    private val dateFormatter =
-        DateTimeFormatter.ofPattern("yyyy.MM.dd")
 
+    @RequiresApi(Build.VERSION_CODES.O)
+    private val dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        // WindowInsets: 홈버튼 영역 자동 패딩
+
         ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(
-                v.paddingLeft,
-                v.paddingTop,
-                v.paddingRight,
-                systemBars.bottom
-            )
+            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom)
             insets
         }
 
-
-        // adapter 기반 목표 추가
         val rv = view.findViewById<RecyclerView>(R.id.recyclerGoals)
         adapter = GoalAdapter()
         rv.layoutManager = LinearLayoutManager(requireContext())
@@ -63,26 +57,30 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showAddDialog() {
-        val ctx = requireContext()
-        val dlgView = layoutInflater.inflate(R.layout.dialog_add_goal_future, null)
+        // 1. Material 테마를 입힌 Context 생성
+        val contextWrapper = ContextThemeWrapper(requireContext(), com.google.android.material.R.style.Theme_MaterialComponents_DayNight_Dialog)
+
+        // 2. 생성한 wrapper를 사용하여 LayoutInflater 생성
+        val themedInflater = LayoutInflater.from(contextWrapper)
+
+        // 3. themedInflater를 사용하여 뷰 인플레이트
+        val dlgView = themedInflater.inflate(R.layout.dialog_add_goal_future, null)
+
+        // XML의 TextInputEditText에 맞춰 타입을 변경하거나 상위 클래스인 EditText 사용
         val etTitle = dlgView.findViewById<EditText>(R.id.etTitle)
-        val tvDate = dlgView.findViewById<TextView>(R.id.tvDate)
-        val btnPick = dlgView.findViewById<Button>(R.id.btnPickDate)
+        val tvDate = dlgView.findViewById<EditText>(R.id.tvDate)
 
-        // ✅ 기본 날짜: 오늘 (LocalDate)
         var selectedDate = LocalDate.now()
-        tvDate.text = selectedDate.format(dateFormatter)
+        tvDate.setText(selectedDate.format(dateFormatter))
 
-        val datePickerListener =
-            DatePickerDialog.OnDateSetListener { _, year, month, day ->
-                // month는 0-based
-                selectedDate = LocalDate.of(year, month + 1, day)
-                tvDate.text = selectedDate.format(dateFormatter)
-            }
+        val datePickerListener = DatePickerDialog.OnDateSetListener { _, year, month, day ->
+            selectedDate = LocalDate.of(year, month + 1, day)
+            tvDate.setText(selectedDate.format(dateFormatter))
+        }
 
-        btnPick.setOnClickListener {
+        tvDate.setOnClickListener {
             DatePickerDialog(
-                ctx,
+                contextWrapper,
                 datePickerListener,
                 selectedDate.year,
                 selectedDate.monthValue - 1,
@@ -90,11 +88,17 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
             ).show()
         }
 
-        val dialog = AlertDialog.Builder(ctx)
+        val dialog = AlertDialog.Builder(contextWrapper)
             .setView(dlgView)
             .setCancelable(true)
             .create()
 
+        // 핵심 수정: Button -> ImageButton (XML에서 ImageButton으로 정의됨)
+        dlgView.findViewById<View>(R.id.btnCancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        // XML에서 MaterialButton은 Button을 상속받으므로 그대로 유지 가능
         dlgView.findViewById<Button>(R.id.btnAdd).setOnClickListener {
             val title = etTitle.text.toString().trim()
             if (title.isEmpty()) {
@@ -102,12 +106,7 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
                 return@setOnClickListener
             }
 
-            // ✅ ViewModel에 LocalDate 그대로 전달
             vm.addGoal(title, selectedDate)
-            dialog.dismiss()
-        }
-
-        dlgView.findViewById<Button>(R.id.btnCancel).setOnClickListener {
             dialog.dismiss()
         }
 
