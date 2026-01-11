@@ -1,6 +1,5 @@
 package com.example.myapplication.feature.present
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.net.toUri
@@ -8,6 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
+import com.example.myapplication.core.util.ImageUtils
 import com.example.myapplication.databinding.ItemRecordBinding
 
 class RecordAdapter : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(RecordDiffCallback()) {
@@ -48,7 +48,12 @@ class RecordAdapter : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(R
             if (record.photoUri.isNotEmpty()) {
                 try {
                     val uri = record.photoUri.toUri()
-                    binding.recordPhoto.setImageURI(uri)
+                    val correctedBitmap = ImageUtils.fixImageOrientation(binding.root.context, uri)
+                    if (correctedBitmap != null) {
+                        binding.recordPhoto.setImageBitmap(correctedBitmap)
+                    } else {
+                        binding.recordPhoto.setImageURI(uri)
+                    }
                 } catch (e: Exception) {
                     // URI 파싱 실패 시 기본 이미지 설정
                     binding.recordPhoto.setImageResource(android.R.drawable.ic_menu_gallery)

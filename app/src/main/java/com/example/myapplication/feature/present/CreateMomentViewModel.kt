@@ -69,10 +69,38 @@ class CreateMomentViewModel : ViewModel() {
     }
 
     /**
-     * 오늘의 대표 기억 체크 토글
+     * 대표 기억 체크 변경 처리
+     *
+     * - 같은 날짜에 이미 대표 기억이 있는 경우, 사용자 확인을 요청합니다.
+     * - 확인 후에만 기존 대표 기억을 해제하고 새로운 선택을 반영합니다.
      */
-    fun toggleFeatured() {
-        _uiState.update { it.copy(isFeatured = !it.isFeatured) }
+    fun onFeaturedSelectionChanged(isChecked: Boolean) {
+        if (!isChecked) {
+            _uiState.update { it.copy(isFeatured = false, showFeaturedReplaceDialog = false) }
+            return
+        }
+
+        val today = currentDateString()
+        val hasFeatured = hasFeaturedRecordForDate(today)
+        if (hasFeatured) {
+            _uiState.update { it.copy(showFeaturedReplaceDialog = true) }
+        } else {
+            _uiState.update { it.copy(isFeatured = true, showFeaturedReplaceDialog = false) }
+        }
+    }
+
+    fun confirmReplaceFeatured() {
+        val today = currentDateString()
+        clearFeaturedForDate(today)
+        _uiState.update { it.copy(isFeatured = true, showFeaturedReplaceDialog = false) }
+    }
+
+    fun cancelReplaceFeatured() {
+        _uiState.update { it.copy(isFeatured = false, showFeaturedReplaceDialog = false) }
+    }
+
+    fun consumeFeaturedReplaceDialog() {
+        _uiState.update { it.copy(showFeaturedReplaceDialog = false) }
     }
 
     /**
@@ -108,6 +136,11 @@ class CreateMomentViewModel : ViewModel() {
                 // 현재 날짜 포맷팅
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 val today = dateFormat.format(Date())
+
+                if (currentState.isFeatured) {
+                    // 저장 시에도 대표 기억은 하루에 하나만 유지되도록 보정
+                    clearFeaturedForDate(today)
+                }
 
                 // DailyRecord 생성
                 val newRecord = DailyRecord(
@@ -154,11 +187,21 @@ class CreateMomentViewModel : ViewModel() {
         _uiState.update { it.copy(savedSuccessfully = false) }
     }
 
-    fun setFeatured(isFeatured: Boolean) {
-        _uiState.update {
-            it.copy(isFeatured = isFeatured)
+    private fun hasFeaturedRecordForDate(date: String): Boolean {
+        return savedRecords.any { it.date == date && it.isFeatured }
+    }
+
+    private fun clearFeaturedForDate(date: String) {
+        savedRecords.forEachIndexed { index, record ->
+            if (record.date == date && record.isFeatured) {
+                savedRecords[index] = record.copy(isFeatured = false)
+            }
         }
     }
 
-}
+    private fun currentDateString(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return dateFormat.format(Date())
+    }
 
+}

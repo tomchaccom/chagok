@@ -12,6 +12,7 @@ package com.example.myapplication.feature.present
  * @param isFeatured 오늘의 대표 기억 체크 여부
  * @param isLoading 저장 중 상태
  * @param savedSuccessfully 저장 완료 여부
+ * @param showFeaturedReplaceDialog 대표 기억 교체 확인 다이얼로그 표시 여부
  */
 data class CreateMomentUiState(
     val selectedPhotoUri: String? = null,
@@ -21,6 +22,6 @@ data class CreateMomentUiState(
     val isFeatured: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val savedSuccessfully: Boolean = false
+    val savedSuccessfully: Boolean = false,
+    val showFeaturedReplaceDialog: Boolean = false
 )
-
