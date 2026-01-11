@@ -137,6 +137,14 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     }
 
     private fun setupMemoInput() {
+        // 한 줄 입력만 허용: 엔터/붙여넣기 시 줄바꿈 제거
+        val noNewlineFilter = android.text.InputFilter { source, start, end, _, _, _ ->
+            val sanitized = source?.subSequence(start, end)?.toString()
+                ?.replace("\n", "")
+                ?.replace("\r", "")
+            sanitized
+        }
+        binding.memoEditText.filters = arrayOf(noNewlineFilter)
         binding.memoEditText.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {}
