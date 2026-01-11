@@ -105,6 +105,21 @@ class CreateMomentViewModel : ViewModel() {
             try {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
+                if (currentState.isFeatured && savedRecords.any { it.isFeatured }) {
+                    if (!currentState.allowFeaturedReplacement) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                errorMessage = "이미 대표 기억이 설정되어 있습니다"
+                            )
+                        }
+                        return@launch
+                    }
+
+                    clearFeaturedRecords()
+                }
+
+
                 // 현재 날짜 포맷팅
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 val today = dateFormat.format(Date())
@@ -155,10 +170,46 @@ class CreateMomentViewModel : ViewModel() {
     }
 
     fun setFeatured(isFeatured: Boolean) {
+        if (isFeatured && savedRecords.any { it.isFeatured }) {
+            _uiState.update {
+                it.copy(
+                    isFeatured = false,
+                    showFeaturedConflictDialog = true,
+                    allowFeaturedReplacement = false
+                )
+            }
+            return
+        }
+
+        _uiState.update { it.copy(
+            isFeatured = isFeatured,
+            allowFeaturedReplacement = if (isFeatured) it.allowFeaturedReplacement else false
+        ) }
+    }
+    fun confirmFeaturedReplacement(shouldReplace: Boolean) {
         _uiState.update {
-            it.copy(isFeatured = isFeatured)
+            it.copy(
+                isFeatured = shouldReplace,
+                showFeaturedConflictDialog = false,
+                allowFeaturedReplacement = shouldReplace
+            )
+        }
+    }
+
+    fun consumeFeaturedConflictDialog() {
+        _uiState.update { it.copy(showFeaturedConflictDialog = false) }
+    }
+
+    private fun clearFeaturedRecords() {
+        for (index in savedRecords.indices) {
+            val record = savedRecords[index]
+            if (record.isFeatured) {
+                savedRecords[index] = record.copy(isFeatured = false)
+            }
         }
     }
 
 }
+
+
 
