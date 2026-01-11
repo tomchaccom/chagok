@@ -9,11 +9,14 @@
 4. Choose an Android device/emulator and run `flutter run`.
 
 ### Migrated screens
-- Present home entry for the "현재" flow (photo-first entry point).
+- 과거 (Past) tab list UI (mocked memories).
+- 현재 (Present) tab entry for the photo-first flow.
+- 미래 (Future) tab planned memories UI (mocked plans).
 - "현재" record creation screen with photo selection and basic interactions.
 - Photo capture/gallery selection UI (mocked for now).
 - Main image selection with duplicate-selection messaging.
 - Photo orientation confirmation screen.
+- Bottom navigation with 과거 | 현재 | 미래 tabs.
 
 ### Known limitations
 - Backend/API and authentication are not wired yet (see TODOs in Dart code).
