@@ -1,13 +1,14 @@
+import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:chagok_flutter/screens/create_moment_screen.dart';
+import 'package:chagok_flutter/models/moment_photo.dart';
 import 'package:chagok_flutter/theme/app_theme.dart';
 
 class PhotoOrientationArguments {
   const PhotoOrientationArguments({required this.photo});
 
-  final PhotoItem photo;
+  final MomentPhoto photo;
 }
 
 class PhotoOrientationScreen extends StatefulWidget {
@@ -22,7 +23,13 @@ class PhotoOrientationScreen extends StatefulWidget {
 }
 
 class _PhotoOrientationScreenState extends State<PhotoOrientationScreen> {
-  double _rotationTurns = 0;
+  late double _rotationTurns;
+
+  @override
+  void initState() {
+    super.initState();
+    _rotationTurns = widget.arguments.photo.rotationTurns;
+  }
 
   void _rotate() {
     setState(() {
@@ -33,6 +40,7 @@ class _PhotoOrientationScreenState extends State<PhotoOrientationScreen> {
   @override
   Widget build(BuildContext context) {
     final photo = widget.arguments.photo;
+    final rotatedPhoto = photo.copyWith(rotationTurns: _rotationTurns);
 
     return Scaffold(
       appBar: AppBar(
@@ -77,11 +85,24 @@ class _PhotoOrientationScreenState extends State<PhotoOrientationScreen> {
                           color: photo.accent,
                           borderRadius: BorderRadius.circular(24),
                         ),
-                        child: const Icon(
-                          Icons.photo,
-                          size: 72,
-                          color: AppColors.main,
-                        ),
+                        child: photo.path == null
+                            ? const Icon(
+                                Icons.photo,
+                                size: 72,
+                                color: AppColors.main,
+                              )
+                            : ClipRRect(
+                                borderRadius: BorderRadius.circular(24),
+                                child: Image.file(
+                                  File(photo.path!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => const Icon(
+                                    Icons.broken_image_outlined,
+                                    size: 72,
+                                    color: AppColors.main,
+                                  ),
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -108,7 +129,7 @@ class _PhotoOrientationScreenState extends State<PhotoOrientationScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context, photo),
+                      onPressed: () => Navigator.pop(context, rotatedPhoto),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.main,
                         foregroundColor: Colors.white,

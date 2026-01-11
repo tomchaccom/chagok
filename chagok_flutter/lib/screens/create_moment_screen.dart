@@ -1,20 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:chagok_flutter/models/moment_entry.dart';
+import 'package:chagok_flutter/models/moment_photo.dart';
 import 'package:chagok_flutter/screens/photo_orientation_screen.dart';
+import 'package:chagok_flutter/state/moment_store.dart';
 import 'package:chagok_flutter/theme/app_theme.dart';
-
-class PhotoItem {
-  const PhotoItem({
-    required this.id,
-    required this.label,
-    required this.accent,
-    required this.source,
-  });
-
-  final String id;
-  final String label;
-  final Color accent;
-  final String source;
-}
+import 'package:chagok_flutter/widgets/moment_photo_view.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
 
 class CreateMomentScreen extends StatefulWidget {
   const CreateMomentScreen({super.key});
@@ -26,32 +18,12 @@ class CreateMomentScreen extends StatefulWidget {
 }
 
 class _CreateMomentScreenState extends State<CreateMomentScreen> {
-  final List<PhotoItem> _selectedPhotos = [];
+  final List<MomentPhoto> _selectedPhotos = [];
   final TextEditingController _memoController = TextEditingController();
-  PhotoItem? _mainPhoto;
+  final ImagePicker _imagePicker = ImagePicker();
+  MomentPhoto? _mainPhoto;
   bool _isFeatured = false;
   int _score = 5;
-
-  final List<PhotoItem> _mockGallery = const [
-    PhotoItem(
-      id: 'gallery_1',
-      label: '빛이 스민 순간',
-      accent: Color(0xFFE3DFFD),
-      source: 'gallery',
-    ),
-    PhotoItem(
-      id: 'gallery_2',
-      label: '조용한 거리',
-      accent: Color(0xFFFDE2E4),
-      source: 'gallery',
-    ),
-    PhotoItem(
-      id: 'gallery_3',
-      label: '따뜻한 오후',
-      accent: Color(0xFFFFF1E6),
-      source: 'gallery',
-    ),
-  ];
 
   @override
   void dispose() {
@@ -60,50 +32,16 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
   }
 
   Future<void> _openGallery() async {
-    final selected = await showModalBottomSheet<PhotoItem>(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '갤러리에서 선택',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              ..._mockGallery.map(
-                (photo) => ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: photo.accent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.image_outlined, color: AppColors.main),
-                  ),
-                  title: Text(photo.label),
-                  subtitle: const Text('선택하면 방향을 확인해요'),
-                  onTap: () => Navigator.pop(context, photo),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
+    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
+    if (picked == null) return;
 
-    if (selected == null) return;
+    final selected = MomentPhoto(
+      id: 'gallery_${DateTime.now().millisecondsSinceEpoch}',
+      label: picked.name.isNotEmpty ? picked.name : '갤러리 사진',
+      source: PhotoSource.gallery,
+      accent: AppColors.sub,
+      path: picked.path,
+    );
 
     final confirmed = await _confirmOrientation(selected);
     if (confirmed == null) return;
@@ -112,11 +50,15 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
   }
 
   Future<void> _openCamera() async {
-    final cameraPhoto = PhotoItem(
+    final picked = await _imagePicker.pickImage(source: ImageSource.camera);
+    if (picked == null) return;
+
+    final cameraPhoto = MomentPhoto(
       id: 'camera_${DateTime.now().millisecondsSinceEpoch}',
-      label: '카메라 스냅',
+      label: picked.name.isNotEmpty ? picked.name : '카메라 스냅',
+      source: PhotoSource.camera,
       accent: AppColors.sub,
-      source: 'camera',
+      path: picked.path,
     );
 
     final confirmed = await _confirmOrientation(cameraPhoto);
@@ -125,30 +67,30 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
     _addPhoto(confirmed);
   }
 
-  Future<PhotoItem?> _confirmOrientation(PhotoItem photo) async {
+  Future<MomentPhoto?> _confirmOrientation(MomentPhoto photo) async {
     final result = await Navigator.pushNamed(
       context,
       PhotoOrientationScreen.routeName,
       arguments: PhotoOrientationArguments(photo: photo),
     );
 
-    if (result is PhotoItem) {
+    if (result is MomentPhoto) {
       return result;
     }
 
     return null;
   }
 
-  void _addPhoto(PhotoItem photo) {
+  void _addPhoto(MomentPhoto photo) {
     setState(() {
       _selectedPhotos.add(photo);
       _mainPhoto ??= photo;
     });
   }
 
-  Future<void> _setAsMain(PhotoItem photo) async {
+  Future<void> _setAsMain(MomentPhoto photo) async {
     if (_mainPhoto?.id == photo.id) {
-      _showSnackBar('이미 대표 기억이 설정되어 있습니다.');
+      _showSnackBar('이미 대표 사진으로 설정되어 있습니다.');
       return;
     }
 
@@ -158,7 +100,8 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
         builder: (context) {
           return AlertDialog(
             title: const Text('대표 기억 변경'),
-            content: const Text('이미 대표 기억이 설정되어 있습니다.\n현재 이미지를 대표 기억으로 변경하시겠습니까?'),
+            content:
+                const Text('이미 대표 사진이 설정되어 있습니다.\n현재 이미지를 대표 기억으로 변경하시겠습니까?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -195,8 +138,25 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
       return;
     }
 
-    // TODO: Integrate backend/API to persist the record.
-    _showSnackBar('임시로 저장되었습니다.');
+    if (_mainPhoto == null) {
+      _showSnackBar('대표 사진을 선택해주세요.');
+      return;
+    }
+
+    final store = context.read<MomentStore>();
+    final now = DateTime.now();
+    store.addMoment(
+      MomentEntry(
+        id: 'moment_${now.millisecondsSinceEpoch}',
+        date: now,
+        memo: _memoController.text.trim(),
+        score: _score,
+        photos: List.unmodifiable(_selectedPhotos),
+        mainPhotoId: _mainPhoto!.id,
+        isFeatured: _isFeatured,
+      ),
+    );
+    Navigator.pop(context, true);
   }
 
   void _showSnackBar(String message) {
@@ -246,7 +206,8 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: _memoController,
-                      maxLines: 2,
+                      maxLines: 1,
+                      textInputAction: TextInputAction.done,
                       decoration: InputDecoration(
                         hintText: '짧은 메모를 작성해보세요…',
                         filled: true,
@@ -348,12 +309,10 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
                         ],
                       ),
                     )
-                  : Center(
-                      child: Icon(
-                        Icons.photo,
-                        size: 64,
-                        color: AppColors.main.withOpacity(0.6),
-                      ),
+                  : MomentPhotoView(
+                      photo: _mainPhoto!,
+                      borderRadius: 0,
+                      fit: BoxFit.cover,
                     ),
             ),
           ),
@@ -435,34 +394,33 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
                     width: isMain ? 2 : 1,
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: photo.accent,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.photo, color: AppColors.main),
-                      ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 44,
+                    width: double.infinity,
+                    child: MomentPhotoView(
+                      photo: photo,
+                      borderRadius: 12,
+                      fit: BoxFit.cover,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      photo.label,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      photo.source == 'camera' ? '카메라' : '갤러리',
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const Spacer(),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    photo.label.isNotEmpty ? photo.label : '선택한 사진',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    photo.source == PhotoSource.camera ? '카메라' : '갤러리',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const Spacer(),
                     SizedBox(
                       width: double.infinity,
                       child: OutlinedButton(
