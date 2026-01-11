@@ -6,7 +6,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -19,7 +18,6 @@ import kotlinx.coroutines.launch
 class PresentFragment : BaseFragment<FragmentPresentBinding>() {
 
     private val viewModel: PresentViewModel by activityViewModels { PresentViewModelFactory() }
-    private val recordListViewModel: RecordListViewModel by viewModels()
     private lateinit var practiceAdapter: PracticeAdapter
     private lateinit var recordAdapter: RecordAdapter
 
@@ -34,7 +32,6 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         setupClickListeners()
         observeUiState()
         observeRecords()
-        observeRecordEvents()
         observeLoadingState()
         observeErrorState()
     }
@@ -52,9 +49,7 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         }
         binding.practicesRecyclerView.adapter = practiceAdapter
 
-        recordAdapter = RecordAdapter { record, shouldSelect ->
-            recordListViewModel.onMainImageToggleIntent(record.id, shouldSelect)
-        }
+        recordAdapter = RecordAdapter()
         binding.recordsCarousel.adapter = recordAdapter
 
         // Link the TabLayout and ViewPager2 for the indicator
@@ -95,7 +90,7 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
     private fun observeRecords() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                recordListViewModel.records.collect { records ->
+                CreateMomentViewModel.getSavedRecordsFlow().collect { records ->
                     val hasRecords = records.isNotEmpty()
                     binding.emptyRecordCard.isVisible = !hasRecords
                     binding.recordsCarousel.isVisible = hasRecords
@@ -108,32 +103,6 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
                 }
             }
         }
-    }
-
-    private fun observeRecordEvents() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                recordListViewModel.events.collect { event ->
-                    when (event) {
-                        RecordListViewModel.UiEvent.ShowMainImageReplaceDialog -> {
-                            showMainImageReplaceDialog()
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun showMainImageReplaceDialog() {
-        androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setMessage("A main image is already selected. Do you want to replace it?")
-            .setPositiveButton("Replace") { _, _ ->
-                recordListViewModel.confirmReplaceMainImage()
-            }
-            .setNegativeButton("Cancel") { _, _ ->
-                recordListViewModel.cancelReplaceMainImage()
-            }
-            .show()
     }
 
     private fun observeLoadingState() {

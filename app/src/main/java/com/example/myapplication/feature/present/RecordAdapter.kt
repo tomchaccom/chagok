@@ -10,9 +10,7 @@ import com.example.myapplication.R
 import com.example.myapplication.core.util.ImageUtils
 import com.example.myapplication.databinding.ItemRecordBinding
 
-class RecordAdapter(
-    private val onMainChecked: (DailyRecord, Boolean) -> Unit
-) : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(RecordDiffCallback()) {
+class RecordAdapter : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(RecordDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecordViewHolder {
         val binding = ItemRecordBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -62,15 +60,6 @@ class RecordAdapter(
                 }
             }
 
-            // 대표 기억 체크박스는 '의도'만 전달하고, 상태는 데이터 바인딩으로 유지합니다.
-            binding.recordMainCheckbox.setOnCheckedChangeListener(null)
-            binding.recordMainCheckbox.isChecked = record.isFeatured
-            binding.recordMainCheckbox.setOnClickListener {
-                val shouldSelect = !record.isFeatured
-                onMainChecked(record, shouldSelect)
-                // 즉시 토글되지 않도록 기존 상태로 되돌려 UI-상태 불일치를 방지합니다.
-                binding.recordMainCheckbox.isChecked = record.isFeatured
-            }
         }
     }
 }

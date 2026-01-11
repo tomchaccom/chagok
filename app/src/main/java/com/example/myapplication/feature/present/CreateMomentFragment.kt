@@ -156,8 +156,10 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     }
 
     private fun setupFeaturedCheckbox() {
-        binding.featuredCheckbox.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.onFeaturedSelectionChanged(isChecked)
+        binding.featuredCheckbox.setOnClickListener {
+            // 체크박스는 의도만 전달하고, 실제 상태는 ViewModel이 결정합니다.
+            viewModel.onFeaturedSelectionIntent()
+            binding.featuredCheckbox.isChecked = viewModel.uiState.value.isFeatured
         }
     }
 
@@ -251,12 +253,8 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                         binding.photoPlaceholder.isVisible = true
                     }
 
-                    // 대표 기억 체크 상태 동기화 (사용자 취소 시 체크 해제)
-                    binding.featuredCheckbox.setOnCheckedChangeListener(null)
+                    // 대표 기억 체크 상태 동기화 (의도 기반 처리)
                     binding.featuredCheckbox.isChecked = state.isFeatured
-                    binding.featuredCheckbox.setOnCheckedChangeListener { _, isChecked ->
-                        viewModel.onFeaturedSelectionChanged(isChecked)
-                    }
 
                     // 버튼 상태
                     val enabled = !state.isLoading
@@ -297,7 +295,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
 
     private fun showFeaturedReplaceDialog() {
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
-            .setMessage("A main image is already selected. Do you want to replace it?")
+            .setMessage("이미 오늘의 대표 기억이 존재합니다.\n현재 기억으로 대체하시겠습니까?")
             .setPositiveButton("Replace") { _, _ ->
                 viewModel.confirmReplaceFeatured()
             }

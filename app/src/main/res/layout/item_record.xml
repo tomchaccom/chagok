@@ -72,16 +72,6 @@
             app:layout_constraintBottom_toTopOf="@+id/record_memo"
             tools:text="⭐ 5" />
 
-        <CheckBox
-            android:id="@+id/record_main_checkbox"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
-            android:layout_marginBottom="8dp"
-            android:text="@string/main_image_label"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintBottom_toTopOf="@+id/record_memo" />
-
         <TextView
             android:id="@+id/record_memo"
             android:layout_width="0dp"
