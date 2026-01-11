@@ -97,6 +97,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         setupFeaturedCheckbox()
         setupSaveButton()
         observeUiState()
+        observeEvents()
     }
 
     /* ---------------- UI 세팅 ---------------- */
@@ -275,9 +276,19 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                         viewModel.resetSavedState()
                         parentFragmentManager.popBackStack()
                     }
+                }
+            }
+        }
+    }
 
-                    if (state.showFeaturedReplaceDialog) {
-                        showFeaturedReplaceDialog()
+    private fun observeEvents() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.events.collect { event ->
+                    when (event) {
+                        CreateMomentViewModel.UiEvent.ShowFeaturedReplaceDialog -> {
+                            showFeaturedReplaceDialog()
+                        }
                     }
                 }
             }
@@ -285,7 +296,6 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     }
 
     private fun showFeaturedReplaceDialog() {
-        viewModel.consumeFeaturedReplaceDialog()
         androidx.appcompat.app.AlertDialog.Builder(requireContext())
             .setMessage("A main image is already selected. Do you want to replace it?")
             .setPositiveButton("Replace") { _, _ ->
