@@ -37,6 +37,24 @@ class CreateMomentViewModel : ViewModel() {
         fun addRecord(record: DailyRecord) {
             savedRecordsFlow.update { it + record }
         }
+        fun updateRecord(recordId: String, transform: (DailyRecord) -> DailyRecord) {
+            savedRecordsFlow.update { records ->
+                records.map { record ->
+                    if (record.id == recordId) transform(record) else record
+                }
+            }
+        }
+        fun clearFeaturedForDate(date: String) {
+            savedRecordsFlow.update { records ->
+                records.map { record ->
+                    if (record.date == date && record.isFeatured) {
+                        record.copy(isFeatured = false)
+                    } else {
+                        record
+                    }
+                }
+            }
+        }
         fun clearRecords() {
             savedRecordsFlow.value = emptyList()
         }
@@ -81,24 +99,17 @@ class CreateMomentViewModel : ViewModel() {
     }
 
     /**
-     * 대표 기억 체크 변경 처리
+     * 대표 기억 체크 의도 처리
      *
-     * - 같은 날짜에 이미 대표 기억이 있는 경우, 사용자 확인을 요청합니다.
-     * - 확인 후에만 기존 대표 기억을 해제하고 새로운 선택을 반영합니다.
+     * - 이전 구현에서는 체크박스가 먼저 토글되면서 상태가 바뀌어,
+     *   동일 프레임에서 다이얼로그 이벤트가 누락될 수 있었습니다.
+     * - 이제는 '의도'만 받아서 필요할 때만 이벤트를 발행합니다.
      */
-    fun onFeaturedSelectionChanged(isChecked: Boolean) {
-        if (!isChecked) {
-            pendingFeaturedSelection = false
-            _uiState.update { it.copy(isFeatured = false) }
-            return
-        }
-
+    fun onFeaturedSelectionIntent() {
         val today = currentDateString()
         val hasFeatured = hasFeaturedRecordForDate(today)
         if (hasFeatured) {
-            // 기존 대표 기억이 있으면 체크 상태는 유지하지 않고 다이얼로그만 요청
             pendingFeaturedSelection = true
-            _uiState.update { it.copy(isFeatured = false) }
             _events.tryEmit(UiEvent.ShowFeaturedReplaceDialog)
         } else {
             _uiState.update { it.copy(isFeatured = true) }
@@ -205,18 +216,6 @@ class CreateMomentViewModel : ViewModel() {
 
     private fun hasFeaturedRecordForDate(date: String): Boolean {
         return savedRecordsFlow.value.any { it.date == date && it.isFeatured }
-    }
-
-    private fun clearFeaturedForDate(date: String) {
-        savedRecordsFlow.update { records ->
-            records.map { record ->
-                if (record.date == date && record.isFeatured) {
-                    record.copy(isFeatured = false)
-                } else {
-                    record
-                }
-            }
-        }
     }
 
     private fun currentDateString(): String {

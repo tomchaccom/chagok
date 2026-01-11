@@ -59,6 +59,7 @@ class RecordAdapter : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(R
                     binding.recordPhoto.setImageResource(android.R.drawable.ic_menu_gallery)
                 }
             }
+
         }
     }
 }
