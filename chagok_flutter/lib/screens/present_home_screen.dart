@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:chagok_flutter/screens/create_moment_screen.dart';
-import 'package:chagok_flutter/state/moment_store.dart';
+import 'package:chagok_flutter/state/moment_store_scope.dart';
 import 'package:chagok_flutter/theme/app_theme.dart';
 import 'package:chagok_flutter/utils/date_utils.dart';
 import 'package:chagok_flutter/widgets/moment_photo_view.dart';
-import 'package:provider/provider.dart';
 
 class PresentHomeScreen extends StatelessWidget {
   const PresentHomeScreen({super.key});
@@ -46,8 +45,8 @@ class PresentHomeScreen extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 12),
-                    Consumer<MomentStore>(
-                      builder: (context, store, _) {
+                    MomentStoreConsumer(
+                      builder: (context, store) {
                         final moments = store.presentMoments;
                         if (moments.isEmpty) {
                           return Container(

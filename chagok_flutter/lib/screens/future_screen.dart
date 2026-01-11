@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:chagok_flutter/state/moment_store.dart';
+import 'package:chagok_flutter/state/moment_store_scope.dart';
 import 'package:chagok_flutter/theme/app_theme.dart';
 import 'package:chagok_flutter/utils/date_utils.dart';
-import 'package:provider/provider.dart';
 
 class FutureScreen extends StatelessWidget {
   const FutureScreen({super.key});
@@ -29,8 +28,8 @@ class FutureScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Expanded(
-              child: Consumer<MomentStore>(
-                builder: (context, store, _) {
+              child: MomentStoreConsumer(
+                builder: (context, store) {
                   final plans = store.futurePlans;
                   if (plans.isEmpty) {
                     return Center(

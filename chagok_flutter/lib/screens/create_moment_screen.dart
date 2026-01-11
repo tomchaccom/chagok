@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:chagok_flutter/models/moment_entry.dart';
 import 'package:chagok_flutter/models/moment_photo.dart';
 import 'package:chagok_flutter/screens/photo_orientation_screen.dart';
-import 'package:chagok_flutter/state/moment_store.dart';
+import 'package:chagok_flutter/services/photo_picker.dart';
+import 'package:chagok_flutter/state/moment_store_scope.dart';
 import 'package:chagok_flutter/theme/app_theme.dart';
 import 'package:chagok_flutter/widgets/moment_photo_view.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:provider/provider.dart';
 
 class CreateMomentScreen extends StatefulWidget {
   const CreateMomentScreen({super.key});
@@ -20,10 +19,16 @@ class CreateMomentScreen extends StatefulWidget {
 class _CreateMomentScreenState extends State<CreateMomentScreen> {
   final List<MomentPhoto> _selectedPhotos = [];
   final TextEditingController _memoController = TextEditingController();
-  final ImagePicker _imagePicker = ImagePicker();
+  late final PhotoPicker _photoPicker;
   MomentPhoto? _mainPhoto;
   bool _isFeatured = false;
   int _score = 5;
+
+  @override
+  void initState() {
+    super.initState();
+    _photoPicker = PhotoPicker();
+  }
 
   @override
   void dispose() {
@@ -32,16 +37,8 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
   }
 
   Future<void> _openGallery() async {
-    final picked = await _imagePicker.pickImage(source: ImageSource.gallery);
-    if (picked == null) return;
-
-    final selected = MomentPhoto(
-      id: 'gallery_${DateTime.now().millisecondsSinceEpoch}',
-      label: picked.name.isNotEmpty ? picked.name : '갤러리 사진',
-      source: PhotoSource.gallery,
-      accent: AppColors.sub,
-      path: picked.path,
-    );
+    final selected = await _photoPicker.pickFromGallery(context);
+    if (selected == null) return;
 
     final confirmed = await _confirmOrientation(selected);
     if (confirmed == null) return;
@@ -50,16 +47,7 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
   }
 
   Future<void> _openCamera() async {
-    final picked = await _imagePicker.pickImage(source: ImageSource.camera);
-    if (picked == null) return;
-
-    final cameraPhoto = MomentPhoto(
-      id: 'camera_${DateTime.now().millisecondsSinceEpoch}',
-      label: picked.name.isNotEmpty ? picked.name : '카메라 스냅',
-      source: PhotoSource.camera,
-      accent: AppColors.sub,
-      path: picked.path,
-    );
+    final cameraPhoto = await _photoPicker.captureFromCamera();
 
     final confirmed = await _confirmOrientation(cameraPhoto);
     if (confirmed == null) return;
@@ -143,7 +131,7 @@ class _CreateMomentScreenState extends State<CreateMomentScreen> {
       return;
     }
 
-    final store = context.read<MomentStore>();
+    final store = context.readMomentStore();
     final now = DateTime.now();
     store.addMoment(
       MomentEntry(

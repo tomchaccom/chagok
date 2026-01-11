@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:chagok_flutter/screens/past_detail_screen.dart';
-import 'package:chagok_flutter/state/moment_store.dart';
+import 'package:chagok_flutter/state/moment_store_scope.dart';
 import 'package:chagok_flutter/theme/app_theme.dart';
 import 'package:chagok_flutter/utils/date_utils.dart';
 import 'package:chagok_flutter/widgets/moment_photo_view.dart';
-import 'package:provider/provider.dart';
 
 class PastScreen extends StatelessWidget {
   const PastScreen({super.key});
@@ -31,8 +30,8 @@ class PastScreen extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Expanded(
-              child: Consumer<MomentStore>(
-                builder: (context, store, _) {
+              child: MomentStoreConsumer(
+                builder: (context, store) {
                   final grouped = store.groupedPastMoments();
                   final entries = grouped.entries.toList();
                   if (entries.isEmpty) {
