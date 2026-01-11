@@ -3,6 +3,7 @@ package com.example.myapplication.feature.present
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,9 +21,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.myapplication.R
 import com.example.myapplication.core.base.BaseFragment
+import com.example.myapplication.core.util.ImageUtils
 import com.example.myapplication.databinding.FragmentCreateMomentBinding
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -56,7 +59,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == android.app.Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
-                    viewModel.setSelectedPhoto(uri.toString())
+                    handleSelectedPhoto(uri)
                 }
             }
         }
@@ -69,7 +72,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                     "${requireContext().packageName}.fileprovider",
                     currentPhotoFile!!
                 )
-                viewModel.setSelectedPhoto(photoUri.toString())
+                handleSelectedPhoto(photoUri)
             } else {
                 showToast("사진 촬영이 취소되었습니다")
             }
@@ -94,6 +97,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         setupFeaturedCheckbox()
         setupSaveButton()
         observeUiState()
+        observeEvents()
     }
 
     /* ---------------- UI 세팅 ---------------- */
@@ -134,6 +138,14 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     }
 
     private fun setupMemoInput() {
+        // 한 줄 입력만 허용: 엔터/붙여넣기 시 줄바꿈 제거
+        val noNewlineFilter = android.text.InputFilter { source, start, end, _, _, _ ->
+            val sanitized = source?.subSequence(start, end)?.toString()
+                ?.replace("\n", "")
+                ?.replace("\r", "")
+            sanitized
+        }
+        binding.memoEditText.filters = arrayOf(noNewlineFilter)
         binding.memoEditText.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {}
@@ -144,8 +156,10 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     }
 
     private fun setupFeaturedCheckbox() {
-        binding.featuredCheckbox.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setFeatured(isChecked)
+        binding.featuredCheckbox.setOnClickListener {
+            // 체크박스는 의도만 전달하고, 실제 상태는 ViewModel이 결정합니다.
+            viewModel.onFeaturedSelectionIntent()
+            binding.featuredCheckbox.isChecked = viewModel.uiState.value.isFeatured
         }
     }
 
@@ -203,6 +217,27 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         return File.createTempFile(fileName, ".jpg", storageDir)
     }
 
+    private fun handleSelectedPhoto(uri: Uri) {
+        // EXIF 방향 정보를 반영한 Bitmap으로 보정 후 캐시에 저장합니다.
+        val correctedBitmap = ImageUtils.fixImageOrientation(requireContext(), uri)
+        val correctedUri = correctedBitmap?.let { saveBitmapToCache(it) } ?: uri
+        viewModel.setSelectedPhoto(correctedUri.toString())
+    }
+
+    private fun saveBitmapToCache(bitmap: Bitmap): Uri {
+        // 메모리에 저장할 때도 회전이 반영된 이미지를 사용하기 위해 캐시에 저장합니다.
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val file = File(requireContext().externalCacheDir, "IMG_${timeStamp}.jpg")
+        FileOutputStream(file).use { output ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+        }
+        return FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.fileprovider",
+            file
+        )
+    }
+
     /* ---------------- State 관찰 ---------------- */
 
     private fun observeUiState() {
@@ -217,6 +252,9 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                     } else {
                         binding.photoPlaceholder.isVisible = true
                     }
+
+                    // 대표 기억 체크 상태 동기화 (의도 기반 처리)
+                    binding.featuredCheckbox.isChecked = state.isFeatured
 
                     // 버튼 상태
                     val enabled = !state.isLoading
@@ -239,5 +277,31 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                 }
             }
         }
+    }
+
+    private fun observeEvents() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.events.collect { event ->
+                    when (event) {
+                        CreateMomentViewModel.UiEvent.ShowFeaturedReplaceDialog -> {
+                            showFeaturedReplaceDialog()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showFeaturedReplaceDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setMessage("이미 오늘의 대표 기억이 존재합니다.\n현재 기억으로 대체하시겠습니까?")
+            .setPositiveButton("Replace") { _, _ ->
+                viewModel.confirmReplaceFeatured()
+            }
+            .setNegativeButton("Cancel") { _, _ ->
+                viewModel.cancelReplaceFeatured()
+            }
+            .show()
     }
 }

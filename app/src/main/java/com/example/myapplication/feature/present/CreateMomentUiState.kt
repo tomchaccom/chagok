@@ -23,4 +23,3 @@ data class CreateMomentUiState(
     val errorMessage: String? = null,
     val savedSuccessfully: Boolean = false
 )
-

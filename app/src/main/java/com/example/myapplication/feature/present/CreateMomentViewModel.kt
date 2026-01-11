@@ -3,8 +3,10 @@ package com.example.myapplication.feature.present
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -28,16 +30,44 @@ class CreateMomentViewModel : ViewModel() {
 
     // 저장된 기록을 임시로 메모리에 보관 (싱글톤으로 변경 가능)
     companion object {
-        private val savedRecords = mutableListOf<DailyRecord>()
+        private val savedRecordsFlow = MutableStateFlow<List<DailyRecord>>(emptyList())
 
-        fun getSavedRecords(): List<DailyRecord> = savedRecords.toList()
+        fun getSavedRecords(): List<DailyRecord> = savedRecordsFlow.value
+        fun getSavedRecordsFlow(): StateFlow<List<DailyRecord>> = savedRecordsFlow.asStateFlow()
         fun addRecord(record: DailyRecord) {
-            savedRecords.add(record)
+            savedRecordsFlow.update { it + record }
+        }
+        fun updateRecord(recordId: String, transform: (DailyRecord) -> DailyRecord) {
+            savedRecordsFlow.update { records ->
+                records.map { record ->
+                    if (record.id == recordId) transform(record) else record
+                }
+            }
+        }
+        fun clearFeaturedForDate(date: String) {
+            savedRecordsFlow.update { records ->
+                records.map { record ->
+                    if (record.date == date && record.isFeatured) {
+                        record.copy(isFeatured = false)
+                    } else {
+                        record
+                    }
+                }
+            }
         }
         fun clearRecords() {
-            savedRecords.clear()
+            savedRecordsFlow.value = emptyList()
         }
     }
+
+    sealed interface UiEvent {
+        data object ShowFeaturedReplaceDialog : UiEvent
+    }
+
+    private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
+    val events = _events.asSharedFlow()
+
+    private var pendingFeaturedSelection = false
 
     /**
      * 사진 URI 설정 (갤러리 또는 카메라에서 선택한 이미지)
@@ -69,10 +99,35 @@ class CreateMomentViewModel : ViewModel() {
     }
 
     /**
-     * 오늘의 대표 기억 체크 토글
+     * 대표 기억 체크 의도 처리
+     *
+     * - 이전 구현에서는 체크박스가 먼저 토글되면서 상태가 바뀌어,
+     *   동일 프레임에서 다이얼로그 이벤트가 누락될 수 있었습니다.
+     * - 이제는 '의도'만 받아서 필요할 때만 이벤트를 발행합니다.
      */
-    fun toggleFeatured() {
-        _uiState.update { it.copy(isFeatured = !it.isFeatured) }
+    fun onFeaturedSelectionIntent() {
+        val today = currentDateString()
+        val hasFeatured = hasFeaturedRecordForDate(today)
+        if (hasFeatured) {
+            pendingFeaturedSelection = true
+            _events.tryEmit(UiEvent.ShowFeaturedReplaceDialog)
+        } else {
+            _uiState.update { it.copy(isFeatured = true) }
+        }
+    }
+
+    fun confirmReplaceFeatured() {
+        val today = currentDateString()
+        clearFeaturedForDate(today)
+        if (pendingFeaturedSelection) {
+            _uiState.update { it.copy(isFeatured = true) }
+        }
+        pendingFeaturedSelection = false
+    }
+
+    fun cancelReplaceFeatured() {
+        pendingFeaturedSelection = false
+        _uiState.update { it.copy(isFeatured = false) }
     }
 
     /**
@@ -108,6 +163,11 @@ class CreateMomentViewModel : ViewModel() {
                 // 현재 날짜 포맷팅
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 val today = dateFormat.format(Date())
+
+                if (currentState.isFeatured) {
+                    // 저장 시에도 대표 기억은 하루에 하나만 유지되도록 보정
+                    clearFeaturedForDate(today)
+                }
 
                 // DailyRecord 생성
                 val newRecord = DailyRecord(
@@ -154,11 +214,13 @@ class CreateMomentViewModel : ViewModel() {
         _uiState.update { it.copy(savedSuccessfully = false) }
     }
 
-    fun setFeatured(isFeatured: Boolean) {
-        _uiState.update {
-            it.copy(isFeatured = isFeatured)
-        }
+    private fun hasFeaturedRecordForDate(date: String): Boolean {
+        return savedRecordsFlow.value.any { it.date == date && it.isFeatured }
+    }
+
+    private fun currentDateString(): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        return dateFormat.format(Date())
     }
 
 }
-
