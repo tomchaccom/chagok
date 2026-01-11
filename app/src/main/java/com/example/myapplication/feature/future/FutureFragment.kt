@@ -111,6 +111,9 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
         }
 
         dialog.show()
+
+        // ✅ 추가: 다이얼로그 자체의 배경을 투명하게 설정하여 카드뷰의 모서리가 깎여 보이게 함
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
     private fun updateDateText(tv: TextView, millis: Long) {

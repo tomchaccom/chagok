@@ -5,6 +5,7 @@
     android:layout_height="wrap_content"
     android:layout_margin="24dp"
     app:cardCornerRadius="24dp"
+    app:cardBackgroundColor="@color/white"
     app:cardElevation="8dp">
 
     <LinearLayout
@@ -74,7 +75,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="32dp"
-            app:hintEnabled="false">
+            app:hintEnabled="false"
+            app:hintTextColor="#757575">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etTitle"
@@ -82,11 +84,12 @@
                 android:layout_height="120dp"
                 android:background="@drawable/bg_input_field_future_add"
                 android:gravity="top"
-                android:hint="완성을 노려보자"
+                android:hint=""
                 android:inputType="textMultiLine"
                 android:padding="16dp"
                 android:textColor="#212121"
-                android:textSize="16sp" />
+                android:textSize="16sp"
+                android:textCursorDrawable="@drawable/cursor_teal"/>
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -96,6 +99,7 @@
             android:insetTop="0dp"
             android:insetBottom="0dp"
             android:text="목표 저장"
+            android:textColor="@color/white"
             android:textSize="16sp"
             android:textStyle="bold"
             app:backgroundTint="#1ABC9C"
