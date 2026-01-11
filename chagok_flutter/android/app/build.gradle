@@ -1,24 +1,8 @@
 plugins {
     id 'com.android.application'
-    id 'kotlin-android'
+    id 'org.jetbrains.kotlin.android'
+    id 'dev.flutter.flutter-gradle-plugin'
 }
-
-import java.util.Properties
-
-final Properties localProperties = new Properties()
-final File localPropertiesFile = rootProject.file('local.properties')
-if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
-    }
-}
-
-final String flutterRoot = localProperties.getProperty('flutter.sdk') ?: ''
-if (flutterRoot.isEmpty()) {
-    throw new GradleException("Flutter SDK not found. Define flutter.sdk in local.properties.")
-}
-
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
     namespace "com.example.chagok_flutter"
