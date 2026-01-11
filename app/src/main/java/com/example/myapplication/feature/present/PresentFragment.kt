@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
@@ -18,6 +19,7 @@ import kotlinx.coroutines.launch
 class PresentFragment : BaseFragment<FragmentPresentBinding>() {
 
     private val viewModel: PresentViewModel by activityViewModels { PresentViewModelFactory() }
+    private val recordListViewModel: RecordListViewModel by viewModels()
     private lateinit var practiceAdapter: PracticeAdapter
     private lateinit var recordAdapter: RecordAdapter
 
@@ -31,6 +33,8 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         setupRecyclerViews()
         setupClickListeners()
         observeUiState()
+        observeRecords()
+        observeRecordEvents()
         observeLoadingState()
         observeErrorState()
     }
@@ -40,20 +44,6 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         // Fragment가 다시 보일 때마다 버튼 보이기
         binding.createMomentButton.visibility = View.VISIBLE
         binding.addRecordIcon.visibility = View.VISIBLE
-
-        // CreateMomentFragment에서 돌아올 때 데이터 갱신
-        refreshRecordsList()
-    }
-
-    private fun refreshRecordsList() {
-        // CreateMomentViewModel에서 저장된 기록들을 다시 로드하여 RecordAdapter 갱신
-        val savedRecords = CreateMomentViewModel.getSavedRecords()
-        if (savedRecords.isNotEmpty()) {
-            binding.emptyRecordCard.visibility = View.GONE
-            binding.recordsCarousel.visibility = View.VISIBLE
-            binding.recordsIndicator.visibility = View.VISIBLE
-            recordAdapter.submitList(savedRecords.toList())
-        }
     }
 
     private fun setupRecyclerViews() {
@@ -62,7 +52,9 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         }
         binding.practicesRecyclerView.adapter = practiceAdapter
 
-        recordAdapter = RecordAdapter()
+        recordAdapter = RecordAdapter { record, shouldSelect ->
+            recordListViewModel.onMainImageToggleIntent(record.id, shouldSelect)
+        }
         binding.recordsCarousel.adapter = recordAdapter
 
         // Link the TabLayout and ViewPager2 for the indicator
@@ -93,20 +85,55 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
                         practicesLeftBadge.text = "${uiState.practicesLeft}개 남음"
                         practiceAdapter.submitList(uiState.practices)
 
-                        // CreateMomentViewModel에서 저장된 기록들을 가져옴
-                        val savedRecords = CreateMomentViewModel.getSavedRecords()
-                        val hasRecords = savedRecords.isNotEmpty()
-                        emptyRecordCard.isVisible = !hasRecords
-                        recordsCarousel.isVisible = hasRecords
-                        recordsIndicator.isVisible = hasRecords
+                        // 기록 목록은 별도 스트림에서 관리합니다.
+                    }
+                }
+            }
+        }
+    }
 
-                        if (hasRecords) {
-                            recordAdapter.submitList(savedRecords)
+    private fun observeRecords() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                recordListViewModel.records.collect { records ->
+                    val hasRecords = records.isNotEmpty()
+                    binding.emptyRecordCard.isVisible = !hasRecords
+                    binding.recordsCarousel.isVisible = hasRecords
+                    binding.recordsIndicator.isVisible = hasRecords
+                    if (hasRecords) {
+                        recordAdapter.submitList(records)
+                    } else {
+                        recordAdapter.submitList(emptyList())
+                    }
+                }
+            }
+        }
+    }
+
+    private fun observeRecordEvents() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                recordListViewModel.events.collect { event ->
+                    when (event) {
+                        RecordListViewModel.UiEvent.ShowMainImageReplaceDialog -> {
+                            showMainImageReplaceDialog()
                         }
                     }
                 }
             }
         }
+    }
+
+    private fun showMainImageReplaceDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setMessage("A main image is already selected. Do you want to replace it?")
+            .setPositiveButton("Replace") { _, _ ->
+                recordListViewModel.confirmReplaceMainImage()
+            }
+            .setNegativeButton("Cancel") { _, _ ->
+                recordListViewModel.cancelReplaceMainImage()
+            }
+            .show()
     }
 
     private fun observeLoadingState() {

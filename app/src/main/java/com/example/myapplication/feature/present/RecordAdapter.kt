@@ -1,6 +1,5 @@
 package com.example.myapplication.feature.present
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.core.net.toUri
@@ -8,9 +7,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
+import com.example.myapplication.core.util.ImageUtils
 import com.example.myapplication.databinding.ItemRecordBinding
 
-class RecordAdapter : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(RecordDiffCallback()) {
+class RecordAdapter(
+    private val onMainChecked: (DailyRecord, Boolean) -> Unit
+) : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(RecordDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecordViewHolder {
         val binding = ItemRecordBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -48,11 +50,26 @@ class RecordAdapter : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(R
             if (record.photoUri.isNotEmpty()) {
                 try {
                     val uri = record.photoUri.toUri()
-                    binding.recordPhoto.setImageURI(uri)
+                    val correctedBitmap = ImageUtils.fixImageOrientation(binding.root.context, uri)
+                    if (correctedBitmap != null) {
+                        binding.recordPhoto.setImageBitmap(correctedBitmap)
+                    } else {
+                        binding.recordPhoto.setImageURI(uri)
+                    }
                 } catch (e: Exception) {
                     // URI 파싱 실패 시 기본 이미지 설정
                     binding.recordPhoto.setImageResource(android.R.drawable.ic_menu_gallery)
                 }
+            }
+
+            // 대표 기억 체크박스는 '의도'만 전달하고, 상태는 데이터 바인딩으로 유지합니다.
+            binding.recordMainCheckbox.setOnCheckedChangeListener(null)
+            binding.recordMainCheckbox.isChecked = record.isFeatured
+            binding.recordMainCheckbox.setOnClickListener {
+                val shouldSelect = !record.isFeatured
+                onMainChecked(record, shouldSelect)
+                // 즉시 토글되지 않도록 기존 상태로 되돌려 UI-상태 불일치를 방지합니다.
+                binding.recordMainCheckbox.isChecked = record.isFeatured
             }
         }
     }
