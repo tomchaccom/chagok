@@ -97,6 +97,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         setupFeaturedCheckbox()
         setupSaveButton()
         observeUiState()
+        observeEvents()
     }
 
     /* ---------------- UI 세팅 ---------------- */
@@ -137,6 +138,14 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     }
 
     private fun setupMemoInput() {
+        // 한 줄 입력만 허용: 엔터/붙여넣기 시 줄바꿈 제거
+        val noNewlineFilter = android.text.InputFilter { source, start, end, _, _, _ ->
+            val sanitized = source?.subSequence(start, end)?.toString()
+                ?.replace("\n", "")
+                ?.replace("\r", "")
+            sanitized
+        }
+        binding.memoEditText.filters = arrayOf(noNewlineFilter)
         binding.memoEditText.addTextChangedListener(object : android.text.TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun afterTextChanged(s: android.text.Editable?) {}
@@ -148,7 +157,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
 
     private fun setupFeaturedCheckbox() {
         binding.featuredCheckbox.setOnCheckedChangeListener { _, isChecked ->
-            viewModel.setFeatured(isChecked)
+            viewModel.onFeaturedSelectionChanged(isChecked)
         }
     }
 
@@ -242,6 +251,13 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                         binding.photoPlaceholder.isVisible = true
                     }
 
+                    // 대표 기억 체크 상태 동기화 (사용자 취소 시 체크 해제)
+                    binding.featuredCheckbox.setOnCheckedChangeListener(null)
+                    binding.featuredCheckbox.isChecked = state.isFeatured
+                    binding.featuredCheckbox.setOnCheckedChangeListener { _, isChecked ->
+                        viewModel.onFeaturedSelectionChanged(isChecked)
+                    }
+
                     // 버튼 상태
                     val enabled = !state.isLoading
                     binding.changePhotoButton.isEnabled = enabled
@@ -263,5 +279,31 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                 }
             }
         }
+    }
+
+    private fun observeEvents() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.events.collect { event ->
+                    when (event) {
+                        CreateMomentViewModel.UiEvent.ShowFeaturedReplaceDialog -> {
+                            showFeaturedReplaceDialog()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun showFeaturedReplaceDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setMessage("A main image is already selected. Do you want to replace it?")
+            .setPositiveButton("Replace") { _, _ ->
+                viewModel.confirmReplaceFeatured()
+            }
+            .setNegativeButton("Cancel") { _, _ ->
+                viewModel.cancelReplaceFeatured()
+            }
+            .show()
     }
 }
