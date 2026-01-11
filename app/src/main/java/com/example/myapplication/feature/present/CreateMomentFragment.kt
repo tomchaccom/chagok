@@ -19,7 +19,8 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import com.example.myapplication.R
+import android.widget.CompoundButton
+import androidx.appcompat.app.AlertDialog
 import com.example.myapplication.core.base.BaseFragment
 import com.example.myapplication.core.util.ImageUtils
 import com.example.myapplication.databinding.FragmentCreateMomentBinding
@@ -43,6 +44,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
 
     private val viewModel: CreateMomentViewModel by viewModels()
     private var currentPhotoFile: File? = null
+    private var featuredCheckedChangeListener: CompoundButton.OnCheckedChangeListener? = null
 
     /* ---------------- 권한 & 런처 ---------------- */
 
@@ -147,9 +149,10 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     }
 
     private fun setupFeaturedCheckbox() {
-        binding.featuredCheckbox.setOnCheckedChangeListener { _, isChecked ->
+        featuredCheckedChangeListener = CompoundButton.OnCheckedChangeListener { _, isChecked ->
             viewModel.setFeatured(isChecked)
         }
+        binding.featuredCheckbox.setOnCheckedChangeListener(featuredCheckedChangeListener)
     }
 
     private fun setupSaveButton() {
@@ -253,6 +256,17 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                         showToast(it)
                         viewModel.clearErrorMessage()
                     }
+                    if (binding.featuredCheckbox.isChecked != state.isFeatured) {
+                        binding.featuredCheckbox.setOnCheckedChangeListener(null)
+                        binding.featuredCheckbox.isChecked = state.isFeatured
+                        binding.featuredCheckbox.setOnCheckedChangeListener(featuredCheckedChangeListener)
+                    }
+
+                    if (state.showFeaturedConflictDialog) {
+                        viewModel.consumeFeaturedConflictDialog()
+                        showFeaturedConflictDialog()
+                    }
+
 
                     // 저장 완료
                     if (state.savedSuccessfully) {
@@ -263,5 +277,16 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                 }
             }
         }
+    }
+    private fun showFeaturedConflictDialog() {
+        AlertDialog.Builder(requireContext())
+            .setMessage("이미 대표 기억이 설정되어 있습니다.\n현재 이미지를 대표 기억으로 변경하시겠습니까?")
+            .setPositiveButton("변경") { _, _ ->
+                viewModel.confirmFeaturedReplacement(true)
+            }
+            .setNegativeButton("취소") { _, _ ->
+                viewModel.confirmFeaturedReplacement(false)
+            }
+            .show()
     }
 }

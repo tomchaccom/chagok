@@ -10,6 +10,8 @@ package com.example.myapplication.feature.present
  * @param score 점수 (1~10)
  * @param meaning 기억 or 잊기
  * @param isFeatured 오늘의 대표 기억 체크 여부
+ * @param showFeaturedConflictDialog 대표 기억 중복 선택 안내 다이얼로그 노출 여부
+ * @param allowFeaturedReplacement 대표 기억 교체 동의 여부
  * @param isLoading 저장 중 상태
  * @param savedSuccessfully 저장 완료 여부
  */
@@ -19,8 +21,9 @@ data class CreateMomentUiState(
     val score: Int = 5, // 기본값: 중간값
     val meaning: Meaning = Meaning.REMEMBER,
     val isFeatured: Boolean = false,
+    val showFeaturedConflictDialog: Boolean = false,
+    val allowFeaturedReplacement: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val savedSuccessfully: Boolean = false
 )
-
