@@ -21,4 +21,7 @@
     <!-- Components -->
     <color name="badge_background">#E8EFE6</color>
     <color name="badge_text">#2E7D32</color>
+    <color name="mint_100">#E6F4F1</color>
+    <color name="green_600">#2E7D32</color>
+
 </resources>
