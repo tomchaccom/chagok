@@ -3,6 +3,7 @@ package com.example.myapplication.feature.present
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
@@ -20,9 +21,11 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.myapplication.R
 import com.example.myapplication.core.base.BaseFragment
+import com.example.myapplication.core.util.ImageUtils
 import com.example.myapplication.databinding.FragmentCreateMomentBinding
 import kotlinx.coroutines.launch
 import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -56,7 +59,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == android.app.Activity.RESULT_OK) {
                 result.data?.data?.let { uri ->
-                    viewModel.setSelectedPhoto(uri.toString())
+                    handleSelectedPhoto(uri)
                 }
             }
         }
@@ -69,7 +72,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                     "${requireContext().packageName}.fileprovider",
                     currentPhotoFile!!
                 )
-                viewModel.setSelectedPhoto(photoUri.toString())
+                handleSelectedPhoto(photoUri)
             } else {
                 showToast("사진 촬영이 취소되었습니다")
             }
@@ -201,6 +204,27 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         val fileName = "JPEG_${timeStamp}_"
         val storageDir = requireContext().externalCacheDir
         return File.createTempFile(fileName, ".jpg", storageDir)
+    }
+
+    private fun handleSelectedPhoto(uri: Uri) {
+        // EXIF 방향 정보를 반영한 Bitmap으로 보정 후 캐시에 저장합니다.
+        val correctedBitmap = ImageUtils.fixImageOrientation(requireContext(), uri)
+        val correctedUri = correctedBitmap?.let { saveBitmapToCache(it) } ?: uri
+        viewModel.setSelectedPhoto(correctedUri.toString())
+    }
+
+    private fun saveBitmapToCache(bitmap: Bitmap): Uri {
+        // 메모리에 저장할 때도 회전이 반영된 이미지를 사용하기 위해 캐시에 저장합니다.
+        val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+        val file = File(requireContext().externalCacheDir, "IMG_${timeStamp}.jpg")
+        FileOutputStream(file).use { output ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+        }
+        return FileProvider.getUriForFile(
+            requireContext(),
+            "${requireContext().packageName}.fileprovider",
+            file
+        )
     }
 
     /* ---------------- State 관찰 ---------------- */
