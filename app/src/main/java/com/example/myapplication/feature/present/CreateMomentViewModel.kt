@@ -3,6 +3,7 @@ package com.example.myapplication.feature.present
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.core.util.TimeState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +17,7 @@ import java.util.*
  *
  * 순간 기록 화면(CreateMomentFragment)의 상태와 로직을 관리합니다.
  * - 사진 선택/촬영 결과 처리
- * - 메모, 점수, 기억/잊기 상태 관리
+     * - 메모, 기억/잊기 상태 관리
  * - 저장 로직 실행
  *
  * 주의: 현재는 in-memory 저장만 지원합니다 (Room DB는 추후 추가)
@@ -25,17 +26,61 @@ class CreateMomentViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateMomentUiState())
     val uiState: StateFlow<CreateMomentUiState> = _uiState.asStateFlow()
+    private var editingRecordId: String? = null
+    private var editingRecordDate: String? = null
 
     // 저장된 기록을 임시로 메모리에 보관 (싱글톤으로 변경 가능)
     companion object {
         private val savedRecords = mutableListOf<DailyRecord>()
+        private const val DEFAULT_SCORE = 5
 
         fun getSavedRecords(): List<DailyRecord> = savedRecords.toList()
+
         fun addRecord(record: DailyRecord) {
             savedRecords.add(record)
         }
+
         fun clearRecords() {
             savedRecords.clear()
+        }
+    }
+
+    fun startEdit(recordId: String) {
+        val record = savedRecords.find { it.id == recordId }
+        if (record == null) {
+            _uiState.update { it.copy(errorMessage = "수정할 기록을 찾을 수 없습니다") }
+            return
+        }
+
+        if (!isRecordEditable(record)) {
+            _uiState.update { it.copy(errorMessage = "오늘 기록만 수정할 수 있습니다") }
+            return
+        }
+
+        editingRecordId = recordId
+        editingRecordDate = record.date
+        val cesInput = CesInput(
+            identity = record.cesMetrics.identity,
+            connectivity = record.cesMetrics.connectivity,
+            perspective = record.cesMetrics.perspective
+        )
+        val weightedScore = record.cesMetrics.weightedScore
+        _uiState.update {
+            it.copy(
+                selectedPhotoUri = record.photoUri,
+                memo = record.memo,
+                cesInput = cesInput,
+                cesWeightedScore = weightedScore,
+                cesDescription = describeCesScore(weightedScore),
+                meaning = record.meaning,
+                isFeatured = record.isFeatured,
+                editMode = true,
+                timeState = TimeState.PRESENT,
+                savedSuccessfully = false,
+                errorMessage = null,
+                showFeaturedConflictDialog = false,
+                allowFeaturedReplacement = false
+            )
         }
     }
 
@@ -56,9 +101,32 @@ class CreateMomentViewModel : ViewModel() {
     /**
      * 점수 슬라이더 값 업데이트 (1~10)
      */
-    fun setScore(score: Int) {
-        val validScore = score.coerceIn(1, 10)
-        _uiState.update { it.copy(score = validScore) }
+    fun setTimeState(state: TimeState) {
+        _uiState.update { it.copy(timeState = state) }
+    }
+
+    fun setCesIdentity(value: Int) {
+        if (!isPresentState()) {
+            _uiState.update { it.copy(errorMessage = "과거 기록은 수정할 수 없습니다") }
+            return
+        }
+        updateCesInput { it.copy(identity = value.coerceIn(1, 5)) }
+    }
+
+    fun setCesConnectivity(value: Int) {
+        if (!isPresentState()) {
+            _uiState.update { it.copy(errorMessage = "과거 기록은 수정할 수 없습니다") }
+            return
+        }
+        updateCesInput { it.copy(connectivity = value.coerceIn(1, 5)) }
+    }
+
+    fun setCesPerspective(value: Int) {
+        if (!isPresentState()) {
+            _uiState.update { it.copy(errorMessage = "과거 기록은 수정할 수 없습니다") }
+            return
+        }
+        updateCesInput { it.copy(perspective = value.coerceIn(1, 5)) }
     }
 
     /**
@@ -81,8 +149,7 @@ class CreateMomentViewModel : ViewModel() {
      * 요구사항:
      * 1. 사진은 필수 (selectedPhotoUri가 null이면 실패)
      * 2. 메모는 선택사항 (빈 값 허용)
-     * 3. 점수는 1~10
-     * 4. 기억/잊기 선택은 필수
+     * 3. 기억/잊기 선택은 필수
      *
      * 저장 완료 시 savedSuccessfully = true로 설정
      * (호출자는 이 값을 감지하여 PresentFragment로 복귀)
@@ -90,14 +157,14 @@ class CreateMomentViewModel : ViewModel() {
     fun saveMoment() {
         val currentState = _uiState.value
 
-        // 유효성 검사
-        if (currentState.selectedPhotoUri.isNullOrBlank()) {
-            _uiState.update { it.copy(errorMessage = "사진을 선택해주세요") }
+        if (!isPresentState()) {
+            _uiState.update { it.copy(errorMessage = "과거 기록은 수정할 수 없습니다") }
             return
         }
 
-        if (currentState.score < 1 || currentState.score > 10) {
-            _uiState.update { it.copy(errorMessage = "점수는 1~10 사이여야 합니다") }
+        // 유효성 검사
+        if (currentState.selectedPhotoUri.isNullOrBlank()) {
+            _uiState.update { it.copy(errorMessage = "사진을 선택해주세요") }
             return
         }
 
@@ -105,7 +172,9 @@ class CreateMomentViewModel : ViewModel() {
             try {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-                if (currentState.isFeatured && savedRecords.any { it.isFeatured }) {
+                val hasFeaturedConflict = currentState.isFeatured &&
+                    savedRecords.any { it.isFeatured && it.id != editingRecordId }
+                if (hasFeaturedConflict) {
                     if (!currentState.allowFeaturedReplacement) {
                         _uiState.update {
                             it.copy(
@@ -116,7 +185,7 @@ class CreateMomentViewModel : ViewModel() {
                         return@launch
                     }
 
-                    clearFeaturedRecords()
+                    clearFeaturedRecords(editingRecordId)
                 }
 
 
@@ -124,19 +193,24 @@ class CreateMomentViewModel : ViewModel() {
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 val today = dateFormat.format(Date())
 
-                // DailyRecord 생성
+                val recordId = editingRecordId ?: UUID.randomUUID().toString()
+                val recordDate = editingRecordDate ?: today
                 val newRecord = DailyRecord(
-                    id = UUID.randomUUID().toString(),
+                    id = recordId,
                     photoUri = currentState.selectedPhotoUri ?: "",
                     memo = currentState.memo,
-                    score = currentState.score,
+                    score = savedRecords.find { it.id == recordId }?.score ?: DEFAULT_SCORE,
+                    cesMetrics = buildCesMetrics(currentState.cesInput),
                     meaning = currentState.meaning,
-                    date = today,
+                    date = recordDate,
                     isFeatured = currentState.isFeatured
                 )
 
-                // 메모리에 저장
-                addRecord(newRecord)
+                if (editingRecordId != null) {
+                    updateRecord(newRecord)
+                } else {
+                    addRecord(newRecord)
+                }
 
                 Log.d("CreateMomentViewModel", "Moment saved: ${newRecord.id}")
 
@@ -170,7 +244,9 @@ class CreateMomentViewModel : ViewModel() {
     }
 
     fun setFeatured(isFeatured: Boolean) {
-        if (isFeatured && savedRecords.any { it.isFeatured }) {
+        val currentEditId = editingRecordId
+        val hasOtherFeatured = savedRecords.any { it.isFeatured && it.id != currentEditId }
+        if (isFeatured && hasOtherFeatured) {
             _uiState.update {
                 it.copy(
                     isFeatured = false,
@@ -201,15 +277,70 @@ class CreateMomentViewModel : ViewModel() {
     }
 
     private fun clearFeaturedRecords() {
+        clearFeaturedRecords(null)
+    }
+
+    private fun clearFeaturedRecords(excludeId: String?) {
         for (index in savedRecords.indices) {
             val record = savedRecords[index]
-            if (record.isFeatured) {
+            if (record.isFeatured && record.id != excludeId) {
                 savedRecords[index] = record.copy(isFeatured = false)
             }
         }
     }
 
+    private fun updateRecord(updated: DailyRecord) {
+        val index = savedRecords.indexOfFirst { it.id == updated.id }
+        if (index == -1) {
+            savedRecords.add(updated)
+        } else {
+            savedRecords[index] = updated
+        }
+    }
+
+    private fun isRecordEditable(record: DailyRecord): Boolean {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        return record.date == today
+    }
+
+    private fun updateCesInput(transform: (CesInput) -> CesInput) {
+        _uiState.update { state ->
+            val updatedInput = transform(state.cesInput)
+            val weightedScore = calculateCesScore(updatedInput)
+            val description = describeCesScore(weightedScore)
+            state.copy(
+                cesInput = updatedInput,
+                cesWeightedScore = weightedScore,
+                cesDescription = description
+            )
+        }
+    }
+
+    private fun calculateCesScore(input: CesInput): Float {
+        val weightedScore = (0.5f * input.identity) +
+            (0.2f * input.connectivity) +
+            (0.3f * input.perspective)
+        return (weightedScore * 10f).toInt() / 10f
+    }
+
+    private fun describeCesScore(score: Float): String {
+        return when {
+            score <= 2.0f -> "낮음"
+            score <= 3.5f -> "보통"
+            else -> "높음"
+        }
+    }
+
+    private fun buildCesMetrics(input: CesInput): CesMetrics {
+        return CesMetrics(
+            identity = input.identity,
+            connectivity = input.connectivity,
+            perspective = input.perspective,
+            weightedScore = calculateCesScore(input)
+        )
+    }
+
+    private fun isPresentState(): Boolean = _uiState.value.timeState == TimeState.PRESENT
+
+
 }
-
-
-

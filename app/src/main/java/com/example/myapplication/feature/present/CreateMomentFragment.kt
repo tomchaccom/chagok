@@ -10,17 +10,18 @@ import android.provider.MediaStore
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.CompoundButton
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.os.bundleOf
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
-import android.widget.CompoundButton
-import androidx.appcompat.app.AlertDialog
 import com.example.myapplication.core.base.BaseFragment
 import com.example.myapplication.core.util.ImageUtils
 import com.example.myapplication.databinding.FragmentCreateMomentBinding
@@ -36,7 +37,7 @@ import java.util.*
  * 기능:
  * - 사진 선택 (갤러리 / 카메라)
  * - 메모 입력
- * - 점수 선택 (1~10)
+ * - CES 지수 입력 (Identity, Connectivity, Perspective)
  * - 대표 기억 체크
  * - 저장 후 PresentFragment로 복귀
  */
@@ -92,8 +93,12 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        arguments?.getString(ARG_EDIT_RECORD_ID)?.let { recordId ->
+            viewModel.startEdit(recordId)
+        }
+
         setupToolbar()
-        setupSlider()
+        setupCesSliders() // CES 슬라이더 설정으로 변경
         setupPhotoButtons()
         setupMemoInput()
         setupFeaturedCheckbox()
@@ -109,18 +114,42 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         }
     }
 
-    private fun setupSlider() {
-        binding.scoreSlider.valueFrom = 1f
-        binding.scoreSlider.valueTo = 10f
-
-        binding.scoreSlider.addOnChangeListener { _, value, _ ->
-            val score = value.toInt()
-            binding.scoreValue.text = score.toString()
-            viewModel.setScore(score)
+    /**
+     * CES(Identity, Connectivity, Perspective) 슬라이더 초기화
+     */
+    private fun setupCesSliders() {
+        // 1. Identity Slider
+        binding.identitySlider.apply {
+            valueFrom = 1f
+            valueTo = 5f
+            stepSize = 1f
+            addOnChangeListener { _, value, _ ->
+                binding.identityValue.text = value.toInt().toString()
+                viewModel.setCesIdentity(value.toInt())
+            }
         }
 
-        binding.scoreSlider.value = viewModel.uiState.value.score.toFloat()
-        binding.scoreValue.text = viewModel.uiState.value.score.toString()
+        // 2. Connectivity Slider
+        binding.connectivitySlider.apply {
+            valueFrom = 1f
+            valueTo = 5f
+            stepSize = 1f
+            addOnChangeListener { _, value, _ ->
+                binding.connectivityValue.text = value.toInt().toString()
+                viewModel.setCesConnectivity(value.toInt())
+            }
+        }
+
+        // 3. Perspective Slider
+        binding.perspectiveSlider.apply {
+            valueFrom = 1f
+            valueTo = 5f
+            stepSize = 1f
+            addOnChangeListener { _, value, _ ->
+                binding.perspectiveValue.text = value.toInt().toString()
+                viewModel.setCesPerspective(value.toInt())
+            }
+        }
     }
 
     private fun setupPhotoButtons() {
@@ -210,14 +239,12 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     }
 
     private fun handleSelectedPhoto(uri: Uri) {
-        // EXIF 방향 정보를 반영한 Bitmap으로 보정 후 캐시에 저장합니다.
         val correctedBitmap = ImageUtils.fixImageOrientation(requireContext(), uri)
         val correctedUri = correctedBitmap?.let { saveBitmapToCache(it) } ?: uri
         viewModel.setSelectedPhoto(correctedUri.toString())
     }
 
     private fun saveBitmapToCache(bitmap: Bitmap): Uri {
-        // 메모리에 저장할 때도 회전이 반영된 이미지를 사용하기 위해 캐시에 저장합니다.
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val file = File(requireContext().externalCacheDir, "IMG_${timeStamp}.jpg")
         FileOutputStream(file).use { output ->
@@ -237,7 +264,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
 
-                    // 사진 미리보기
+                    // 1. 사진 미리보기
                     if (!state.selectedPhotoUri.isNullOrBlank()) {
                         binding.photoPreview.setImageURI(state.selectedPhotoUri.toUri())
                         binding.photoPlaceholder.isVisible = false
@@ -245,30 +272,56 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                         binding.photoPlaceholder.isVisible = true
                     }
 
-                    // 버튼 상태
+                    // 2. CES 값 및 총점 업데이트
+                    binding.identityValue.text = state.cesInput.identity.toString()
+                    binding.connectivityValue.text = state.cesInput.connectivity.toString()
+                    binding.perspectiveValue.text = state.cesInput.perspective.toString()
+
+                    if (binding.memoEditText.text?.toString() != state.memo) {
+                        binding.memoEditText.setText(state.memo)
+                        binding.memoEditText.setSelection(state.memo.length)
+                    }
+
+                    binding.cesScoreValue.text = "${state.cesWeightedScore}점"
+                    binding.cesScoreDescription.text = state.cesDescription
+
+                    // 슬라이더 값 동기화 (ViewModel 상태와 UI 일치)
+                    if (binding.identitySlider.value != state.cesInput.identity.toFloat()) {
+                        binding.identitySlider.value = state.cesInput.identity.toFloat()
+                    }
+                    if (binding.connectivitySlider.value != state.cesInput.connectivity.toFloat()) {
+                        binding.connectivitySlider.value = state.cesInput.connectivity.toFloat()
+                    }
+                    if (binding.perspectiveSlider.value != state.cesInput.perspective.toFloat()) {
+                        binding.perspectiveSlider.value = state.cesInput.perspective.toFloat()
+                    }
+
+                    // 3. 버튼 상태
                     val enabled = !state.isLoading
                     binding.changePhotoButton.isEnabled = enabled
                     binding.cameraButton.isEnabled = enabled
                     binding.saveMomentButton.isEnabled = enabled
 
-                    // 에러
+                    // 4. 에러 처리
                     state.errorMessage?.let {
                         showToast(it)
                         viewModel.clearErrorMessage()
                     }
+
+                    // 5. 대표 기억 체크박스
                     if (binding.featuredCheckbox.isChecked != state.isFeatured) {
                         binding.featuredCheckbox.setOnCheckedChangeListener(null)
                         binding.featuredCheckbox.isChecked = state.isFeatured
                         binding.featuredCheckbox.setOnCheckedChangeListener(featuredCheckedChangeListener)
                     }
 
+                    // 6. 대표 기억 충돌 다이얼로그
                     if (state.showFeaturedConflictDialog) {
                         viewModel.consumeFeaturedConflictDialog()
                         showFeaturedConflictDialog()
                     }
 
-
-                    // 저장 완료
+                    // 7. 저장 완료
                     if (state.savedSuccessfully) {
                         showToast("순간이 저장되었습니다")
                         viewModel.resetSavedState()
@@ -278,6 +331,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
             }
         }
     }
+
     private fun showFeaturedConflictDialog() {
         AlertDialog.Builder(requireContext())
             .setMessage("이미 대표 기억이 설정되어 있습니다.\n현재 이미지를 대표 기억으로 변경하시겠습니까?")
@@ -288,5 +342,15 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                 viewModel.confirmFeaturedReplacement(false)
             }
             .show()
+    }
+
+    companion object {
+        private const val ARG_EDIT_RECORD_ID = "arg_edit_record_id"
+
+        fun newInstance(recordId: String): CreateMomentFragment {
+            return CreateMomentFragment().apply {
+                arguments = bundleOf(ARG_EDIT_RECORD_ID to recordId)
+            }
+        }
     }
 }

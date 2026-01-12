@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.core.util.ImageUtils
 import com.example.myapplication.databinding.ItemRecordBinding
+import java.util.Locale
 
 class RecordAdapter : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(RecordDiffCallback()) {
 
@@ -26,8 +27,7 @@ class RecordAdapter : ListAdapter<DailyRecord, RecordAdapter.RecordViewHolder>(R
             // 메모 표시
             binding.recordMemo.text = if (record.memo.isNotEmpty()) record.memo else "(메모 없음)"
 
-            // 점수 표시
-            binding.recordScoreBadge.text = String.format("⭐ %d", record.score)
+            binding.recordCesValue.text = String.format(Locale.getDefault(), "%.1f", record.cesMetrics.weightedScore)
 
             // 날짜 표시
             binding.recordDate.text = record.date
