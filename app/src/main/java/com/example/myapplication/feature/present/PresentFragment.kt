@@ -42,18 +42,7 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         binding.addRecordIcon.visibility = View.VISIBLE
 
         // CreateMomentFragment에서 돌아올 때 데이터 갱신
-        refreshRecordsList()
-    }
-
-    private fun refreshRecordsList() {
-        // CreateMomentViewModel에서 저장된 기록들을 다시 로드하여 RecordAdapter 갱신
-        val savedRecords = CreateMomentViewModel.getSavedRecords()
-        if (savedRecords.isNotEmpty()) {
-            binding.emptyRecordCard.visibility = View.GONE
-            binding.recordsCarousel.visibility = View.VISIBLE
-            binding.recordsIndicator.visibility = View.VISIBLE
-            recordAdapter.submitList(savedRecords.toList())
-        }
+        viewModel.loadPresentData()
     }
 
     private fun setupRecyclerViews() {

@@ -93,9 +93,9 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         super.onViewCreated(view, savedInstanceState)
 
         setupToolbar()
-        setupSlider()
         setupPhotoButtons()
         setupMemoInput()
+        setupCesInputs()
         setupFeaturedCheckbox()
         setupSaveButton()
         observeUiState()
@@ -107,20 +107,6 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         binding.toolbar.setNavigationOnClickListener {
             parentFragmentManager.popBackStack()
         }
-    }
-
-    private fun setupSlider() {
-        binding.scoreSlider.valueFrom = 1f
-        binding.scoreSlider.valueTo = 10f
-
-        binding.scoreSlider.addOnChangeListener { _, value, _ ->
-            val score = value.toInt()
-            binding.scoreValue.text = score.toString()
-            viewModel.setScore(score)
-        }
-
-        binding.scoreSlider.value = viewModel.uiState.value.score.toFloat()
-        binding.scoreValue.text = viewModel.uiState.value.score.toString()
     }
 
     private fun setupPhotoButtons() {
@@ -146,6 +132,35 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                 viewModel.setMemo(s.toString())
             }
         })
+    }
+
+    private fun setupCesInputs() {
+        binding.identitySlider.valueFrom = 1f
+        binding.identitySlider.valueTo = 5f
+        binding.identitySlider.stepSize = 1f
+
+        binding.connectivitySlider.valueFrom = 1f
+        binding.connectivitySlider.valueTo = 5f
+        binding.connectivitySlider.stepSize = 1f
+
+        binding.perspectiveSlider.valueFrom = 1f
+        binding.perspectiveSlider.valueTo = 5f
+        binding.perspectiveSlider.stepSize = 1f
+
+        binding.identitySlider.addOnChangeListener { _, value, _ ->
+            viewModel.setCesIdentity(value.toInt())
+        }
+        binding.connectivitySlider.addOnChangeListener { _, value, _ ->
+            viewModel.setCesConnectivity(value.toInt())
+        }
+        binding.perspectiveSlider.addOnChangeListener { _, value, _ ->
+            viewModel.setCesPerspective(value.toInt())
+        }
+
+        val state = viewModel.uiState.value
+        binding.identitySlider.value = state.cesInput.identity.toFloat()
+        binding.connectivitySlider.value = state.cesInput.connectivity.toFloat()
+        binding.perspectiveSlider.value = state.cesInput.perspective.toFloat()
     }
 
     private fun setupFeaturedCheckbox() {
@@ -274,6 +289,27 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                         viewModel.resetSavedState()
                         parentFragmentManager.popBackStack()
                     }
+
+                    binding.identityValue.text = state.cesInput.identity.toString()
+                    binding.connectivityValue.text = state.cesInput.connectivity.toString()
+                    binding.perspectiveValue.text = state.cesInput.perspective.toString()
+                    binding.cesScoreValue.text = state.cesWeightedScore.toString()
+                    binding.cesScoreDescription.text = state.cesDescription
+
+                    if (binding.identitySlider.value.toInt() != state.cesInput.identity) {
+                        binding.identitySlider.value = state.cesInput.identity.toFloat()
+                    }
+                    if (binding.connectivitySlider.value.toInt() != state.cesInput.connectivity) {
+                        binding.connectivitySlider.value = state.cesInput.connectivity.toFloat()
+                    }
+                    if (binding.perspectiveSlider.value.toInt() != state.cesInput.perspective) {
+                        binding.perspectiveSlider.value = state.cesInput.perspective.toFloat()
+                    }
+
+                    val cesEditable = state.timeState == com.example.myapplication.core.util.TimeState.PRESENT
+                    binding.identitySlider.isEnabled = cesEditable
+                    binding.connectivitySlider.isEnabled = cesEditable
+                    binding.perspectiveSlider.isEnabled = cesEditable
                 }
             }
         }
