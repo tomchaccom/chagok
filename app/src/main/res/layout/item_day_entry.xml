@@ -39,4 +39,12 @@
             android:textColor="#666666"/>
     </LinearLayout>
 
+    <ImageView
+        android:id="@+id/toDetail"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:src="@drawable/ic_arrow_forward_ios_24"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="back" />
+
 </LinearLayout>
