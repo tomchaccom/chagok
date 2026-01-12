@@ -7,7 +7,6 @@ package com.example.myapplication.feature.present
  *
  * @param selectedPhotoUri 사용자가 선택한 사진 URI (null이면 선택 안 됨)
  * @param memo 한 줄 메모 입력값
- * @param score 점수 (1~10)
  * @param meaning 기억 or 잊기
  * @param isFeatured 오늘의 대표 기억 체크 여부
  * @param showFeaturedConflictDialog 대표 기억 중복 선택 안내 다이얼로그 노출 여부
@@ -18,7 +17,10 @@ package com.example.myapplication.feature.present
 data class CreateMomentUiState(
     val selectedPhotoUri: String? = null,
     val memo: String = "",
-    val score: Int = 5, // 기본값: 중간값
+    val cesInput: CesInput = CesInput(),
+    val cesWeightedScore: Float = 3.0f,
+    val cesDescription: String = "보통",
+    val timeState: com.example.myapplication.core.util.TimeState = com.example.myapplication.core.util.TimeState.PRESENT,
     val meaning: Meaning = Meaning.REMEMBER,
     val isFeatured: Boolean = false,
     val showFeaturedConflictDialog: Boolean = false,

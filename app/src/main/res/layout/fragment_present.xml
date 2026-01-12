@@ -186,7 +186,7 @@
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/records_carousel"
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="320dp"
             android:layout_marginTop="16dp"
             app:layout_constraintTop_toBottomOf="@id/create_moment_button" />
 
