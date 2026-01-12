@@ -79,49 +79,68 @@
                 app:strokeColor="@color/border_divider"
                 app:strokeWidth="1dp">
 
-                <LinearLayout
+                <!-- 🔹 겹침을 위한 컨테이너 -->
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_height="wrap_content">
 
-                    <TextView
-                        android:id="@+id/explanation_letter"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:textAppearance="?attr/textAppearanceHeadlineMedium"
-                        android:textColor="@color/secondary_accent"
-                        android:textStyle="bold"
-                        tools:text="I" />
+                    <!-- 🟢 차곡이: 카드 우측 상단 -->
+                    <ImageView
+                        android:id="@+id/imgChagokHighlight"
+                        android:layout_width="90dp"
+                        android:layout_height="70dp"
+                        android:layout_gravity="top|end"
+                        android:layout_margin="12dp"
+                        android:src="@drawable/chagok_pho"
+                        android:contentDescription="@drawable/chagok_pho"
+                        android:alpha="0.95" />
 
-                    <TextView
-                        android:id="@+id/explanation_title"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textColor="@color/text_primary"
-                        android:textStyle="bold"
-                        tools:text="Identity · 나다운 기억" />
-
-                    <TextView
-                        android:id="@+id/explanation_body"
+                    <!-- 🔹 기존 카드 내용 -->
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:textAppearance="?attr/textAppearanceBodySmall"
-                        android:textColor="@color/text_secondary"
-                        tools:text="Identity measures how deeply this memory is embedded in who I am." />
+                        android:orientation="vertical"
+                        android:padding="16dp">
 
-                    <TextView
-                        android:id="@+id/explanation_guide"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp"
-                        android:textAppearance="?attr/textAppearanceBodySmall"
-                        android:textColor="@color/text_secondary"
-                        tools:text="This memory represents events that are essential when explaining who I am as a person." />
-                </LinearLayout>
+                        <TextView
+                            android:id="@+id/explanation_letter"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                            android:textColor="@color/secondary_accent"
+                            android:textStyle="bold"
+                            tools:text="I" />
+
+                        <TextView
+                            android:id="@+id/explanation_title"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textAppearance="?attr/textAppearanceTitleMedium"
+                            android:textColor="@color/text_primary"
+                            android:textStyle="bold"
+                            tools:text="Identity · 나다운 기억" />
+
+                        <TextView
+                            android:id="@+id/explanation_body"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:textColor="@color/text_secondary"
+                            tools:text="Identity measures how deeply this memory is embedded in who I am." />
+
+                        <TextView
+                            android:id="@+id/explanation_guide"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:textAppearance="?attr/textAppearanceBodySmall"
+                            android:textColor="@color/text_secondary"
+                            tools:text="This memory represents events that are essential when explaining who I am as a person." />
+                    </LinearLayout>
+
+                </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
@@ -150,14 +169,7 @@
                         android:textColor="@color/text_secondary"
                         android:textSize="14sp" />
 
-                    <ImageView
-                        android:id="@+id/imgChagokHighlight"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center_horizontal"
-                        android:layout_marginTop="12dp"
-                        android:adjustViewBounds="true"
-                        android:src="@drawable/chagok_mascot" />
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -173,6 +185,8 @@
             <include
                 android:id="@+id/section_perspective"
                 layout="@layout/item_highlight_section" />
+
+
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
