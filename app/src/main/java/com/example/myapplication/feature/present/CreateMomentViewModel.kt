@@ -30,11 +30,14 @@ class CreateMomentViewModel : ViewModel() {
     // 저장된 기록을 임시로 메모리에 보관 (싱글톤으로 변경 가능)
     companion object {
         private val savedRecords = mutableListOf<DailyRecord>()
+        private const val DEFAULT_SCORE = 5
 
         fun getSavedRecords(): List<DailyRecord> = savedRecords.toList()
+
         fun addRecord(record: DailyRecord) {
             savedRecords.add(record)
         }
+
         fun clearRecords() {
             savedRecords.clear()
         }
@@ -272,8 +275,5 @@ class CreateMomentViewModel : ViewModel() {
 
     private fun isPresentState(): Boolean = _uiState.value.timeState == TimeState.PRESENT
 
-    companion object {
-        private const val DEFAULT_SCORE = 5
-    }
 
 }
