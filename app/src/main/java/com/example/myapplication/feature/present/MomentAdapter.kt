@@ -18,6 +18,19 @@ class MomentAdapter(
     private var items: List<DailyRecord> = emptyList()
 ) : RecyclerView.Adapter<MomentAdapter.MomentViewHolder>() {
 
+    private var items: List<DailyRecord> = emptyList()
+
+
+    fun setItems(newItems: List<DailyRecord>) {
+        items = newItems
+        notifyDataSetChanged()
+    }
+
+    override fun getItemCount(): Int = items.size
+
+    override fun onBindViewHolder(holder: MomentViewHolder, position: Int) {
+        holder.bind(items[position])
+    }
     inner class MomentViewHolder(private val binding: ItemMomentCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -55,12 +68,6 @@ class MomentAdapter(
         )
         return MomentViewHolder(binding)
     }
-
-    override fun onBindViewHolder(holder: MomentViewHolder, position: Int) {
-        holder.bind(items[position])
-    }
-
-    override fun getItemCount(): Int = items.size
 
     fun submitList(newItems: List<DailyRecord>) {
         items = newItems
