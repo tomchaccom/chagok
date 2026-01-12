@@ -77,7 +77,8 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
             selectedDate = LocalDate.of(year, month + 1, day)
             tvDate.setText(selectedDate.format(dateFormatter))
         }
-
+        
+        // 날짜 선택 탭에서 선택된 날짜를 보여줌 -> tvDate에 저장
         tvDate.setOnClickListener {
             DatePickerDialog(
                 contextWrapper,
@@ -93,7 +94,6 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
             .setCancelable(true)
             .create()
 
-        // 핵심 수정: Button -> ImageButton (XML에서 ImageButton으로 정의됨)
         dlgView.findViewById<View>(R.id.btnCancel).setOnClickListener {
             dialog.dismiss()
         }
