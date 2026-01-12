@@ -62,11 +62,15 @@ class HighlightViewModel(
         records: List<DailyRecord>,
         selector: (DailyRecord) -> Int
     ): HighlightRankSection {
+
         val sorted = records.sortedWith(
             compareByDescending<DailyRecord> { selector(it) }
                 .thenByDescending { parseDate(it.date) }
         )
-        val items = sorted.take(MAX_RANK_COUNT).mapIndexed { index, record ->
+
+        val topRecords = sorted.take(MAX_RANK_COUNT)
+
+        val items = topRecords.mapIndexed { index, record ->
             HighlightRankItem(
                 recordId = record.id,
                 rank = index + 1,
@@ -75,8 +79,25 @@ class HighlightViewModel(
                 score = selector(record)
             )
         }
-        return HighlightRankSection(metric = metric, items = items)
+
+        val graphPoints = topRecords.mapIndexed { index, record ->
+            HighlightGraphPoint(
+                label = "${index + 1}",
+                value = selector(record)
+            )
+        }
+
+        val canShowGraph = graphPoints.size >= 3
+
+        return HighlightRankSection(
+            metric = metric,
+            items = items,
+            graphPoints = graphPoints,
+            canShowGraph = canShowGraph
+        )
+
     }
+
 
     private fun parseDate(date: String): Long {
         return try {

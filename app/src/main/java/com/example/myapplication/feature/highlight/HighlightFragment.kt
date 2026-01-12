@@ -13,6 +13,15 @@ import com.example.myapplication.R
 import com.example.myapplication.core.base.BaseFragment
 import com.example.myapplication.databinding.FragmentHighlightBinding
 import kotlinx.coroutines.launch
+import com.example.myapplication.databinding.ItemHighlightSectionBinding
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+
+
 
 class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
 
@@ -145,22 +154,32 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
     }
 
     private fun bindSection(
-        sectionBinding: com.example.myapplication.databinding.ItemHighlightSectionBinding,
+        sectionBinding: ItemHighlightSectionBinding,
         section: HighlightRankSection?,
         adapter: HighlightRankAdapter
     ) {
         if (section == null) {
             adapter.submitList(emptyList())
+            sectionBinding.sectionGraphContainer.isVisible = false
+            sectionBinding.sectionGraphEmpty.isVisible = true
             return
         }
 
         sectionBinding.sectionTitle.text = section.metric.title
         adapter.submitList(section.items)
 
-        val hasGraphData = section.items.size >= MIN_GRAPH_POINTS
-        sectionBinding.sectionGraphContainer.isVisible = hasGraphData
-        sectionBinding.sectionGraphEmpty.isVisible = !hasGraphData
+        sectionBinding.sectionGraphContainer.isVisible = section.canShowGraph
+        sectionBinding.sectionGraphEmpty.isVisible = !section.canShowGraph
+
+        if (section.canShowGraph) {
+            bindBarChart(
+                chart = sectionBinding.sectionGraphChart,
+                points = section.graphPoints
+            )
+        }
     }
+
+
 
     private fun navigateToPresent(recordId: String) {
         val bottomNavigation = requireActivity()
@@ -181,4 +200,50 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
     companion object {
         private const val MIN_GRAPH_POINTS = 3
     }
+
+
+    private fun bindBarChart(
+        chart: BarChart,
+        points: List<HighlightGraphPoint>
+    ) {
+        val entries = points.mapIndexed { index, point ->
+            BarEntry(index.toFloat(), point.value.toFloat())
+        }
+
+        val dataSet = BarDataSet(entries, "").apply {
+            color = requireContext().getColor(R.color.primary)
+            valueTextSize = 10f
+            setDrawValues(true)
+        }
+
+        chart.data = BarData(dataSet).apply {
+            barWidth = 0.6f
+        }
+
+        chart.apply {
+            description.isEnabled = false
+            legend.isEnabled = false
+            setFitBars(true)
+            setDrawGridBackground(false)
+            axisRight.isEnabled = false
+
+            xAxis.apply {
+                position = XAxis.XAxisPosition.BOTTOM
+                setDrawGridLines(false)
+                granularity = 1f
+                valueFormatter = IndexAxisValueFormatter(
+                    points.map { it.label }
+                )
+            }
+
+            axisLeft.apply {
+                axisMinimum = 0f
+                granularity = 1f
+            }
+
+            animateY(500)
+            invalidate()
+        }
+    }
+
 }
