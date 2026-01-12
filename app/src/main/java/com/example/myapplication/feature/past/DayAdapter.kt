@@ -26,8 +26,8 @@ class DayAdapter(
     }
 
     override fun getItemId(position: Int): Long {
-        // 날짜 라벨을 기반으로 stable id 반환
-        return try { getItem(position).dateLabel.hashCode().toLong() } catch (_: Throwable) { position.toLong() }
+        // DayEntry에 포함된 고유 id 사용
+        return try { getItem(position).id } catch (_: Throwable) { position.toLong() }
     }
 
     override fun onBindViewHolder(holder: DayVH, position: Int) {
@@ -67,7 +67,7 @@ class DayAdapter(
 
 private class DayDiffCallback : DiffUtil.ItemCallback<DayEntry>() {
     override fun areItemsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean {
-        return oldItem.dateLabel == newItem.dateLabel
+        return oldItem.id == newItem.id
     }
 
     override fun areContentsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean {

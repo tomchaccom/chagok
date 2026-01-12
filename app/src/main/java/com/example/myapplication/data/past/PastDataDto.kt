@@ -18,6 +18,7 @@ data class PhotoItem(
  * 하루 단위 기록
  */
 data class DayEntry(
+    val id: Long,
     val dateLabel: String,      // "2024년 3월 20일"
     val dayMemo: String,        // 일자 기본 메모
     val photos: List<PhotoItem>
