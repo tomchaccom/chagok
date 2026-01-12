@@ -13,4 +13,24 @@
     <string name="past_tab_placeholder">과거 탭입니다</string>
     <string name="highlight_tab_placeholder">하이라이트 탭 (준비 중)</string>
     <string name="future_tab_placeholder">미래 탭입니다</string>
+    <string name="edit_moment">오늘의 기억 수정</string>
+    <string name="highlight_empty_state">아직 분석할 기억이 충분하지 않아요.</string>
+    <string name="highlight_score_label">I / C / P</string>
+    <string name="highlight_rank_photo">랭킹 사진</string>
+    <string name="highlight_rank_date_placeholder">날짜</string>
+    <string name="highlight_icp_badge_placeholder">I / C / P</string>
+    <string name="highlight_graph_title">TOP 5 기억 그래프</string>
+    <string name="highlight_graph_placeholder">점수와 날짜가 교차되는 순간을 부드럽게 보여줄 예정입니다.</string>
+    <string name="highlight_theme_identity">나다운 기억</string>
+    <string name="highlight_theme_connectivity">무의식의 나</string>
+    <string name="highlight_theme_perspective">가장 큰 영향</string>
+    <string name="highlight_theme_identity_title">나다운 기억</string>
+    <string name="highlight_theme_identity_body">이 테마는 ‘평소의 나’가 가장 잘 드러난 순간들을 기준으로 기억을 보여줍니다.</string>
+    <string name="highlight_theme_identity_guide">I : 감정과 선택이 강하게 드러난 순간\nC : 반복되며 나를 형성한 일상적 순간\nP : 평소의 나에서 벗어난 행동/결정</string>
+    <string name="highlight_theme_connectivity_title">무의식의 나</string>
+    <string name="highlight_theme_connectivity_body">이 테마는 무의식적으로 나를 이끌었던 기억을 중심으로 정리합니다.</string>
+    <string name="highlight_theme_connectivity_guide">I : 의식적으로 표현된 감정\nC : 무의식적으로 반복되는 선택\nP : 현재의 방향을 바꾼 순간</string>
+    <string name="highlight_theme_perspective_title">가장 큰 영향을 준 기억</string>
+    <string name="highlight_theme_perspective_body">이 테마는 현재의 나에게 큰 영향을 준 순간들을 다시 보여줍니다.</string>
+    <string name="highlight_theme_perspective_guide">I : 그때의 나의 결심\nC : 주변과의 연결이 만든 영향\nP : 이후의 변화를 만든 계기</string>
 </resources>

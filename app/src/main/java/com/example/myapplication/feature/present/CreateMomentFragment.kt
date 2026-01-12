@@ -15,6 +15,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.os.bundleOf
 import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
@@ -91,6 +92,10 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        arguments?.getString(ARG_EDIT_RECORD_ID)?.let { recordId ->
+            viewModel.startEdit(recordId)
+        }
 
         setupToolbar()
         setupCesSliders() // CES 슬라이더 설정으로 변경
@@ -272,6 +277,11 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                     binding.connectivityValue.text = state.cesInput.connectivity.toString()
                     binding.perspectiveValue.text = state.cesInput.perspective.toString()
 
+                    if (binding.memoEditText.text?.toString() != state.memo) {
+                        binding.memoEditText.setText(state.memo)
+                        binding.memoEditText.setSelection(state.memo.length)
+                    }
+
                     binding.cesScoreValue.text = "${state.cesWeightedScore}점"
                     binding.cesScoreDescription.text = state.cesDescription
 
@@ -332,5 +342,15 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
                 viewModel.confirmFeaturedReplacement(false)
             }
             .show()
+    }
+
+    companion object {
+        private const val ARG_EDIT_RECORD_ID = "arg_edit_record_id"
+
+        fun newInstance(recordId: String): CreateMomentFragment {
+            return CreateMomentFragment().apply {
+                arguments = bundleOf(ARG_EDIT_RECORD_ID to recordId)
+            }
+        }
     }
 }

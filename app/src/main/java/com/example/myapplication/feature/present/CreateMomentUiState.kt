@@ -27,5 +27,6 @@ data class CreateMomentUiState(
     val allowFeaturedReplacement: Boolean = false,
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
-    val savedSuccessfully: Boolean = false
+    val savedSuccessfully: Boolean = false,
+    val editMode: Boolean = false
 )
