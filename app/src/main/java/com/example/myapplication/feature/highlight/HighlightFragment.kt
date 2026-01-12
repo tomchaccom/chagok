@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContentProviderCompat
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -14,12 +16,14 @@ import com.example.myapplication.core.base.BaseFragment
 import com.example.myapplication.databinding.FragmentHighlightBinding
 import kotlinx.coroutines.launch
 import com.example.myapplication.databinding.ItemHighlightSectionBinding
-import com.github.mikephil.charting.charts.BarChart
-import com.github.mikephil.charting.data.BarEntry
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
+import androidx.core.content.ContextCompat
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.data.Entry
+import com.github.mikephil.charting.data.LineData
+import com.github.mikephil.charting.data.LineDataSet
+
 
 
 
@@ -172,10 +176,12 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         sectionBinding.sectionGraphEmpty.isVisible = !section.canShowGraph
 
         if (section.canShowGraph) {
-            bindBarChart(
+            bindLineChart(
                 chart = sectionBinding.sectionGraphChart,
-                points = section.graphPoints
+                points = section.graphPoints,
+                metric = section.metric
             )
+
         }
     }
 
@@ -202,35 +208,40 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
     }
 
 
-    private fun bindBarChart(
-        chart: BarChart,
-        points: List<HighlightGraphPoint>
+    private fun bindLineChart(
+        chart: LineChart,
+        points: List<HighlightGraphPoint>,
+        metric: HighlightMetric
     ) {
+        val color = getGraphColor(metric)
+
         val entries = points.mapIndexed { index, point ->
-            BarEntry(index.toFloat(), point.value.toFloat())
+            Entry(index.toFloat(), point.value.toFloat())
         }
 
-        val dataSet = BarDataSet(entries, "").apply {
-            color = requireContext().getColor(R.color.primary)
-            valueTextSize = 10f
-            setDrawValues(true)
+        val dataSet = LineDataSet(entries, "").apply {
+            this.color = color
+            lineWidth = 2.5f
+
+            setDrawCircles(true)
+            circleRadius = 4f
+            setCircleColor(color)
+
+            setDrawValues(false)
+            mode = LineDataSet.Mode.CUBIC_BEZIER
         }
 
-        chart.data = BarData(dataSet).apply {
-            barWidth = 0.6f
-        }
+        chart.data = LineData(dataSet)
 
         chart.apply {
             description.isEnabled = false
             legend.isEnabled = false
-            setFitBars(true)
-            setDrawGridBackground(false)
             axisRight.isEnabled = false
 
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
-                setDrawGridLines(false)
                 granularity = 1f
+                setDrawGridLines(false)
                 valueFormatter = IndexAxisValueFormatter(
                     points.map { it.label }
                 )
@@ -241,9 +252,37 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
                 granularity = 1f
             }
 
-            animateY(500)
+            animateX(400)
             invalidate()
         }
     }
+    private fun getGraphColor(metric: HighlightMetric): Int {
+        return when (metric) {
+            HighlightMetric.IDENTITY ->
+                requireContext().resources.getColor(
+                    R.color.graph_identity,
+                    requireContext().theme
+                )
+
+            HighlightMetric.CONNECTIVITY ->
+                requireContext().resources.getColor(
+                    R.color.graph_connectivity,
+                    requireContext().theme
+                )
+
+            HighlightMetric.PERSPECTIVE ->
+                requireContext().resources.getColor(
+                    R.color.graph_perspective,
+                    requireContext().theme
+                )
+        }
+    }
+
 
 }
+
+
+
+
+
+
