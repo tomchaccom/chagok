@@ -87,7 +87,7 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
 
         // 빈 화면 카드 내의 "+" 아이콘
         // (기존 코드에서는 AddPracticeModal이었으나, UI상 '기록'이 없을 때 뜨는 카드이므로 기록 화면으로 이동이 자연스러움)
-        binding.addRecordIcon.setOnClickListener {
+        binding.imgChagokPresent.setOnClickListener {
             navigateToCreateMoment()
         }
     }
