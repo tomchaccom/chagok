@@ -5,22 +5,19 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.net.toUri
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.data.past.DayEntry
 import com.example.myapplication.data.past.PhotoItem
+import com.example.myapplication.util.ImageLoader
 
 class DayAdapter(
     private val onClick: (DayEntry) -> Unit
-) : RecyclerView.Adapter<DayAdapter.DayVH>() {
+) : ListAdapter<DayEntry, DayAdapter.DayVH>(DayDiffCallback()) {
 
-    private var items: List<DayEntry> = emptyList()
-
-    fun submitList(list: List<DayEntry>) {
-        items = list
-        notifyDataSetChanged()
-    }
+    private var thumbnailPx: Int = 0
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayVH {
         val v = LayoutInflater.from(parent.context)
@@ -28,11 +25,14 @@ class DayAdapter(
         return DayVH(v)
     }
 
-    override fun onBindViewHolder(holder: DayVH, position: Int) {
-        holder.bind(items[position])
+    override fun getItemId(position: Int): Long {
+        // 날짜 라벨을 기반으로 stable id 반환
+        return try { getItem(position).dateLabel.hashCode().toLong() } catch (_: Throwable) { position.toLong() }
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun onBindViewHolder(holder: DayVH, position: Int) {
+        holder.bind(getItem(position))
+    }
 
     inner class DayVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val ivThumb: ImageView = itemView.findViewById(R.id.ivThumb)
@@ -43,7 +43,7 @@ class DayAdapter(
             itemView.setOnClickListener {
                 val pos = bindingAdapterPosition
                 if (pos != RecyclerView.NO_POSITION) {
-                    onClick(items[pos])
+                    onClick(getItem(pos))
                 }
             }
         }
@@ -53,31 +53,24 @@ class DayAdapter(
             tvMemo.text = day.dayMemo
             val rep: PhotoItem? = day.representativePhoto
             if (rep != null) {
-                val ctx = ivThumb.context
-                val uriStr = rep.imageUri
-                try {
-                    if (uriStr.startsWith("android.resource://")) {
-                        val lastSeg = uriStr.substringAfterLast('/')
-                        val nameNoExt = lastSeg.substringBeforeLast('.', lastSeg)
-                        val sanitized = nameNoExt.replace(Regex("[^a-z0-9_]+"), "_").lowercase()
-                        val resId = ctx.resources.getIdentifier(sanitized, "drawable", ctx.packageName)
-                        if (resId != 0) {
-                            ivThumb.setImageResource(resId)
-                            ivThumb.visibility = View.VISIBLE
-                        } else {
-                            ivThumb.setImageURI(uriStr.toUri())
-                            ivThumb.visibility = View.VISIBLE
-                        }
-                    } else {
-                        ivThumb.setImageURI(uriStr.toUri())
-                        ivThumb.visibility = View.VISIBLE
-                    }
-                } catch (_: Exception) {
-                    ivThumb.setImageResource(android.R.drawable.ic_menu_report_image)
+                if (thumbnailPx == 0) {
+                    val density = itemView.context.resources.displayMetrics.density
+                    thumbnailPx = (56 * density).toInt()
                 }
+                ImageLoader.loadInto(ivThumb, rep.imageUri, R.drawable.ic_launcher_background, reqWidth = thumbnailPx, reqHeight = thumbnailPx)
             } else {
                 ivThumb.setImageResource(android.R.drawable.ic_menu_report_image)
             }
         }
+    }
+}
+
+private class DayDiffCallback : DiffUtil.ItemCallback<DayEntry>() {
+    override fun areItemsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean {
+        return oldItem.dateLabel == newItem.dateLabel
+    }
+
+    override fun areContentsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean {
+        return oldItem == newItem
     }
 }

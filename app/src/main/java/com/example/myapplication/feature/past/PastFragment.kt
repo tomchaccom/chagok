@@ -54,14 +54,54 @@ class PastFragment : Fragment() {
             viewModel.selectDay(day)
             showDetailFor(day)
         }
+        // stable id는 adapter에 설정
+        dayAdapter.setHasStableIds(true)
         rvDays.layoutManager = LinearLayoutManager(requireContext())
+        rvDays.setHasFixedSize(true)
+        rvDays.setItemViewCacheSize(20)
         rvDays.adapter = dayAdapter
+
+        // 스크롤 중에는 이미지 로더 일시중지하여 프레임 드랍 방지
+        rvDays.addOnScrollListener(object : androidx.recyclerview.widget.RecyclerView.OnScrollListener() {
+            override fun onScrollStateChanged(recyclerView: androidx.recyclerview.widget.RecyclerView, newState: Int) {
+                super.onScrollStateChanged(recyclerView, newState)
+                when (newState) {
+                    androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_DRAGGING,
+                    androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_SETTLING -> {
+                        com.example.myapplication.util.ImageLoader.setPaused(true)
+                    }
+                    androidx.recyclerview.widget.RecyclerView.SCROLL_STATE_IDLE -> {
+                        com.example.myapplication.util.ImageLoader.setPaused(false)
+                        // 보이는 항목만 RecyclerView의 바인딩 흐름을 통해 다시 그리도록 notifyItemChanged 사용
+                        val lm = recyclerView.layoutManager as? LinearLayoutManager
+                        if (lm != null) {
+                            val start = lm.findFirstVisibleItemPosition()
+                            val end = lm.findLastVisibleItemPosition()
+                            if (start >= 0 && end >= start) {
+                                // UI 스레드에서 안전하게 실행
+                                recyclerView.post {
+                                    for (i in start..end) {
+                                        if (i >= 0 && i < dayAdapter.itemCount) {
+                                            dayAdapter.notifyItemChanged(i)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        })
 
         // Photo grid
         photoAdapter = PhotoAdapter { position ->
             viewModel.togglePhoto(position)
         }
+        // stable id는 adapter에 설정
+        photoAdapter.setHasStableIds(true)
         rvPhotos.layoutManager = GridLayoutManager(requireContext(), 3)
+        rvPhotos.setHasFixedSize(true)
+        rvPhotos.setItemViewCacheSize(30)
         rvPhotos.adapter = photoAdapter
 
         btnBack.setOnClickListener {
@@ -71,6 +111,7 @@ class PastFragment : Fragment() {
 
         // Observe
         viewModel.days.observe(viewLifecycleOwner) { days ->
+            // submitList는 DiffUtil을 사용하므로 부분 갱신만 발생합니다.
             dayAdapter.submitList(days)
         }
 

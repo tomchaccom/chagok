@@ -5,28 +5,26 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
-import androidx.core.net.toUri
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.data.past.PhotoItem
+import com.example.myapplication.util.ImageLoader
 
 class PhotoAdapter(
     private val onPhotoClick: (position: Int) -> Unit
-) : RecyclerView.Adapter<PhotoAdapter.PhotoVH>() {
+) : ListAdapter<PhotoItem, PhotoAdapter.PhotoVH>(PhotoDiffCallback()) {
 
-    private var items: List<PhotoItem> = emptyList()
     private var selectedIndex: Int? = null
 
-    fun submitList(list: List<PhotoItem>) {
-        items = list
-        selectedIndex = null
-        notifyDataSetChanged()
-    }
-
     fun setSelectedIndex(index: Int?) {
+        val prev = selectedIndex
         selectedIndex = index
-        notifyDataSetChanged()
+        // 부분 갱신: 이전/현재 선택 항목만 갱신
+        if (prev != null) notifyItemChanged(prev)
+        if (index != null) notifyItemChanged(index)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PhotoVH {
@@ -36,10 +34,12 @@ class PhotoAdapter(
     }
 
     override fun onBindViewHolder(holder: PhotoVH, position: Int) {
-        holder.bind(items[position], position)
+        holder.bind(getItem(position), position)
     }
 
-    override fun getItemCount(): Int = items.size
+    override fun getItemId(position: Int): Long {
+        return try { getItem(position).imageUri.hashCode().toLong() } catch (_: Exception) { position.toLong() }
+    }
 
     inner class PhotoVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val ivPhoto: ImageView = itemView.findViewById(R.id.ivPhoto)
@@ -55,33 +55,25 @@ class PhotoAdapter(
         }
 
         fun bind(photo: PhotoItem, position: Int) {
-            val ctx = ivPhoto.context
-            val uriStr = photo.imageUri
-            try {
-                if (uriStr.startsWith("android.resource://")) {
-                    val lastSeg = uriStr.substringAfterLast('/')
-                    val nameNoExt = lastSeg.substringBeforeLast('.', lastSeg)
-                    val sanitized = nameNoExt.replace(Regex("[^a-z0-9_]+"), "_").lowercase()
-                    val resId = ctx.resources.getIdentifier(sanitized, "drawable", ctx.packageName)
-                    if (resId != 0) {
-                        ivPhoto.setImageResource(resId)
-                        ivPhoto.visibility = View.VISIBLE
-                    } else {
-                        ivPhoto.setImageURI(uriStr.toUri())
-                        ivPhoto.visibility = View.VISIBLE
-                    }
-                } else {
-                    ivPhoto.setImageURI(uriStr.toUri())
-                    ivPhoto.visibility = View.VISIBLE
-                }
-            } catch (_: Exception) {
-                ivPhoto.setImageResource(android.R.drawable.ic_menu_report_image)
-                ivPhoto.visibility = View.VISIBLE
-            }
+            // 썸네일 사이즈로 로드 (이미지뷰 높이 110dp -> 픽셀로 변환)
+            val density = itemView.context.resources.displayMetrics.density
+            val hPx = (110 * density).toInt()
+            ImageLoader.loadInto(ivPhoto, photo.imageUri, R.drawable.ic_launcher_background, reqWidth = hPx, reqHeight = hPx)
+            ivPhoto.visibility = View.VISIBLE
 
             val isSelected = (selectedIndex == position)
             overlay.isVisible = isSelected
             overlay.setBackgroundColor(if (isSelected) Color.parseColor("#330000FF") else Color.TRANSPARENT)
         }
+    }
+}
+
+private class PhotoDiffCallback : DiffUtil.ItemCallback<PhotoItem>() {
+    override fun areItemsTheSame(oldItem: PhotoItem, newItem: PhotoItem): Boolean {
+        return oldItem.imageUri == newItem.imageUri
+    }
+
+    override fun areContentsTheSame(oldItem: PhotoItem, newItem: PhotoItem): Boolean {
+        return oldItem == newItem
     }
 }
