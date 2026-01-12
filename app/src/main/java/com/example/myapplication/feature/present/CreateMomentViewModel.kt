@@ -26,6 +26,8 @@ class CreateMomentViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(CreateMomentUiState())
     val uiState: StateFlow<CreateMomentUiState> = _uiState.asStateFlow()
+    private var editingRecordId: String? = null
+    private var editingRecordDate: String? = null
 
     // 저장된 기록을 임시로 메모리에 보관 (싱글톤으로 변경 가능)
     companion object {
@@ -40,6 +42,45 @@ class CreateMomentViewModel : ViewModel() {
 
         fun clearRecords() {
             savedRecords.clear()
+        }
+    }
+
+    fun startEdit(recordId: String) {
+        val record = savedRecords.find { it.id == recordId }
+        if (record == null) {
+            _uiState.update { it.copy(errorMessage = "수정할 기록을 찾을 수 없습니다") }
+            return
+        }
+
+        if (!isRecordEditable(record)) {
+            _uiState.update { it.copy(errorMessage = "오늘 기록만 수정할 수 있습니다") }
+            return
+        }
+
+        editingRecordId = recordId
+        editingRecordDate = record.date
+        val cesInput = CesInput(
+            identity = record.cesMetrics.identity,
+            connectivity = record.cesMetrics.connectivity,
+            perspective = record.cesMetrics.perspective
+        )
+        val weightedScore = record.cesMetrics.weightedScore
+        _uiState.update {
+            it.copy(
+                selectedPhotoUri = record.photoUri,
+                memo = record.memo,
+                cesInput = cesInput,
+                cesWeightedScore = weightedScore,
+                cesDescription = describeCesScore(weightedScore),
+                meaning = record.meaning,
+                isFeatured = record.isFeatured,
+                editMode = true,
+                timeState = TimeState.PRESENT,
+                savedSuccessfully = false,
+                errorMessage = null,
+                showFeaturedConflictDialog = false,
+                allowFeaturedReplacement = false
+            )
         }
     }
 
@@ -131,7 +172,9 @@ class CreateMomentViewModel : ViewModel() {
             try {
                 _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
-                if (currentState.isFeatured && savedRecords.any { it.isFeatured }) {
+                val hasFeaturedConflict = currentState.isFeatured &&
+                    savedRecords.any { it.isFeatured && it.id != editingRecordId }
+                if (hasFeaturedConflict) {
                     if (!currentState.allowFeaturedReplacement) {
                         _uiState.update {
                             it.copy(
@@ -142,7 +185,7 @@ class CreateMomentViewModel : ViewModel() {
                         return@launch
                     }
 
-                    clearFeaturedRecords()
+                    clearFeaturedRecords(editingRecordId)
                 }
 
 
@@ -150,20 +193,24 @@ class CreateMomentViewModel : ViewModel() {
                 val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
                 val today = dateFormat.format(Date())
 
-                // DailyRecord 생성
+                val recordId = editingRecordId ?: UUID.randomUUID().toString()
+                val recordDate = editingRecordDate ?: today
                 val newRecord = DailyRecord(
-                    id = UUID.randomUUID().toString(),
+                    id = recordId,
                     photoUri = currentState.selectedPhotoUri ?: "",
                     memo = currentState.memo,
-                    score = DEFAULT_SCORE,
+                    score = savedRecords.find { it.id == recordId }?.score ?: DEFAULT_SCORE,
                     cesMetrics = buildCesMetrics(currentState.cesInput),
                     meaning = currentState.meaning,
-                    date = today,
+                    date = recordDate,
                     isFeatured = currentState.isFeatured
                 )
 
-                // 메모리에 저장
-                addRecord(newRecord)
+                if (editingRecordId != null) {
+                    updateRecord(newRecord)
+                } else {
+                    addRecord(newRecord)
+                }
 
                 Log.d("CreateMomentViewModel", "Moment saved: ${newRecord.id}")
 
@@ -197,7 +244,9 @@ class CreateMomentViewModel : ViewModel() {
     }
 
     fun setFeatured(isFeatured: Boolean) {
-        if (isFeatured && savedRecords.any { it.isFeatured }) {
+        val currentEditId = editingRecordId
+        val hasOtherFeatured = savedRecords.any { it.isFeatured && it.id != currentEditId }
+        if (isFeatured && hasOtherFeatured) {
             _uiState.update {
                 it.copy(
                     isFeatured = false,
@@ -228,12 +277,30 @@ class CreateMomentViewModel : ViewModel() {
     }
 
     private fun clearFeaturedRecords() {
+        clearFeaturedRecords(null)
+    }
+
+    private fun clearFeaturedRecords(excludeId: String?) {
         for (index in savedRecords.indices) {
             val record = savedRecords[index]
-            if (record.isFeatured) {
+            if (record.isFeatured && record.id != excludeId) {
                 savedRecords[index] = record.copy(isFeatured = false)
             }
         }
+    }
+
+    private fun updateRecord(updated: DailyRecord) {
+        val index = savedRecords.indexOfFirst { it.id == updated.id }
+        if (index == -1) {
+            savedRecords.add(updated)
+        } else {
+            savedRecords[index] = updated
+        }
+    }
+
+    private fun isRecordEditable(record: DailyRecord): Boolean {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        return record.date == today
     }
 
     private fun updateCesInput(transform: (CesInput) -> CesInput) {

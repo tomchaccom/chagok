@@ -13,4 +13,7 @@
     <string name="past_tab_placeholder">과거 탭입니다</string>
     <string name="highlight_tab_placeholder">하이라이트 탭 (준비 중)</string>
     <string name="future_tab_placeholder">미래 탭입니다</string>
+    <string name="edit_moment">오늘의 기억 수정</string>
+    <string name="highlight_empty_state">아직 분석할 기억이 충분하지 않아요.</string>
+    <string name="highlight_score_label">I / C / P</string>
 </resources>
