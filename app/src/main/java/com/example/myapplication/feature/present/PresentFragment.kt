@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
@@ -63,7 +64,9 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         binding.practicesRecyclerView.adapter = practiceAdapter
 
         // 2. Moment Carousel (ViewPager2) - 변경됨
-        momentAdapter = MomentAdapter()
+        momentAdapter = MomentAdapter { record ->
+            showEditMomentDialog(record)
+        }
         binding.recordsCarousel.apply {
             adapter = momentAdapter
             offscreenPageLimit = 1 // 양옆의 카드를 미리 로드하여 부드럽게
@@ -94,6 +97,38 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
             .replace(R.id.container, CreateMomentFragment()) // container ID 확인 필요
             .addToBackStack(null)
             .commit()
+    }
+
+    private fun navigateToEditMoment(record: DailyRecord) {
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.container, CreateMomentFragment.newInstance(record.id)) // container ID 확인 필요
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun showEditMomentDialog(record: DailyRecord) {
+        if (!record.isToday()) {
+            return
+        }
+
+        AlertDialog.Builder(requireContext())
+            .setMessage("오늘의 기억을 수정하시겠습니까?\n오늘만 수정이 가능합니다.")
+            .setNegativeButton("취소") { dialog, _ ->
+                dialog.dismiss()
+            }
+            .setPositiveButton("수정") { _, _ ->
+                navigateToEditMoment(record)
+            }
+            .show()
+    }
+
+    private fun DailyRecord.isToday(): Boolean {
+        if (date.isBlank()) {
+            return false
+        }
+        val today = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            .format(java.util.Date())
+        return date == today
     }
 
 

@@ -13,4 +13,5 @@
     <string name="past_tab_placeholder">과거 탭입니다</string>
     <string name="highlight_tab_placeholder">하이라이트 탭 (준비 중)</string>
     <string name="future_tab_placeholder">미래 탭입니다</string>
+    <string name="edit_moment">오늘의 기억 수정</string>
 </resources>
