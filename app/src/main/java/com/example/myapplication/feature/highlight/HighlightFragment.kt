@@ -94,6 +94,8 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         }
 
         sectionBinding.sectionTitle.text = section.metric.title
+        sectionBinding.sectionLetter.text = section.metric.letter
+        sectionBinding.sectionSubtitle.text = section.metric.subtitle
         adapter.submitList(section.items)
     }
 

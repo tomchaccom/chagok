@@ -16,14 +16,16 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:navigationIcon="@android:drawable/ic_menu_close_clear_cancel"
+            app:navigationIcon="@drawable/ic_close_24"
             app:title="순간 기록하기" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/record_scroll"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        android:fillViewport="true"
         app:layout_constraintTop_toBottomOf="@id/app_bar_layout"
         app:layout_constraintBottom_toTopOf="@id/save_moment_button"
         app:layout_constraintStart_toStartOf="parent"
@@ -32,17 +34,42 @@
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp">
+            android:padding="20dp">
+
+            <TextView
+                android:id="@+id/record_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:text="오늘의 기억"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="@color/text_primary"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <TextView
+                android:id="@+id/record_subtitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="6dp"
+                android:text="차분한 순간을 사진과 한 줄로 남겨보세요."
+                android:textColor="@color/text_secondary"
+                android:textSize="13sp"
+                app:layout_constraintTop_toBottomOf="@id/record_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/photo_card"
                 android:layout_width="0dp"
-                android:layout_height="250dp"
+                android:layout_height="240dp"
+                android:layout_marginTop="20dp"
                 app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
+                app:cardCornerRadius="18dp"
+                app:cardElevation="1dp"
                 app:strokeColor="@color/border_divider"
                 app:strokeWidth="1dp"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/record_subtitle"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
@@ -57,14 +84,28 @@
                         android:scaleType="centerCrop"
                         tools:ignore="ContentDescription" />
 
-                    <TextView
-                        android:id="@+id/photo_placeholder"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:drawableTop="@android:drawable/ic_menu_camera"
-                        android:drawablePadding="8dp"
-                        android:text="사진을 추가해주세요" />
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:orientation="vertical">
+
+                        <ImageView
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:src="@drawable/ic_add_24"
+                            android:tint="@color/secondary_accent"
+                            tools:ignore="ContentDescription" />
+
+                        <TextView
+                            android:id="@+id/photo_placeholder"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="사진을 추가해주세요"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="13sp" />
+                    </LinearLayout>
                 </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -72,48 +113,72 @@
                 android:id="@+id/photo_buttons_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="-24dp"
-                android:orientation="horizontal"
+                android:layout_marginTop="12dp"
                 android:gravity="end"
+                android:orientation="horizontal"
                 app:layout_constraintTop_toBottomOf="@id/photo_card"
+                app:layout_constraintStart_toStartOf="@id/photo_card"
                 app:layout_constraintEnd_toEndOf="@id/photo_card">
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/camera_button"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="8dp"
-                    android:backgroundTint="@color/surface"
-                    android:text="카메라" />
+                    android:text="카메라"
+                    app:strokeColor="@color/border_divider"
+                    app:iconTint="@color/secondary_accent"
+                    app:cornerRadius="12dp" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/change_photo_button"
-                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:backgroundTint="@color/surface"
-                    android:text="갤러리" />
+                    android:text="갤러리"
+                    app:strokeColor="@color/border_divider"
+                    app:iconTint="@color/secondary_accent"
+                    app:cornerRadius="12dp" />
             </LinearLayout>
 
-            <CheckBox
-                android:id="@+id/featured_checkbox"
-                android:layout_width="wrap_content"
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/featured_card"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="대표 기억으로 설정"
+                app:cardBackgroundColor="@color/surface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/border_divider"
+                app:strokeWidth="1dp"
                 app:layout_constraintTop_toBottomOf="@id/photo_buttons_layout"
-                app:layout_constraintStart_toStartOf="parent" />
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
 
-            <TextView
-                android:id="@+id/featured_helper_text"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="오늘을 대표할 기억으로 고정됩니다."
-                android:textColor="@color/text_secondary"
-                android:textSize="12sp"
-                app:layout_constraintTop_toBottomOf="@id/featured_checkbox"
-                app:layout_constraintStart_toStartOf="@id/featured_checkbox" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <CheckBox
+                        android:id="@+id/featured_checkbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="대표 기억으로 설정"
+                        android:textColor="@color/text_primary" />
+
+                    <TextView
+                        android:id="@+id/featured_helper_text"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="오늘을 대표할 기억으로 고정됩니다."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
             <TextView
                 android:id="@+id/memo_label"
@@ -121,7 +186,8 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
                 android:text="이 순간을 한 줄로 남겨보세요"
-                app:layout_constraintTop_toBottomOf="@id/featured_helper_text"
+                android:textColor="@color/text_primary"
+                app:layout_constraintTop_toBottomOf="@id/featured_card"
                 app:layout_constraintStart_toStartOf="parent" />
 
             <com.google.android.material.textfield.TextInputLayout
@@ -130,6 +196,12 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
+                app:boxBackgroundColor="@color/surface"
+                app:boxStrokeColor="@color/border_divider"
+                app:boxCornerRadiusTopStart="14dp"
+                app:boxCornerRadiusTopEnd="14dp"
+                app:boxCornerRadiusBottomStart="14dp"
+                app:boxCornerRadiusBottomEnd="14dp"
                 app:layout_constraintTop_toBottomOf="@id/memo_label"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
@@ -138,15 +210,15 @@
                     android:id="@+id/memo_edit_text"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="짧은 메모를 작성해보세요…" />
+                    android:hint="짧은 메모를 작성해보세요…"
+                    android:minLines="3" />
             </com.google.android.material.textfield.TextInputLayout>
-
 
             <TextView
                 android:id="@+id/ces_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
+                android:layout_marginTop="24dp"
                 android:text="CES 지수 측정"
                 android:textSize="18sp"
                 android:textStyle="bold"
@@ -161,6 +233,7 @@
                 android:layout_marginTop="12dp"
                 app:cardBackgroundColor="@color/surface"
                 app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
                 app:strokeColor="@color/border_divider"
                 app:strokeWidth="1dp"
                 app:layout_constraintTop_toBottomOf="@id/ces_label"
@@ -210,7 +283,7 @@
                             android:text="1"
                             android:textColor="@color/secondary_accent"
                             android:textSize="16sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <com.google.android.material.slider.Slider
@@ -220,14 +293,20 @@
                         android:valueFrom="1"
                         android:valueTo="5"
                         android:stepSize="1"
-                        android:value="1"/>
+                        android:value="1" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="@color/border_divider" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="16dp">
+                        android:gravity="center_vertical">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -260,7 +339,7 @@
                             android:text="1"
                             android:textColor="@color/secondary_accent"
                             android:textSize="16sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <com.google.android.material.slider.Slider
@@ -270,14 +349,20 @@
                         android:valueFrom="1"
                         android:valueTo="5"
                         android:stepSize="1"
-                        android:value="1"/>
+                        android:value="1" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginBottom="8dp"
+                        android:background="@color/border_divider" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginTop="16dp">
+                        android:gravity="center_vertical">
 
                         <LinearLayout
                             android:layout_width="0dp"
@@ -310,7 +395,7 @@
                             android:text="1"
                             android:textColor="@color/secondary_accent"
                             android:textSize="16sp"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                     <com.google.android.material.slider.Slider
@@ -320,14 +405,14 @@
                         android:valueFrom="1"
                         android:valueTo="5"
                         android:stepSize="1"
-                        android:value="1"/>
+                        android:value="1" />
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
-                        android:layout_marginTop="8dp"
+                        android:layout_marginTop="12dp"
                         android:layout_marginBottom="16dp"
-                        android:background="@color/border_divider"/>
+                        android:background="@color/border_divider" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -341,9 +426,12 @@
                             android:layout_height="wrap_content"
                             android:text="종합 CES 점수"
                             android:textStyle="bold"
-                            android:textSize="16sp"/>
+                            android:textSize="16sp" />
 
-                        <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="0dp"/>
+                        <View
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="0dp" />
 
                         <TextView
                             android:id="@+id/ces_score_value"
@@ -352,7 +440,7 @@
                             android:text="0점"
                             android:textSize="18sp"
                             android:textColor="@color/secondary_accent"
-                            android:textStyle="bold"/>
+                            android:textStyle="bold" />
 
                         <TextView
                             android:id="@+id/ces_score_description"
@@ -361,7 +449,7 @@
                             android:layout_marginStart="8dp"
                             android:text="(낮음)"
                             android:textColor="@color/text_secondary"
-                            android:textSize="14sp"/>
+                            android:textSize="14sp" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -375,10 +463,10 @@
         android:layout_height="wrap_content"
         android:layout_margin="16dp"
         android:backgroundTint="@color/secondary_accent"
-        android:padding="12dp"
+        android:padding="14dp"
         android:text="이 순간 저장하기"
         android:textColor="@color/surface"
-        app:cornerRadius="14dp"
+        app:cornerRadius="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

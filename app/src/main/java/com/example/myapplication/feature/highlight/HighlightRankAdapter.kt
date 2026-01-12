@@ -19,6 +19,10 @@ class HighlightRankAdapter(
             binding.rankMemo.text = if (item.memo.isNotBlank()) item.memo else "메모가 없습니다."
             binding.rankScore.text = item.score.toString()
 
+            val normalizedScore = (item.score.coerceIn(1, 10) - 1) / 9f
+            binding.rankEmphasis.alpha = 0.4f + normalizedScore * 0.6f
+            binding.rankEmphasis.scaleY = 0.7f + normalizedScore * 0.3f
+
             if (item.photoUri.isNotBlank()) {
                 binding.rankPhoto.setImageURI(Uri.parse(item.photoUri))
             } else {
