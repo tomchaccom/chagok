@@ -113,26 +113,31 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
                 letter = R.string.highlight_metric_letter_identity,
                 title = R.string.highlight_theme_identity_title,
                 body = R.string.highlight_theme_identity_body,
-                guide = R.string.highlight_theme_identity_guide
+                guide = 0
             )
             HighlightMetric.CONNECTIVITY -> ThemeExplanation(
                 letter = R.string.highlight_metric_letter_connectivity,
                 title = R.string.highlight_theme_connectivity_title,
                 body = R.string.highlight_theme_connectivity_body,
-                guide = R.string.highlight_theme_connectivity_guide
+                guide = 0
             )
             HighlightMetric.PERSPECTIVE -> ThemeExplanation(
                 letter = R.string.highlight_metric_letter_perspective,
                 title = R.string.highlight_theme_perspective_title,
                 body = R.string.highlight_theme_perspective_body,
-                guide = R.string.highlight_theme_perspective_guide
+                guide = 0
             )
         }
 
         binding.explanationLetter.setText(explanation.letter)
         binding.explanationTitle.setText(explanation.title)
         binding.explanationBody.setText(explanation.body)
-        binding.explanationGuide.setText(explanation.guide)
+        if (explanation.guide == 0) {
+            binding.explanationGuide.isVisible = false
+        } else {
+            binding.explanationGuide.isVisible = true
+            binding.explanationGuide.setText(explanation.guide)
+        }
 
         binding.sectionIdentity.root.isVisible = metric == HighlightMetric.IDENTITY
         binding.sectionConnectivity.root.isVisible = metric == HighlightMetric.CONNECTIVITY

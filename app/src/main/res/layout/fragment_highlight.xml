@@ -22,37 +22,51 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <com.google.android.material.button.MaterialButtonToggleGroup
-                android:id="@+id/theme_toggle_group"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="12dp"
-                app:singleSelection="true">
+                app:cardBackgroundColor="@color/surface"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                app:strokeColor="@color/border_divider"
+                app:strokeWidth="1dp">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/theme_identity_button"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/theme_toggle_group"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/highlight_theme_identity" />
+                    android:padding="4dp"
+                    app:singleSelection="true">
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/theme_connectivity_button"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/highlight_theme_connectivity" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/theme_identity_button"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/highlight_theme_identity"
+                        app:cornerRadius="999dp" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/theme_perspective_button"
-                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/highlight_theme_perspective" />
-            </com.google.android.material.button.MaterialButtonToggleGroup>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/theme_connectivity_button"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/highlight_theme_connectivity"
+                        app:cornerRadius="999dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/theme_perspective_button"
+                        style="@style/Widget.MaterialComponents.Button.TextButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/highlight_theme_perspective"
+                        app:cornerRadius="999dp" />
+                </com.google.android.material.button.MaterialButtonToggleGroup>
+            </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/highlight_explanation_card"
