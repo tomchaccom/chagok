@@ -127,13 +127,11 @@
                 android:padding="24dp">
 
                 <ImageView
-                    android:id="@+id/add_record_icon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/badge_background"
-                    android:padding="6dp"
-                    android:src="@android:drawable/ic_input_add"
-                    app:tint="@color/secondary_accent"
+                    android:id="@+id/imgChagokPresent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:adjustViewBounds="true"
+                    android:src="@drawable/chagok_mascot"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
@@ -146,7 +144,7 @@
                     android:text="아직 기록하지 않으셨나요?"
                     android:textSize="16sp"
                     android:textColor="@color/text_primary"
-                    app:layout_constraintTop_toBottomOf="@id/add_record_icon"
+                    app:layout_constraintTop_toBottomOf="@id/imgChagokPresent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent" />
 
