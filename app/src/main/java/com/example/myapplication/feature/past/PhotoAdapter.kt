@@ -5,9 +5,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import androidx.core.net.toUri
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
 import com.example.myapplication.R
 import com.example.myapplication.data.past.PhotoItem
 
@@ -47,15 +47,36 @@ class PhotoAdapter(
 
         init {
             itemView.setOnClickListener {
-                onPhotoClick(adapterPosition)
+                val pos = bindingAdapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    onPhotoClick(pos)
+                }
             }
         }
 
         fun bind(photo: PhotoItem, position: Int) {
-            ivPhoto.load(photo.imageUri) {
-                crossfade(true)
-                placeholder(R.drawable.ic_launcher_background)
-                error(android.R.drawable.ic_menu_report_image)
+            val ctx = ivPhoto.context
+            val uriStr = photo.imageUri
+            try {
+                if (uriStr.startsWith("android.resource://")) {
+                    val lastSeg = uriStr.substringAfterLast('/')
+                    val nameNoExt = lastSeg.substringBeforeLast('.', lastSeg)
+                    val sanitized = nameNoExt.replace(Regex("[^a-z0-9_]+"), "_").lowercase()
+                    val resId = ctx.resources.getIdentifier(sanitized, "drawable", ctx.packageName)
+                    if (resId != 0) {
+                        ivPhoto.setImageResource(resId)
+                        ivPhoto.visibility = View.VISIBLE
+                    } else {
+                        ivPhoto.setImageURI(uriStr.toUri())
+                        ivPhoto.visibility = View.VISIBLE
+                    }
+                } else {
+                    ivPhoto.setImageURI(uriStr.toUri())
+                    ivPhoto.visibility = View.VISIBLE
+                }
+            } catch (_: Exception) {
+                ivPhoto.setImageResource(android.R.drawable.ic_menu_report_image)
+                ivPhoto.visibility = View.VISIBLE
             }
 
             val isSelected = (selectedIndex == position)

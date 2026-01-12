@@ -1,13 +1,12 @@
 package com.example.myapplication.feature.past
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.net.toUri
 import androidx.recyclerview.widget.RecyclerView
-import coil.load
 import com.example.myapplication.R
 import com.example.myapplication.data.past.DayEntry
 import com.example.myapplication.data.past.PhotoItem
@@ -42,7 +41,10 @@ class DayAdapter(
 
         init {
             itemView.setOnClickListener {
-                onClick(items[adapterPosition])
+                val pos = bindingAdapterPosition
+                if (pos != RecyclerView.NO_POSITION) {
+                    onClick(items[pos])
+                }
             }
         }
 
@@ -51,10 +53,27 @@ class DayAdapter(
             tvMemo.text = day.dayMemo
             val rep: PhotoItem? = day.representativePhoto
             if (rep != null) {
-                // Coil로 imageUri 로드 (android.resource 등 모두 처리)
-                ivThumb.load(rep.imageUri) {
-                    crossfade(true)
-                    placeholder(R.drawable.ic_launcher_background)
+                val ctx = ivThumb.context
+                val uriStr = rep.imageUri
+                try {
+                    if (uriStr.startsWith("android.resource://")) {
+                        val lastSeg = uriStr.substringAfterLast('/')
+                        val nameNoExt = lastSeg.substringBeforeLast('.', lastSeg)
+                        val sanitized = nameNoExt.replace(Regex("[^a-z0-9_]+"), "_").lowercase()
+                        val resId = ctx.resources.getIdentifier(sanitized, "drawable", ctx.packageName)
+                        if (resId != 0) {
+                            ivThumb.setImageResource(resId)
+                            ivThumb.visibility = View.VISIBLE
+                        } else {
+                            ivThumb.setImageURI(uriStr.toUri())
+                            ivThumb.visibility = View.VISIBLE
+                        }
+                    } else {
+                        ivThumb.setImageURI(uriStr.toUri())
+                        ivThumb.visibility = View.VISIBLE
+                    }
+                } catch (_: Exception) {
+                    ivThumb.setImageResource(android.R.drawable.ic_menu_report_image)
                 }
             } else {
                 ivThumb.setImageResource(android.R.drawable.ic_menu_report_image)

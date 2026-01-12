@@ -11,8 +11,6 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.myapplication.R
 import com.example.myapplication.data.past.PastRepository
-import com.example.myapplication.feature.past.DayAdapter
-import com.example.myapplication.feature.past.PhotoAdapter
 
 class PastFragment : Fragment() {
 
@@ -48,7 +46,7 @@ class PastFragment : Fragment() {
 
         // ViewModel: repository 주입용 factory 사용 (없으면 Hilt 또는 기본 생성자 사용)
         val repo = PastRepository(requireContext())
-        val factory = PastViewModelFactory(repo)
+        val factory = com.example.myapplication.feature.past.PastViewModelFactory(repo)
         viewModel = ViewModelProvider(this, factory).get(PastViewModel::class.java)
 
         // Day list

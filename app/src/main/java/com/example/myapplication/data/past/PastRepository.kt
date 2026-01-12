@@ -8,7 +8,7 @@ class PastRepository(private val context: Context) {
         val pkg = context.packageName
 
         fun drawableUri(name: String): String =
-            "android.resource://$pkg/drawable/past/$name"
+            "android.resource://$pkg/drawable/$name"
 
         return listOf(
             DayEntry(
