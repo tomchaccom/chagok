@@ -47,7 +47,7 @@
                 android:id="@+id/tvDetailDate"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2024년 3월 20일"
+                android:text="2002년 9월 7일"
                 android:textSize="18sp"
                 android:layout_gravity="center_vertical"
                 android:paddingStart="8dp"/>
@@ -75,7 +75,7 @@
                 android:id="@+id/tvMemoTitle"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="사진 메모"
+                android:text="오늘 메모"
                 android:textSize="12sp"
                 android:textColor="#888888"/>
 

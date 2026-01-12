@@ -17,7 +17,8 @@ class PastRepository(private val context: Context) {
                 photos = listOf(
                     PhotoItem(drawableUri("photo1"), "오늘 석양이 정말 멋졌어요."),
                     PhotoItem(drawableUri("photo2"), "구름이 인상적이었다."),
-                    PhotoItem(drawableUri("photo3"), "혼자 바라본 풍경.")
+                    PhotoItem(drawableUri("photo3"), "혼자 바라본 풍경."),
+                    PhotoItem(drawableUri("photo5"), "산책 중에 찍은 사진.")
                 )
             ),
             DayEntry(

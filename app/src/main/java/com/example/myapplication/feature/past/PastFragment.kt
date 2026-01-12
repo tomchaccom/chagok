@@ -9,6 +9,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import com.example.myapplication.R
 import com.example.myapplication.data.past.PastRepository
 
@@ -44,6 +46,20 @@ class PastFragment : Fragment() {
         tvMemoContent = view.findViewById(R.id.tvMemoContent)
         tvMemoTitle = view.findViewById(R.id.tvMemoTitle)
 
+        // 상태표시줄 등 시스템 인셋으로 뷰가 가려지는 문제 해결: 루트 뷰에 상단 인셋을 적용
+        val rootView = view.findViewById<View>(R.id.root)
+        // 초기 패딩을 저장해서 인셋 이벤트가 여러 번 발생해도 누적되지 않도록 함
+        val initialPaddingTop = rootView.paddingTop
+        val initialPaddingLeft = rootView.paddingLeft
+        val initialPaddingRight = rootView.paddingRight
+        val initialPaddingBottom = rootView.paddingBottom
+        ViewCompat.setOnApplyWindowInsetsListener(rootView) { v, insets ->
+            val statusBarTop = insets.getInsets(WindowInsetsCompat.Type.statusBars()).top
+            v.setPadding(initialPaddingLeft, initialPaddingTop + statusBarTop, initialPaddingRight, initialPaddingBottom)
+            insets
+        }
+        ViewCompat.requestApplyInsets(rootView)
+
         // ViewModel: repository 주입용 factory 사용 (없으면 Hilt 또는 기본 생성자 사용)
         val repo = PastRepository(requireContext())
         val factory = com.example.myapplication.feature.past.PastViewModelFactory(repo)
@@ -77,11 +93,11 @@ class PastFragment : Fragment() {
                         if (lm != null) {
                             val start = lm.findFirstVisibleItemPosition()
                             val end = lm.findLastVisibleItemPosition()
-                            if (start >= 0 && end >= start) {
+                            if (start in 0..end) {
                                 // UI 스레드에서 안전하게 실행
                                 recyclerView.post {
                                     for (i in start..end) {
-                                        if (i >= 0 && i < dayAdapter.itemCount) {
+                                        if (i < dayAdapter.itemCount) {
                                             dayAdapter.notifyItemChanged(i)
                                         }
                                     }
@@ -126,7 +142,7 @@ class PastFragment : Fragment() {
                 tvMemoContent.text = ""
             } else {
                 if (idx == null) {
-                    tvMemoTitle.text = "사진 메모"
+                    tvMemoTitle.text = "오늘 메모"
                     tvMemoContent.text = day.dayMemo
                 } else {
                     tvMemoTitle.text = "사진 메모"
@@ -146,7 +162,7 @@ class PastFragment : Fragment() {
         rvDays.visibility = View.GONE
         detailContainer.visibility = View.VISIBLE
         tvDetailDate.text = day.dateLabel
-        tvMemoTitle.text = "사진 메모"
+        tvMemoTitle.text = "오늘 메모"
         tvMemoContent.text = day.dayMemo
         photoAdapter.submitList(day.photos)
     }
