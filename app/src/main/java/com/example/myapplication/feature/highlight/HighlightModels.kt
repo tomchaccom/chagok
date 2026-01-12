@@ -1,31 +1,25 @@
 package com.example.myapplication.feature.highlight
 
-enum class HighlightType {
-    MASTERPIECE,
-    HIDDEN_DRIVER,
-    EMOTIONAL_ANCHOR
+enum class HighlightMetric(val title: String) {
+    IDENTITY("나다운 기억 TOP 5"),
+    CONNECTIVITY("무의식의 나 TOP 5"),
+    PERSPECTIVE("가장 큰 영향을 준 기억 TOP 5")
 }
 
-data class HighlightItem(
-    val type: HighlightType,
-    val title: String,
-    val description: String,
+data class HighlightRankItem(
+    val recordId: String,
+    val rank: Int,
     val photoUri: String,
     val memo: String,
-    val identityScore: Int,
-    val connectivityScore: Int,
-    val perspectiveScore: Int,
-    val recordId: String
+    val score: Int
 )
 
-data class HighlightSection(
-    val type: HighlightType,
-    val title: String,
-    val description: String,
-    val primary: HighlightItem?,
-    val secondary: List<HighlightItem> = emptyList()
+data class HighlightRankSection(
+    val metric: HighlightMetric,
+    val items: List<HighlightRankItem>
 )
 
 data class HighlightUiState(
-    val sections: List<HighlightSection> = emptyList()
+    val sections: List<HighlightRankSection> = emptyList(),
+    val showEmptyState: Boolean = true
 )

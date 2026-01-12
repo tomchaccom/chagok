@@ -44,16 +44,17 @@
                     android:textSize="14sp" />
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- TODO: ranking 섹션 디자인을 polish 할 수 있도록 여백과 색을 조정하세요. -->
             <include
-                android:id="@+id/section_masterpiece"
+                android:id="@+id/section_identity"
                 layout="@layout/item_highlight_section" />
 
             <include
-                android:id="@+id/section_hidden_driver"
+                android:id="@+id/section_connectivity"
                 layout="@layout/item_highlight_section" />
 
             <include
-                android:id="@+id/section_emotional_anchor"
+                android:id="@+id/section_perspective"
                 layout="@layout/item_highlight_section" />
 
         </LinearLayout>

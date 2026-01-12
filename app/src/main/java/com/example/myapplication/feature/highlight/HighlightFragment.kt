@@ -1,6 +1,5 @@
 package com.example.myapplication.feature.highlight
 
-import android.content.res.Resources
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,13 +12,14 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.myapplication.R
 import com.example.myapplication.core.base.BaseFragment
 import com.example.myapplication.databinding.FragmentHighlightBinding
-import com.example.myapplication.databinding.ItemHighlightSectionBinding
-import com.example.myapplication.feature.present.CreateMomentViewModel
 import kotlinx.coroutines.launch
 
 class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
 
     private val viewModel: HighlightViewModel by activityViewModels()
+    private lateinit var identityAdapter: HighlightRankAdapter
+    private lateinit var connectivityAdapter: HighlightRankAdapter
+    private lateinit var perspectiveAdapter: HighlightRankAdapter
 
     override fun inflateBinding(
         inflater: LayoutInflater,
@@ -30,130 +30,79 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupAdapters()
         observeUiState()
-        refreshData()
     }
 
     override fun onResume() {
         super.onResume()
-        refreshData()
-    }
-
-    private fun refreshData() {
-        val records = CreateMomentViewModel.getSavedRecords()
-        viewModel.refreshIfNeeded(records)
+        viewModel.refreshIfNeeded()
     }
 
     private fun observeUiState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    val sections = state.sections
-                    val hasSections = sections.isNotEmpty()
-                    binding.highlightEmptyCard.isVisible = !hasSections
-
-                    bindSection(
-                        binding.sectionMasterpiece,
-                        sections.firstOrNull { it.type == HighlightType.MASTERPIECE }
-                    )
-                    bindSection(
-                        binding.sectionHiddenDriver,
-                        sections.firstOrNull { it.type == HighlightType.HIDDEN_DRIVER }
-                    )
-                    bindSection(
-                        binding.sectionEmotionalAnchor,
-                        sections.firstOrNull { it.type == HighlightType.EMOTIONAL_ANCHOR }
-                    )
-
-                    emphasizeTopScore(sections)
+                    binding.highlightEmptyCard.isVisible = state.showEmptyState
+                    bindSections(state.sections)
                 }
             }
         }
     }
 
+    private fun setupAdapters() {
+        identityAdapter = HighlightRankAdapter { item ->
+            navigateToPresent(item.recordId)
+        }
+        connectivityAdapter = HighlightRankAdapter { item ->
+            navigateToPresent(item.recordId)
+        }
+        perspectiveAdapter = HighlightRankAdapter { item ->
+            navigateToPresent(item.recordId)
+        }
+
+        binding.sectionIdentity.sectionList.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+        binding.sectionIdentity.sectionList.adapter = identityAdapter
+        binding.sectionConnectivity.sectionList.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+        binding.sectionConnectivity.sectionList.adapter = connectivityAdapter
+        binding.sectionPerspective.sectionList.layoutManager =
+            androidx.recyclerview.widget.LinearLayoutManager(requireContext())
+        binding.sectionPerspective.sectionList.adapter = perspectiveAdapter
+    }
+
+    private fun bindSections(sections: List<HighlightRankSection>) {
+        val identitySection = sections.firstOrNull { it.metric == HighlightMetric.IDENTITY }
+        val connectivitySection = sections.firstOrNull { it.metric == HighlightMetric.CONNECTIVITY }
+        val perspectiveSection = sections.firstOrNull { it.metric == HighlightMetric.PERSPECTIVE }
+
+        bindSection(binding.sectionIdentity, identitySection, identityAdapter)
+        bindSection(binding.sectionConnectivity, connectivitySection, connectivityAdapter)
+        bindSection(binding.sectionPerspective, perspectiveSection, perspectiveAdapter)
+    }
+
     private fun bindSection(
-        sectionBinding: ItemHighlightSectionBinding,
-        section: HighlightSection?
+        sectionBinding: com.example.myapplication.databinding.ItemHighlightSectionBinding,
+        section: HighlightRankSection?,
+        adapter: HighlightRankAdapter
     ) {
-        val primary = section?.primary
-        sectionBinding.root.isVisible = primary != null
-        if (primary == null || section == null) {
+        sectionBinding.root.isVisible = section != null && section.items.isNotEmpty()
+        if (section == null) {
+            adapter.submitList(emptyList())
             return
         }
 
-        sectionBinding.highlightTitle.text = section.title
-        sectionBinding.highlightDescription.text = section.description
-        sectionBinding.highlightMemo.text =
-            if (primary.memo.isNotBlank()) primary.memo else "메모가 없습니다."
-        sectionBinding.highlightScoreValue.text =
-            "${primary.identityScore} / ${primary.connectivityScore} / ${primary.perspectiveScore}"
-
-        if (primary.photoUri.isNotBlank()) {
-            sectionBinding.highlightPhoto.setImageURI(android.net.Uri.parse(primary.photoUri))
-        } else {
-            sectionBinding.highlightPhoto.setImageResource(android.R.drawable.ic_menu_gallery)
-        }
-
-        sectionBinding.highlightCard.setOnClickListener {
-            navigateToPresent(primary.recordId)
-        }
-
-        // TODO: secondary 후보를 보여주는 디자인과 상호작용을 추가하세요.
-        val accentColor = when (section.type) {
-            HighlightType.MASTERPIECE -> R.color.primary
-            HighlightType.HIDDEN_DRIVER -> R.color.secondary_accent
-            HighlightType.EMOTIONAL_ANCHOR -> R.color.error
-        }
-        sectionBinding.highlightAccent.setBackgroundColor(requireContext().getColor(accentColor))
-
-        val totalScore = primary.identityScore + primary.connectivityScore + primary.perspectiveScore
-        sectionBinding.highlightCard.tag = totalScore
-        applyPhotoHeight(sectionBinding, totalScore)
-    }
-
-    private fun emphasizeTopScore(sections: List<HighlightSection>) {
-        val primaryItems = sections.mapNotNull { it.primary }
-        val topScore = primaryItems.maxOfOrNull {
-            it.identityScore + it.connectivityScore + it.perspectiveScore
-        } ?: return
-
-        val bindings = listOf(
-            binding.sectionMasterpiece,
-            binding.sectionHiddenDriver,
-            binding.sectionEmotionalAnchor
-        )
-        for (sectionBinding in bindings) {
-            val totalScore = sectionBinding.highlightCard.tag as? Int
-            val isTop = totalScore == topScore
-            sectionBinding.highlightCard.strokeWidth =
-                if (isTop) dpToPx(2) else dpToPx(1)
-            sectionBinding.highlightCard.cardElevation =
-                if (isTop) dpToPx(6).toFloat() else dpToPx(4).toFloat()
-        }
-    }
-
-    private fun applyPhotoHeight(
-        sectionBinding: ItemHighlightSectionBinding,
-        score: Int
-    ) {
-        val minHeight = 160
-        val maxHeight = 240
-        val normalized = ((score - 3).coerceIn(0, 12)).toFloat() / 12f
-        val heightDp = (minHeight + (maxHeight - minHeight) * normalized).toInt()
-        val params = sectionBinding.highlightPhoto.layoutParams
-        params.height = dpToPx(heightDp)
-        sectionBinding.highlightPhoto.layoutParams = params
+        sectionBinding.sectionTitle.text = section.metric.title
+        adapter.submitList(section.items)
     }
 
     private fun navigateToPresent(recordId: String) {
-        val bottomNavigation = requireActivity().findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-            R.id.bottomNavigation
-        )
+        val bottomNavigation = requireActivity()
+            .findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
+                R.id.bottomNavigation
+            )
         bottomNavigation.selectedItemId = R.id.navigation_present
         // TODO: PresentFragment와 연결하여 recordId로 스크롤 이동을 지원하세요.
-    }
-
-    private fun dpToPx(dp: Int): Int {
-        return (dp * Resources.getSystem().displayMetrics.density).toInt()
     }
 }

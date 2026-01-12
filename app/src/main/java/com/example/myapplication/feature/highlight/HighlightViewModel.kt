@@ -9,14 +9,17 @@ import java.text.ParseException
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-class HighlightViewModel : ViewModel() {
+class HighlightViewModel(
+    private val repository: RecordRepository = FakeRecordRepository()
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HighlightUiState())
     val uiState: StateFlow<HighlightUiState> = _uiState.asStateFlow()
 
-    private var lastRecordSignature: List<String> = emptyList()
+    private var lastSignature: List<String> = emptyList()
 
-    fun refreshIfNeeded(records: List<DailyRecord>) {
+    fun refreshIfNeeded() {
+        val records = repository.getTodayRecords()
         val signature = records.map { record ->
             listOf(
                 record.id,
@@ -25,116 +28,54 @@ class HighlightViewModel : ViewModel() {
                 record.cesMetrics.identity,
                 record.cesMetrics.connectivity,
                 record.cesMetrics.perspective,
-                record.date,
-                record.isFeatured
+                record.date
             ).joinToString("|")
         }
-        if (signature == lastRecordSignature) {
+        if (signature == lastSignature) {
             return
         }
-        lastRecordSignature = signature
-        _uiState.value = HighlightUiState(
-            sections = buildSections(records)
-        )
+        lastSignature = signature
+        _uiState.value = buildUiState(records)
     }
 
-    private fun buildSections(records: List<DailyRecord>): List<HighlightSection> {
-        val masterpiece = buildSection(
-            type = HighlightType.MASTERPIECE,
-            title = "나다운 기억",
-            description = "I·C·P가 모두 높은 기억이에요.",
-            candidates = records.filter { isMasterpiece(it) }
-        )
-        val hiddenDriver = buildSection(
-            type = HighlightType.HIDDEN_DRIVER,
-            title = "무의식의 나",
-            description = "I가 낮고 P가 높은 기억이에요.",
-            candidates = records.filter { isHiddenDriver(it) }
-        )
-        val emotionalAnchor = buildSection(
-            type = HighlightType.EMOTIONAL_ANCHOR,
-            title = "가장 큰 영향",
-            description = "C가 다른 지표보다 크게 높은 기억이에요.",
-            candidates = records.filter { isEmotionalAnchor(it) }
-        )
+    private fun buildUiState(records: List<DailyRecord>): HighlightUiState {
+        if (records.size < MIN_RECORDS_FOR_ANALYSIS) {
+            return HighlightUiState(
+                sections = emptyList(),
+                showEmptyState = true
+            )
+        }
 
-        return listOf(masterpiece, hiddenDriver, emotionalAnchor)
-            .filter { it.primary != null }
+        val sections = listOf(
+            buildSection(HighlightMetric.IDENTITY, records) { it.cesMetrics.identity },
+            buildSection(HighlightMetric.CONNECTIVITY, records) { it.cesMetrics.connectivity },
+            buildSection(HighlightMetric.PERSPECTIVE, records) { it.cesMetrics.perspective }
+        )
+        return HighlightUiState(
+            sections = sections,
+            showEmptyState = sections.all { it.items.isEmpty() }
+        )
     }
 
     private fun buildSection(
-        type: HighlightType,
-        title: String,
-        description: String,
-        candidates: List<DailyRecord>
-    ): HighlightSection {
-        if (candidates.isEmpty()) {
-            return HighlightSection(type, title, description, primary = null)
-        }
-
-        val scoredCandidates = candidates.map { record ->
-            record to totalScore(record)
-        }
-        val maxScore = scoredCandidates.maxOf { it.second }
-        val topCandidates = scoredCandidates.filter { it.second == maxScore }.map { it.first }
-        val primaryRecord = topCandidates.maxByOrNull { record -> parseDate(record.date) } ?: topCandidates.first()
-        val secondary = scoredCandidates
-            .map { it.first }
-            .filter { it.id != primaryRecord.id }
-            .sortedWith(
-                compareByDescending<DailyRecord> { totalScore(it) }
-                    .thenByDescending { parseDate(it.date) }
+        metric: HighlightMetric,
+        records: List<DailyRecord>,
+        selector: (DailyRecord) -> Int
+    ): HighlightRankSection {
+        val sorted = records.sortedWith(
+            compareByDescending<DailyRecord> { selector(it) }
+                .thenByDescending { parseDate(it.date) }
+        )
+        val items = sorted.take(MAX_RANK_COUNT).mapIndexed { index, record ->
+            HighlightRankItem(
+                recordId = record.id,
+                rank = index + 1,
+                photoUri = record.photoUri,
+                memo = record.memo,
+                score = selector(record)
             )
-            .take(3)
-            .map { toHighlightItem(type, title, description, it) }
-
-        return HighlightSection(
-            type = type,
-            title = title,
-            description = description,
-            primary = toHighlightItem(type, title, description, primaryRecord),
-            secondary = secondary
-        )
-    }
-
-    private fun toHighlightItem(
-        type: HighlightType,
-        title: String,
-        description: String,
-        record: DailyRecord
-    ): HighlightItem {
-        return HighlightItem(
-            type = type,
-            title = title,
-            description = description,
-            photoUri = record.photoUri,
-            memo = record.memo,
-            identityScore = record.cesMetrics.identity,
-            connectivityScore = record.cesMetrics.connectivity,
-            perspectiveScore = record.cesMetrics.perspective,
-            recordId = record.id
-        )
-    }
-
-    private fun isMasterpiece(record: DailyRecord): Boolean {
-        return record.cesMetrics.identity >= HIGH_THRESHOLD &&
-            record.cesMetrics.connectivity >= HIGH_THRESHOLD &&
-            record.cesMetrics.perspective >= HIGH_THRESHOLD
-    }
-
-    private fun isHiddenDriver(record: DailyRecord): Boolean {
-        return record.cesMetrics.identity <= LOW_THRESHOLD &&
-            record.cesMetrics.perspective >= HIGH_THRESHOLD
-    }
-
-    private fun isEmotionalAnchor(record: DailyRecord): Boolean {
-        val maxOther = maxOf(record.cesMetrics.identity, record.cesMetrics.perspective)
-        return record.cesMetrics.connectivity >= HIGH_THRESHOLD &&
-            record.cesMetrics.connectivity - maxOther >= ANCHOR_DELTA
-    }
-
-    private fun totalScore(record: DailyRecord): Int {
-        return record.cesMetrics.identity + record.cesMetrics.connectivity + record.cesMetrics.perspective
+        }
+        return HighlightRankSection(metric = metric, items = items)
     }
 
     private fun parseDate(date: String): Long {
@@ -147,8 +88,7 @@ class HighlightViewModel : ViewModel() {
     }
 
     companion object {
-        private const val HIGH_THRESHOLD = 4
-        private const val LOW_THRESHOLD = 2
-        private const val ANCHOR_DELTA = 2
+        private const val MAX_RANK_COUNT = 5
+        private const val MIN_RECORDS_FOR_ANALYSIS = 3
     }
 }
