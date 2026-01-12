@@ -14,10 +14,22 @@ import java.util.Locale
 // (이제 DailyModels.kt에 있는 클래스를 자동으로 가져다 씁니다)
 
 class MomentAdapter(
-    private val onEditClick: ((DailyRecord) -> Unit)? = null,
-    private var items: List<DailyRecord> = emptyList()
+    private val onEditClick: ((DailyRecord) -> Unit)? = null
 ) : RecyclerView.Adapter<MomentAdapter.MomentViewHolder>() {
 
+    private var items: List<DailyRecord> = emptyList()
+
+
+    fun setItems(newItems: List<DailyRecord>) {
+        items = newItems
+        notifyDataSetChanged()
+    }
+
+    override fun getItemCount(): Int = items.size
+
+    override fun onBindViewHolder(holder: MomentViewHolder, position: Int) {
+        holder.bind(items[position])
+    }
     inner class MomentViewHolder(private val binding: ItemMomentCardBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
@@ -55,12 +67,6 @@ class MomentAdapter(
         )
         return MomentViewHolder(binding)
     }
-
-    override fun onBindViewHolder(holder: MomentViewHolder, position: Int) {
-        holder.bind(items[position])
-    }
-
-    override fun getItemCount(): Int = items.size
 
     fun submitList(newItems: List<DailyRecord>) {
         items = newItems
