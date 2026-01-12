@@ -22,7 +22,6 @@ class HighlightRankAdapter(
             binding.rankDate.text = binding.root.context.getString(
                 com.example.myapplication.R.string.highlight_rank_date_placeholder
             )
-            binding.rankIcpBadge.text = metricLabel
             binding.rankScore.alpha = rankAlpha(item.rank)
             binding.rankMemo.alpha = rankAlpha(item.rank)
 

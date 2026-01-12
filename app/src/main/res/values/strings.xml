@@ -17,7 +17,6 @@
     <string name="highlight_empty_state">아직 분석할 기억이 충분하지 않아요.</string>
     <string name="highlight_score_label">점수</string>
     <string name="highlight_rank_date_placeholder">날짜</string>
-    <string name="highlight_icp_badge_placeholder">I / C / P</string>
     <string name="highlight_graph_title">TOP 5 기억 그래프</string>
     <string name="highlight_graph_placeholder">점수 변화와 날짜 흐름을 부드럽게 연결하는 그래프를 표시합니다.</string>
     <string name="highlight_graph_empty_state">그래프를 표시하려면 기록이 더 필요합니다.</string>
