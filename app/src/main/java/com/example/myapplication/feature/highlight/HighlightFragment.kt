@@ -151,6 +151,10 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
 
         sectionBinding.sectionTitle.text = section.metric.title
         adapter.submitList(section.items)
+
+        val hasGraphData = section.items.size >= MIN_GRAPH_POINTS
+        sectionBinding.sectionGraphContainer.isVisible = hasGraphData
+        sectionBinding.sectionGraphEmpty.isVisible = !hasGraphData
     }
 
     private fun navigateToPresent(recordId: String) {
@@ -168,4 +172,8 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         val body: Int,
         val guide: Int
     )
+
+    companion object {
+        private const val MIN_GRAPH_POINTS = 3
+    }
 }

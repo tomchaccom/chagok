@@ -44,6 +44,15 @@
             android:textAppearance="?attr/textAppearanceTitleSmall"
             android:textColor="@color/text_primary" />
 
+        <TextView
+            android:id="@+id/section_graph_empty"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/highlight_graph_empty_state"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp" />
+
         <!-- TODO: 그래프 점/축 레이아웃을 실제 디자인으로 대체하세요. -->
         <LinearLayout
             android:id="@+id/section_graph_container"
