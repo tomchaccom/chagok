@@ -52,13 +52,19 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
     }
 
     private fun setupAdapters() {
-        identityAdapter = HighlightRankAdapter { item ->
+        identityAdapter = HighlightRankAdapter(
+            getString(R.string.highlight_metric_identity_badge)
+        ) { item ->
             navigateToPresent(item.recordId)
         }
-        connectivityAdapter = HighlightRankAdapter { item ->
+        connectivityAdapter = HighlightRankAdapter(
+            getString(R.string.highlight_metric_connectivity_badge)
+        ) { item ->
             navigateToPresent(item.recordId)
         }
-        perspectiveAdapter = HighlightRankAdapter { item ->
+        perspectiveAdapter = HighlightRankAdapter(
+            getString(R.string.highlight_metric_perspective_badge)
+        ) { item ->
             navigateToPresent(item.recordId)
         }
 
@@ -104,22 +110,26 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
     private fun updateTheme(metric: HighlightMetric) {
         val explanation = when (metric) {
             HighlightMetric.IDENTITY -> ThemeExplanation(
+                letter = R.string.highlight_metric_letter_identity,
                 title = R.string.highlight_theme_identity_title,
                 body = R.string.highlight_theme_identity_body,
                 guide = R.string.highlight_theme_identity_guide
             )
             HighlightMetric.CONNECTIVITY -> ThemeExplanation(
+                letter = R.string.highlight_metric_letter_connectivity,
                 title = R.string.highlight_theme_connectivity_title,
                 body = R.string.highlight_theme_connectivity_body,
                 guide = R.string.highlight_theme_connectivity_guide
             )
             HighlightMetric.PERSPECTIVE -> ThemeExplanation(
+                letter = R.string.highlight_metric_letter_perspective,
                 title = R.string.highlight_theme_perspective_title,
                 body = R.string.highlight_theme_perspective_body,
                 guide = R.string.highlight_theme_perspective_guide
             )
         }
 
+        binding.explanationLetter.setText(explanation.letter)
         binding.explanationTitle.setText(explanation.title)
         binding.explanationBody.setText(explanation.body)
         binding.explanationGuide.setText(explanation.guide)
@@ -153,6 +163,7 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
     }
 
     private data class ThemeExplanation(
+        val letter: Int,
         val title: Int,
         val body: Int,
         val guide: Int

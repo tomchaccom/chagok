@@ -72,13 +72,23 @@
                     android:padding="16dp">
 
                     <TextView
+                        android:id="@+id/explanation_letter"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?attr/textAppearanceHeadlineMedium"
+                        android:textColor="@color/secondary_accent"
+                        android:textStyle="bold"
+                        tools:text="I" />
+
+                    <TextView
                         android:id="@+id/explanation_title"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
                         android:textAppearance="?attr/textAppearanceTitleMedium"
                         android:textColor="@color/text_primary"
                         android:textStyle="bold"
-                        tools:text="나다운 기억" />
+                        tools:text="Identity · 나다운 기억" />
 
                     <TextView
                         android:id="@+id/explanation_body"
@@ -87,7 +97,7 @@
                         android:layout_marginTop="8dp"
                         android:textAppearance="?attr/textAppearanceBodySmall"
                         android:textColor="@color/text_secondary"
-                        tools:text="이 테마는 ‘평소의 나’가 가장 잘 드러난 순간들을 기준으로 기억을 보여줍니다." />
+                        tools:text="Identity measures how deeply this memory is embedded in who I am." />
 
                     <TextView
                         android:id="@+id/explanation_guide"
@@ -96,7 +106,7 @@
                         android:layout_marginTop="12dp"
                         android:textAppearance="?attr/textAppearanceBodySmall"
                         android:textColor="@color/text_secondary"
-                        tools:text="I : 감정과 선택이 강하게 드러난 순간\nC : 반복되며 나를 형성한 일상적 순간\nP : 평소의 나에서 벗어난 행동/결정" />
+                        tools:text="This memory represents events that are essential when explaining who I am as a person." />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 

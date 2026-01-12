@@ -50,7 +50,7 @@
             android:layout_width="match_parent"
             android:layout_height="140dp"
             android:layout_marginTop="8dp"
-            android:background="@color/mint_100"
+            android:background="@color/badge_background"
             android:orientation="vertical"
             android:padding="12dp">
 

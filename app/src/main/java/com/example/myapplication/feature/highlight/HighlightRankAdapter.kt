@@ -1,12 +1,12 @@
 package com.example.myapplication.feature.highlight
 
-import android.net.Uri
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.databinding.ItemHighlightRankBinding
 
 class HighlightRankAdapter(
+    private val metricLabel: String,
     private val onItemClick: (HighlightRankItem) -> Unit
 ) : RecyclerView.Adapter<HighlightRankAdapter.RankViewHolder>() {
 
@@ -22,15 +22,9 @@ class HighlightRankAdapter(
             binding.rankDate.text = binding.root.context.getString(
                 com.example.myapplication.R.string.highlight_rank_date_placeholder
             )
-            binding.rankIcpBadge.text = binding.root.context.getString(
-                com.example.myapplication.R.string.highlight_icp_badge_placeholder
-            )
-
-            if (item.photoUri.isNotBlank()) {
-                binding.rankPhoto.setImageURI(Uri.parse(item.photoUri))
-            } else {
-                binding.rankPhoto.setImageResource(android.R.drawable.ic_menu_gallery)
-            }
+            binding.rankIcpBadge.text = metricLabel
+            binding.rankScore.alpha = rankAlpha(item.rank)
+            binding.rankMemo.alpha = rankAlpha(item.rank)
 
             binding.root.setOnClickListener {
                 onItemClick(item)
@@ -56,5 +50,15 @@ class HighlightRankAdapter(
     fun submitList(newItems: List<HighlightRankItem>) {
         items = newItems
         notifyDataSetChanged()
+    }
+
+    private fun rankAlpha(rank: Int): Float {
+        return when (rank) {
+            1 -> 1.0f
+            2 -> 0.92f
+            3 -> 0.86f
+            4 -> 0.8f
+            else -> 0.74f
+        }
     }
 }
