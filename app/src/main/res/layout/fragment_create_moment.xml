@@ -48,7 +48,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <TextView
                         android:layout_width="wrap_content"
@@ -58,22 +58,14 @@
                         android:textStyle="bold"
                         android:textSize="12sp" />
 
-                    <CheckBox
-                        android:id="@+id/featured_checkbox"
-                        android:layout_width="wrap_content"
-                        android:layout_height="24dp"
-                        android:layout_alignParentEnd="true"
-                        android:text="대표"
-                        android:textSize="11sp"
-                        android:buttonTint="#4CAF50"
-                        android:padding="0dp" />
-
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
-                        android:layout_height="200dp"
-                        android:layout_marginTop="12dp"
+                        android:layout_height="220dp"
+                        android:layout_marginTop="16dp"
                         app:cardCornerRadius="16dp"
-                        app:cardElevation="0dp">
+                        app:cardElevation="0dp"
+                        app:strokeColor="#E0E0E0"
+                        app:strokeWidth="1dp">
                         <FrameLayout android:layout_width="match_parent" android:layout_height="match_parent">
                             <ImageView
                                 android:id="@+id/photo_preview"
@@ -87,41 +79,71 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_gravity="center"
-                                android:text="사진을 추가해주세요"
+                                android:text="소중한 순간을 담아주세요"
                                 android:textColor="#BBBBBB" />
-
-                            <LinearLayout
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="bottom|end"
-                                android:layout_margin="12dp"
-                                android:background="@drawable/bg_dark_control_bar"
-                                android:padding="4dp">
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/camera_button"
-                                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="36dp"
-                                    android:text="카메라"
-                                    android:textColor="@android:color/white"
-                                    android:textSize="11sp" />
-                                <com.google.android.material.button.MaterialButton
-                                    android:id="@+id/change_photo_button"
-                                    style="@style/Widget.MaterialComponents.Button.TextButton"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="36dp"
-                                    android:text="갤러리"
-                                    android:textColor="@android:color/white"
-                                    android:textSize="11sp" />
-                            </LinearLayout>
                         </FrameLayout>
                     </com.google.android.material.card.MaterialCardView>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:text="어떤 방식으로 남길까요?"
+                        android:textColor="#333333"
+                        android:textSize="14sp"
+                        android:textStyle="bold" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp"
+                        android:gravity="center">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/camera_button"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="50dp"
+                            android:layout_marginEnd="8dp"
+                            android:text="카메라"
+                            android:textColor="#4CAF50"
+                            android:textSize="14sp"
+                            app:icon="@android:drawable/ic_menu_camera"
+                            app:iconTint="#4CAF50"
+                            app:strokeColor="#4CAF50"
+                            app:cornerRadius="12dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/change_photo_button"
+                            style="@style/Widget.MaterialComponents.Button"
+                            android:layout_width="0dp"
+                            android:layout_weight="1"
+                            android:layout_height="50dp"
+                            android:layout_marginStart="8dp"
+                            android:text="갤러리"
+                            android:textColor="@android:color/white"
+                            android:textSize="14sp"
+                            android:backgroundTint="#4CAF50"
+                            app:icon="@android:drawable/ic_menu_gallery"
+                            app:iconTint="@android:color/white"
+                            app:iconSize="14dp"
+                            app:cornerRadius="12dp"
+                            app:elevation="2dp" />
+                    </LinearLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:layout_marginTop="24dp"
+                        android:layout_marginBottom="16dp"
+                        android:background="#F2F2F2" />
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        app:boxStrokeColor="#4CAF50"
+                        app:boxStrokeWidth="0dp"
                         app:hintEnabled="false">
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/memo_edit_text"
@@ -129,8 +151,19 @@
                             android:layout_height="wrap_content"
                             android:hint="이 순간을 한 줄로 남겨보세요..."
                             android:background="@android:color/transparent"
-                            android:padding="0dp" />
+                            android:padding="0dp"
+                            android:textSize="16sp" />
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <CheckBox
+                        android:id="@+id/featured_checkbox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:text="오늘의 대표 기억으로 간직하기"
+                        android:textSize="13sp"
+                        android:textColor="#888888"
+                        android:buttonTint="#4CAF50" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -175,6 +208,7 @@
                                 android:textStyle="bold"
                                 android:textSize="15sp" />
                         </LinearLayout>
+
                         <ImageView
                             android:id="@+id/ivChagokEmo"
                             android:layout_width="120dp"
@@ -220,11 +254,8 @@
                             android:text="(보통)"
                             android:textColor="#888888" />
                     </LinearLayout>
-
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
-
-
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
