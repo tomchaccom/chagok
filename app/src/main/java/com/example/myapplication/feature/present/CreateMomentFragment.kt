@@ -33,6 +33,21 @@ import java.util.*
 
 class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
 
+    companion object {
+        private const val ARG_RECORD_ID = "arg_record_id"
+
+        /**
+         * 새로운 인스턴스를 생성하며 recordId를 전달합니다.
+         */
+        @JvmStatic
+        fun newInstance(recordId: String) =
+            CreateMomentFragment().apply {
+                arguments = Bundle().apply {
+                    putString(ARG_RECORD_ID, recordId)
+                }
+            }
+    }
+
     // 1. 현재 화면의 입력 상태 관리 (독립적)
     private val createViewModel: CreateMomentViewModel by viewModels()
 
