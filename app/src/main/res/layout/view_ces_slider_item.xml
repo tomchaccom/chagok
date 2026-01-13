@@ -41,6 +41,7 @@
         android:valueFrom="1"
         android:valueTo="5"
         android:stepSize="1"
+        android:value="3"
         app:trackHeight="10dp"
         app:thumbColor="#4CAF50"
         app:trackColorActive="#4CAF50" />
