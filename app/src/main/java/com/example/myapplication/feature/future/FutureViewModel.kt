@@ -5,6 +5,7 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.myapplication.data.future.GoalRepository
 import java.time.LocalDate
 
 @RequiresApi(Build.VERSION_CODES.O)
