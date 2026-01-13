@@ -93,63 +93,89 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        arguments?.getString(ARG_EDIT_RECORD_ID)?.let { recordId ->
-            viewModel.startEdit(recordId)
-        }
+        // 1. 슬라이더 레이아웃별 텍스트 초기화
+        initSliderTexts()
 
+        // 2. 리스너 및 UI 설정 함수 호출 (이게 빠지면 에러가 납니다)
         setupToolbar()
-        setupCesSliders() // CES 슬라이더 설정으로 변경
-        setupPhotoButtons()
-        setupMemoInput()
+        setupCesSliders()     // 슬라이더 리스너 연결
+        setupPhotoButtons()   // 카메라/갤러리 버튼 리스너 연결
+        setupMemoInput()      // 메모 입력 리스너 연결
         setupFeaturedCheckbox()
         setupSaveButton()
+
+        // 3. ViewModel 상태 관찰 시작
         observeUiState()
     }
 
-    /* ---------------- UI 세팅 ---------------- */
+    private fun initSliderTexts() {
+        // Identity 초기화
+        binding.layoutIdentity.sliderTitle.text = "Identity (정체성)"
+        binding.layoutIdentity.sliderSubTitle.text = "얼마나 '나'다운 기억이었나요?"
 
-    private fun setupToolbar() {
-        binding.toolbar.setNavigationOnClickListener {
-            parentFragmentManager.popBackStack()
-        }
+        // Connectivity 초기화
+        binding.layoutConnectivity.sliderTitle.text = "Connectivity (연결성)"
+        binding.layoutConnectivity.sliderSubTitle.text = "무의식적으로 떠오를 것 같은 기억인가요?"
+
+        // Perspective 초기화
+        binding.layoutPerspective.sliderTitle.text = "Perspective (관점)"
+        binding.layoutPerspective.sliderSubTitle.text = "이 기억이 앞날의 당신을 변화시킬 수 있나요?"
     }
 
     /**
-     * CES(Identity, Connectivity, Perspective) 슬라이더 초기화
+     * CES(Identity, Connectivity, Perspective) 슬라이더 초기화 및 에러 수정
      */
     private fun setupCesSliders() {
-        // 1. Identity Slider
-        binding.identitySlider.apply {
-            valueFrom = 1f
-            valueTo = 5f
-            stepSize = 1f
-            addOnChangeListener { _, value, _ ->
-                binding.identityValue.text = value.toInt().toString()
-                viewModel.setCesIdentity(value.toInt())
+        // 1. Identity (나다움)
+        binding.layoutIdentity.sliderMain.addOnChangeListener { _, value, _ ->
+            val msg = when(value.toInt()) {
+                1, 2 -> "조금은 낯선 모습이었나요?"
+                3 -> "평소의 당신다운 모습이네요."
+                else -> "완벽하게 '나'다운 순간이었어요!"
             }
+            updateChagok(msg, value)
+            binding.layoutIdentity.sliderValueText.text = value.toInt().toString()
+            viewModel.setCesIdentity(value.toInt())
         }
 
-        // 2. Connectivity Slider
-        binding.connectivitySlider.apply {
-            valueFrom = 1f
-            valueTo = 5f
-            stepSize = 1f
-            addOnChangeListener { _, value, _ ->
-                binding.connectivityValue.text = value.toInt().toString()
-                viewModel.setCesConnectivity(value.toInt())
+        // 2. Connectivity (연결성)
+        binding.layoutConnectivity.sliderMain.addOnChangeListener { _, value, _ ->
+            val msg = when(value.toInt()) {
+                1, 2 -> "혼자만의 깊은 시간이었군요."
+                3 -> "세상과 기분 좋게 연결된 느낌!"
+                else -> "모든 것이 하나로 이어진 듯해요."
             }
+            updateChagok(msg, value)
+            binding.layoutConnectivity.sliderValueText.text = value.toInt().toString()
+            viewModel.setCesConnectivity(value.toInt())
         }
 
-        // 3. Perspective Slider
-        binding.perspectiveSlider.apply {
-            valueFrom = 1f
-            valueTo = 5f
-            stepSize = 1f
-            addOnChangeListener { _, value, _ ->
-                binding.perspectiveValue.text = value.toInt().toString()
-                viewModel.setCesPerspective(value.toInt())
+        // 3. Perspective (관점의 확장)
+        binding.layoutPerspective.sliderMain.addOnChangeListener { _, value, _ ->
+            val msg = when(value.toInt()) {
+                1, 2 -> "익숙하고 편안한 시선이었어요."
+                3 -> "새로운 생각을 해보게 되었네요."
+                else -> "세상을 보는 눈이 한 뼘 더 커졌어요!"
             }
+            updateChagok(msg, value)
+            binding.layoutPerspective.sliderValueText.text = value.toInt().toString()
+            viewModel.setCesPerspective(value.toInt())
         }
+    }
+
+    // 공통 애니메이션 및 메시지 업데이트 함수
+    private fun updateChagok(message: String, value: Float) {
+        binding.tvChagokMessage.text = message
+
+        // 반응형 애니메이션: 점수가 높을수록 더 크게 반응!
+        val scaleFactor = 1.1f + (value * 0.04f)
+        binding.ivChagokEmo.animate()
+            .scaleX(scaleFactor)
+            .scaleY(scaleFactor)
+            .setDuration(150)
+            .withEndAction {
+                binding.ivChagokEmo.animate().scaleX(1.0f).scaleY(1.0f).start()
+            }.start()
     }
 
     private fun setupPhotoButtons() {
@@ -264,64 +290,63 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
 
-                    // 1. 사진 미리보기
+                    // 1. 사진 미리보기 및 플레이스홀더 (ID: photo_placeholder -> photoPlaceholder)
                     if (!state.selectedPhotoUri.isNullOrBlank()) {
                         binding.photoPreview.setImageURI(state.selectedPhotoUri.toUri())
-                        binding.photoPlaceholder.isVisible = false
+                        // isVisible 속성이 안 보인다면 view.visibility = View.GONE 사용
+                        binding.photoPlaceholder.visibility = android.view.View.GONE
                     } else {
-                        binding.photoPlaceholder.isVisible = true
+                        binding.photoPlaceholder.visibility = android.view.View.VISIBLE
                     }
 
-                    // 2. CES 값 및 총점 업데이트
-                    binding.identityValue.text = state.cesInput.identity.toString()
-                    binding.connectivityValue.text = state.cesInput.connectivity.toString()
-                    binding.perspectiveValue.text = state.cesInput.perspective.toString()
+                    // 2. CES 값 업데이트 (레이아웃 내부 참조)
+                    binding.layoutIdentity.sliderValueText.text = state.cesInput.identity.toString()
+                    binding.layoutConnectivity.sliderValueText.text = state.cesInput.connectivity.toString()
+                    binding.layoutPerspective.sliderValueText.text = state.cesInput.perspective.toString()
 
+                    // 3. 메모 입력창 업데이트
                     if (binding.memoEditText.text?.toString() != state.memo) {
                         binding.memoEditText.setText(state.memo)
                         binding.memoEditText.setSelection(state.memo.length)
                     }
 
+                    // 4. 종합 점수 및 설명 업데이트 (s 개수 오타 주의!)
+                    // XML ID가 ces_score_value이므로 바인딩은 cesScoreValue입니다.
                     binding.cesScoreValue.text = "${state.cesWeightedScore}점"
                     binding.cesScoreDescription.text = state.cesDescription
 
-                    // 슬라이더 값 동기화 (ViewModel 상태와 UI 일치)
-                    if (binding.identitySlider.value != state.cesInput.identity.toFloat()) {
-                        binding.identitySlider.value = state.cesInput.identity.toFloat()
+                    // 5. 슬라이더 바 값 동기화 (레이아웃 내부 참조)
+                    if (binding.layoutIdentity.sliderMain.value != state.cesInput.identity.toFloat()) {
+                        binding.layoutIdentity.sliderMain.value = state.cesInput.identity.toFloat()
                     }
-                    if (binding.connectivitySlider.value != state.cesInput.connectivity.toFloat()) {
-                        binding.connectivitySlider.value = state.cesInput.connectivity.toFloat()
+                    if (binding.layoutConnectivity.sliderMain.value != state.cesInput.connectivity.toFloat()) {
+                        binding.layoutConnectivity.sliderMain.value = state.cesInput.connectivity.toFloat()
                     }
-                    if (binding.perspectiveSlider.value != state.cesInput.perspective.toFloat()) {
-                        binding.perspectiveSlider.value = state.cesInput.perspective.toFloat()
+                    if (binding.layoutPerspective.sliderMain.value != state.cesInput.perspective.toFloat()) {
+                        binding.layoutPerspective.sliderMain.value = state.cesInput.perspective.toFloat()
                     }
 
-                    // 3. 버튼 상태
+                    // 6. 버튼 및 체크박스 상태
                     val enabled = !state.isLoading
-                    binding.changePhotoButton.isEnabled = enabled
-                    binding.cameraButton.isEnabled = enabled
                     binding.saveMomentButton.isEnabled = enabled
 
-                    // 4. 에러 처리
-                    state.errorMessage?.let {
-                        showToast(it)
-                        viewModel.clearErrorMessage()
-                    }
-
-                    // 5. 대표 기억 체크박스
                     if (binding.featuredCheckbox.isChecked != state.isFeatured) {
                         binding.featuredCheckbox.setOnCheckedChangeListener(null)
                         binding.featuredCheckbox.isChecked = state.isFeatured
                         binding.featuredCheckbox.setOnCheckedChangeListener(featuredCheckedChangeListener)
                     }
 
-                    // 6. 대표 기억 충돌 다이얼로그
+                    // 7. 기타 처리 (에러, 다이얼로그, 저장 완료)
+                    state.errorMessage?.let {
+                        showToast(it)
+                        viewModel.clearErrorMessage()
+                    }
+
                     if (state.showFeaturedConflictDialog) {
                         viewModel.consumeFeaturedConflictDialog()
                         showFeaturedConflictDialog()
                     }
 
-                    // 7. 저장 완료
                     if (state.savedSuccessfully) {
                         showToast("순간이 저장되었습니다")
                         viewModel.resetSavedState()
@@ -351,6 +376,14 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
             return CreateMomentFragment().apply {
                 arguments = bundleOf(ARG_EDIT_RECORD_ID to recordId)
             }
+        }
+    }
+
+    private fun setupToolbar() {
+        // 툴바의 네비게이션 아이콘(보통 X 또는 뒤로가기 화살표) 클릭 리스너
+        binding.toolbar.setNavigationOnClickListener {
+            // 현재 프래그먼트를 제거하고 이전 화면으로 복귀
+            parentFragmentManager.popBackStack()
         }
     }
 }
