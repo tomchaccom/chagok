@@ -17,9 +17,9 @@ class DayAdapter(
 ) : ListAdapter<DayEntry, DayAdapter.DayViewHolder>(DayDiffCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
-        // 새로 만든 카드 UI 레이아웃 연결
+        // [수정 전] item_day_record_placeholder -> [수정 후] item_day (또는 작업하신 xml 파일명)
         val view = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_day_record_placeholder, parent, false)
+            .inflate(R.layout.item_day, parent, false) // 👈 여기를 수정하세요!
         return DayViewHolder(view, onDayClick)
     }
 
@@ -34,40 +34,40 @@ class DayAdapter(
         private val onDayClick: (DayEntry) -> Unit
     ) : RecyclerView.ViewHolder(itemView) {
 
-        private val tvDayNumber: TextView = itemView.findViewById(R.id.tvDayNumber)
-        private val tvDayOfWeek: TextView = itemView.findViewById(R.id.tvDayOfWeek)
-        private val tvSummary: TextView = itemView.findViewById(R.id.tvSummary)
-        private val imgThumbnail: ImageView = itemView.findViewById(R.id.imgThumbnail)
+        // XML에서 정의한 ID로 변경
+        private val tvDateTitle: TextView = itemView.findViewById(R.id.tvDateTitle) // 날짜
+        private val tvSummary: TextView = itemView.findViewById(R.id.tvSummary)     // 메모
+        private val imgThumbnail: ImageView = itemView.findViewById(R.id.imgThumbnail) // 사진
 
         fun bind(day: DayEntry) {
             itemView.setOnClickListener { onDayClick(day) }
 
-            // 날짜 표시 로직 (예: "2024년 3월 20일")
-            val dateParts = day.dateLabel.split(" ")
-            if (dateParts.size >= 3) {
-                // "20" (일)
-                tvDayNumber.text = dateParts.last().replace("일", "")
-                // "2024년 3월"
-                tvDayOfWeek.text = "${dateParts[0]} ${dateParts[1]}"
-            } else {
-                tvDayNumber.text = day.dateLabel
-                tvDayOfWeek.text = ""
-            }
+            // 1. 날짜 표시 (디자인에 맞춰 쪼개지 않고 전체 표시)
+            // 예: "2024년 3월 20일" 그대로 사용
+            tvDateTitle.text = day.dateLabel
 
-            tvSummary.text = day.dayMemo
+            // 2. 내용(메모) 표시
+            // 내용이 없으면 "내용 없음" 같은 기본 문구를 넣을 수도 있습니다.
+            tvSummary.text = if (day.dayMemo.isNotEmpty()) day.dayMemo else "기록된 내용이 없습니다."
 
-            // 썸네일 이미지 로드
+            // 3. 썸네일 이미지 로드 (기존 로직 유지)
             val repPhoto = day.representativePhoto
             if (repPhoto != null) {
-                val sizePx = (48 * itemView.context.resources.displayMetrics.density).toInt()
-                ImageLoader.loadInto(imgThumbnail, repPhoto.imageUri, R.drawable.ic_launcher_background, sizePx, sizePx)
+                // 60dp 크기로 로드 (XML의 CardView 크기에 맞춤)
+                val sizePx = (60 * itemView.context.resources.displayMetrics.density).toInt()
+                ImageLoader.loadInto(
+                    imgThumbnail,
+                    repPhoto.imageUri,
+                    R.drawable.ic_launcher_background,
+                    sizePx,
+                    sizePx
+                )
             } else {
                 imgThumbnail.setImageResource(R.drawable.ic_launcher_background)
             }
         }
     }
 }
-
 class DayDiffCallback : DiffUtil.ItemCallback<DayEntry>() {
     override fun areItemsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean = oldItem.id == newItem.id
     override fun areContentsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean = oldItem == newItem
