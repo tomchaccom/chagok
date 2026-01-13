@@ -1,49 +1,57 @@
 package com.example.myapplication.feature.present
 
+import android.graphics.Paint
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
+import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.example.myapplication.databinding.ItemTodayGoalBinding
+// 🌟 R 클래스 임포트 필수 (패키지명 확인)
+import com.example.myapplication.R
+import com.example.myapplication.data.future.Goal as DataGoal
 
-// Adapter가 사용하는 데이터 타입을 'Practice'로 통일합니다.
 class TodayGoalAdapter(
-    private val onCheckedChange: (Practice, Boolean) -> Unit
-) : ListAdapter<Practice, TodayGoalAdapter.ViewHolder>(PracticeDiffCallback) {
+    private val onActionClick: (DataGoal) -> Unit
+) : ListAdapter<DataGoal, TodayGoalAdapter.VH>(GoalDiff) {
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val binding = ItemTodayGoalBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
-        )
-        return ViewHolder(binding)
+    // 🌟 onCreateViewHolder 필수 구현
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
+        val view = LayoutInflater.from(parent.context).inflate(R.layout.item_today_goal, parent, false)
+        return VH(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    // 🌟 onBindViewHolder 필수 구현
+    override fun onBindViewHolder(holder: VH, position: Int) {
         holder.bind(getItem(position))
     }
 
-    inner class ViewHolder(private val binding: ItemTodayGoalBinding) :
-        RecyclerView.ViewHolder(binding.root) {
+    inner class VH(val view: View) : RecyclerView.ViewHolder(view) {
+        fun bind(goal: DataGoal) {
+            val titleTv = view.findViewById<TextView>(R.id.tvTodayGoalTitle)
+            val actionBtn = view.findViewById<ImageButton>(R.id.btnComplete)
 
-        fun bind(item: Practice) {
-            // 1. XML ID 확인: tvTodayGoalTitle
-            binding.tvTodayGoalTitle.text = item.title
+            titleTv.text = goal.title
 
-            // 2. 완료 버튼 클릭 시 onCheckedChange 호출 (onAction -> onCheckedChange로 수정)
-            binding.btnComplete.setOnClickListener {
-                onCheckedChange(item, true)
+            if (goal.isAchieved) {
+                titleTv.paintFlags = titleTv.paintFlags or Paint.STRIKE_THRU_TEXT_FLAG
+                view.alpha = 0.5f
+                actionBtn.setImageResource(android.R.drawable.checkbox_on_background)
+                actionBtn.isEnabled = false
+            } else {
+                titleTv.paintFlags = titleTv.paintFlags and Paint.STRIKE_THRU_TEXT_FLAG.inv()
+                view.alpha = 1.0f
+                actionBtn.setImageResource(R.drawable.ic_chevron_right)
+                actionBtn.isEnabled = true
+                actionBtn.setOnClickListener { onActionClick(goal) }
             }
         }
     }
 
-    companion object {
-        // DiffUtil의 타입도 Practice로 통일합니다.
-        private val PracticeDiffCallback = object : DiffUtil.ItemCallback<Practice>() {
-            override fun areItemsTheSame(oldItem: Practice, newItem: Practice): Boolean =
-                oldItem.id == newItem.id
-            override fun areContentsTheSame(oldItem: Practice, newItem: Practice): Boolean =
-                oldItem == newItem
-        }
+    companion object GoalDiff : DiffUtil.ItemCallback<DataGoal>() {
+        override fun areItemsTheSame(oldItem: DataGoal, newItem: DataGoal) = oldItem.id == newItem.id
+        override fun areContentsTheSame(oldItem: DataGoal, newItem: DataGoal) = oldItem == newItem
     }
 }
