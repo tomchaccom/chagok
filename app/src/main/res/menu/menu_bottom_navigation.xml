@@ -2,18 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/navigation_past"
-        android:icon="@drawable/ic_baseline_history_24"
+        android:icon="@drawable/st1"
         android:title="@string/tab_past" />
     <item
         android:id="@+id/navigation_present"
-        android:icon="@drawable/ic_baseline_today_24"
+        android:icon="@drawable/st2"
         android:title="@string/tab_present" />
+    <item
+        android:id="@+id/navigation_future"
+        android:icon="@drawable/st3"
+        android:title="@string/tab_future" />
     <item
         android:id="@+id/navigation_highlight"
         android:icon="@drawable/ic_baseline_star_24"
         android:title="@string/tab_highlight" />
-    <item
-        android:id="@+id/navigation_future"
-        android:icon="@drawable/ic_baseline_schedule_24"
-        android:title="@string/tab_future" />
 </menu>

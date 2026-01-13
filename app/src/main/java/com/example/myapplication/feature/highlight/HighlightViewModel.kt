@@ -1,7 +1,8 @@
 package com.example.myapplication.feature.highlight
 
 import androidx.lifecycle.ViewModel
-import com.example.myapplication.feature.present.DailyRecord
+// 1. 패키지 충돌 해결을 위한 Alias 설정
+import com.example.myapplication.data.present.DailyRecord as DataRecord
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -35,10 +36,13 @@ class HighlightViewModel(
             return
         }
         lastSignature = signature
+
+        // 38번 줄: 이제 records와 buildUiState의 인자 타입이 DataRecord로 일치합니다.
         _uiState.value = buildUiState(records)
     }
 
-    private fun buildUiState(records: List<DailyRecord>): HighlightUiState {
+    // 2. 인자 타입을 DataRecord로 변경
+    private fun buildUiState(records: List<DataRecord>): HighlightUiState {
         if (records.size < MIN_RECORDS_FOR_ANALYSIS) {
             return HighlightUiState(
                 sections = emptyList(),
@@ -57,14 +61,16 @@ class HighlightViewModel(
         )
     }
 
+    // 3. 인자 타입을 DataRecord로 변경
     private fun buildSection(
         metric: HighlightMetric,
-        records: List<DailyRecord>,
-        selector: (DailyRecord) -> Int
+        records: List<DataRecord>,
+        selector: (DataRecord) -> Int
     ): HighlightRankSection {
 
+        // 1. 점수와 날짜순으로 정렬 (DataRecord 타입 기반)
         val sorted = records.sortedWith(
-            compareByDescending<DailyRecord> { selector(it) }
+            compareByDescending<DataRecord> { selector(it) }
                 .thenByDescending { parseDate(it.date) }
         )
 
@@ -80,6 +86,8 @@ class HighlightViewModel(
             )
         }
 
+        val avg = if (items.isEmpty()) 0.0 else items.map { it.score }.average()
+
         val graphPoints = topRecords.mapIndexed { index, record ->
             HighlightGraphPoint(
                 label = "${index + 1}",
@@ -93,11 +101,10 @@ class HighlightViewModel(
             metric = metric,
             items = items,
             graphPoints = graphPoints,
-            canShowGraph = canShowGraph
+            canShowGraph = canShowGraph,
+            averageScore = avg
         )
-
     }
-
 
     private fun parseDate(date: String): Long {
         return try {

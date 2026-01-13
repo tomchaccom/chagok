@@ -1,28 +1,17 @@
 package com.example.myapplication.data.past
 
-/**
- * 개별 사진 + 사진 메모
- * imageUri 는 다음을 모두 수용 가능
- * - android.resource:// 패키지명/drawable/파일명
- * - file://...
- * - content://...
- * - https://...
- */
-
-data class PhotoItem(
-    val imageUri: String,
-    val memo: String
-)
+import com.example.myapplication.data.present.DailyRecord
 
 /**
  * 하루 단위 기록
  */
+
 data class DayEntry(
     val id: Long,
     val dateLabel: String,      // "2024년 3월 20일"
-    val dayMemo: String,        // 일자 기본 메모
-    val photos: List<PhotoItem>
+    val photos: List<DailyRecord>
 ) {
-    val representativePhoto: PhotoItem?
-        get() = photos.firstOrNull()
+    // 대표 사진은 isFeatured=true를 우선으로, 없으면 첫 번째 사진
+    val representativePhoto: DailyRecord
+        get() = photos.firstOrNull { it.isFeatured } ?: photos.first()
 }

@@ -4,7 +4,7 @@ data class PresentUiState(
     val userProfile: UserProfile = UserProfile(),
     val practices: List<Practice> = emptyList(),
     val practicesLeft: Int = 0,
-    val dailyRecords: List<DailyRecord> = emptyList()
+    val todayRecords: List<DailyRecord> = emptyList() // ⬅️ dailyRecords에서 이름 변경
 )
 
 data class UserProfile(

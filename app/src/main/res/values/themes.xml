@@ -11,7 +11,47 @@
         <item name="android:windowLightStatusBar">true</item>
 
         <!-- Customize your theme here. -->
-        <item name="android:windowBackground">@color/background</item>
-        <item name="android:textColor">@color/text_primary</item>
+
+
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_primary</item>
+        <item name="colorSurface">#FFFFFF</item>
+        <item name="colorSurfaceVariant">#FFFFFF</item>
+
+        <item name="android:windowBackground">#FFFFFF</item>
+        <item name="android:colorBackground">#FFFFFF</item>
+        <item name="android:navigationBarColor">#FFFFFF</item>
+
+
+
+        <item name="colorSurfaceContainer">#FFFFFF</item>
+
     </style>
+
+    <style name="CustomDatePickerTheme" parent="Theme.MaterialComponents.Light.Dialog">
+        <item name="colorPrimary">#4CAF50</item> <item name="colorAccent">#4CAF50</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+
+    </style>
+
+    <style name="ThemeOverlay_App_DatePicker" parent="ThemeOverlay.MaterialComponents.MaterialCalendar">
+        <item name="colorPrimary">#81C784</item>
+        <item name="colorSecondary">#4CAF50</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.App.MediumComponent</item>
+    </style>
+
+    <style name="ShapeAppearance.App.MediumComponent" parent="ShapeAppearance.MaterialComponents.MediumComponent">
+        <item name="cornerSize">24dp</item>
+    </style>
+
+    <style name="CustomMaterialCalendarStyle" parent="Widget.MaterialComponents.MaterialCalendar">
+        <item name="rangeFillColor">#E8F5E9</item>
+    </style>
+
+    <style name="Theme.RecordCard" parent="">
+        <item name="colorPrimary">#000000</item>
+        <item name="colorSecondary">#666666</item>
+        <item name="android:textColorPrimary">#1A1A1A</item>
+    </style>
+
 </resources>

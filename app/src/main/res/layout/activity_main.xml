@@ -19,12 +19,15 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@color/surface"
-        app:itemIconTint="@color/bottom_nav_item_color"
         app:itemTextColor="@color/bottom_nav_item_color"
-        app:labelVisibilityMode="labeled"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:menu="@menu/bottom_navigation_menu" />
+        app:menu="@menu/bottom_navigation_menu"
+        app:itemIconSize="100dp"
+        app:itemIconTint="@null"
+        app:labelVisibilityMode="labeled"
+        app:itemPaddingTop="12dp"
+        app:itemPaddingBottom="12dp" />/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

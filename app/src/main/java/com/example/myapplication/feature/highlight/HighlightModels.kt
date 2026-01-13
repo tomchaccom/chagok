@@ -17,6 +17,7 @@ data class HighlightRankItem(
 data class HighlightRankSection(
     val metric: HighlightMetric,
     val items: List<HighlightRankItem>,
+    val averageScore: Double,
 
     // 🔽 추가
     val graphPoints: List<HighlightGraphPoint> = emptyList(),

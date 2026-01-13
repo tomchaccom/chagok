@@ -13,8 +13,10 @@ data class DailyRecord(
     val cesMetrics: CesMetrics,
     val meaning: Meaning,
     val date: String,
-    val isFeatured: Boolean
+    val isFeatured: Boolean,
+    val isAchieved : Boolean = true
 )
+
 
 /**
  * CES 지수 (정체성, 연결성, 관점 + 가중치 점수)

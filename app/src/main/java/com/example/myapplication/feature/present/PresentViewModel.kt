@@ -3,13 +3,14 @@ package com.example.myapplication.feature.present
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.myapplication.data.future.GoalRepository
 import com.example.myapplication.data.present.PresentRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
+import com.example.myapplication.R
 class PresentViewModel(private val repository: PresentRepository) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PresentUiState())
@@ -51,6 +52,7 @@ class PresentViewModel(private val repository: PresentRepository) : ViewModel() 
                     }
                     it.copy(practices = updatedPractices)
                 }
+
             } catch (e: Exception) {
                 Log.e("PresentViewModel", "Error updating practice: ${e.message}", e)
                 _errorMessage.value = "실천 상태 업데이트에 실패했습니다"
@@ -72,5 +74,30 @@ class PresentViewModel(private val repository: PresentRepository) : ViewModel() 
 
     fun clearErrorMessage() {
         _errorMessage.value = null
+    }
+
+    // PresentViewModel.kt
+    fun saveNewRecord(photoUri: String, memo: String, score: Int, goalId: String? = null) {
+
+        goalId?.let { id ->
+            // 앞서 GoalRepository에 추가한 업데이트 함수를 호출합니다.
+            GoalRepository.updateGoalAchieved(id, true)
+        }
+
+        // 2. 오늘 날짜 기록 저장 또는 업데이트 로직
+        val todayStr = java.time.LocalDate.now().toString()
+
+        val newRecord = DailyRecord(
+            id = System.currentTimeMillis().toString(), // 임시 ID
+            photoUri = photoUri,
+            memo = memo,
+            score = score,
+            cesMetrics = CesMetrics(3, 3, 3, 3.0f), // 임시 값
+            date = "2026.01.13",
+            meaning = Meaning.REMEMBER,
+            isFeatured = false
+        )
+        repository.addRecord(newRecord)
+        loadPresentData() // 저장 후 즉시 리스트 새로고침
     }
 }
