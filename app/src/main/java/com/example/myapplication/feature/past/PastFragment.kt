@@ -16,6 +16,8 @@ import com.example.myapplication.data.present.DailyRecord as DataDailyRecord
 import com.example.myapplication.feature.present.DailyRecord as FeatureDailyRecord
 import android.widget.Toast
 import com.example.myapplication.data.present.DailyRecord
+import com.example.myapplication.feature.present.CreateMomentViewModel
+
 class PastFragment : Fragment() {
 
     private lateinit var viewModel: PastViewModel
@@ -31,6 +33,38 @@ class PastFragment : Fragment() {
 
     private fun showToast(message: String) {
         Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+
+    // PastFragment.kt 내 수정 부분
+    // --- 수정된 importPresentToPastBeforeVm 함수 (이 하나만 남기세요) ---
+    private fun importPresentToPastBeforeVm(repo: PastRepository) {
+        try {
+            // 1. 현재 기록 가져오기
+            val saved = CreateMomentViewModel.getSavedRecords()
+            if (saved.isEmpty()) return
+
+            // 2. 날짜별 그룹화
+            val groups = saved.groupBy { rec ->
+                if (rec.date.isBlank()) currentDateIso() else rec.date
+            }
+
+            for ((dateIso, records) in groups) {
+                val dateLabel = formatDateLabel(dateIso)
+                val dayPhotos = records.reversed()
+
+                // 3. DayEntry 생성 (ID는 0L로 전달, 저장소에서 자동 부여)
+                val newDay = DayEntry(id = 0L, dateLabel = dateLabel, photos = dayPhotos)
+
+                // 🌟 77번 줄 문제 해결: addDayEntry 대신 중복 체크 기능이 있는 함수 호출
+                repo.addOrUpdateDayEntry(newDay)
+            }
+
+            // 4. 현재 저장소 비우기
+            CreateMomentViewModel.clearRecords()
+            showToast("오늘의 기억이 해당 날짜 카드에 통합되었습니다.")
+        } catch (_: Exception) {
+            // 에러 발생 시 로그를 남기거나 무시
+        }
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -134,36 +168,6 @@ class PastFragment : Fragment() {
         }
     }
 
-
-    private fun importPresentToPastBeforeVm(repo: PastRepository) {
-        try {
-            // ViewModel에서 가져오는 레코드는 이제 data.present.DailyRecord 타입입니다.
-            val saved: List<DailyRecord> = com.example.myapplication.feature.present.CreateMomentViewModel.getSavedRecords()
-
-            if (saved.isEmpty()) return
-
-            val groups = saved.groupBy { rec -> if (rec.date.isBlank()) currentDateIso() else rec.date }
-            for ((dateIso, records) in groups) {
-                val dateLabel = formatDateLabel(dateIso)
-
-                // 타입이 동일하므로 mapToDataDaily 함수를 호출할 필요 없이 바로 사용 가능합니다.
-                val photos: List<DailyRecord> = records.reversed()
-
-                val day = DayEntry(id = 0L, dateLabel = dateLabel, photos = photos)
-                repo.addDayEntry(day)
-            }
-
-            com.example.myapplication.feature.present.CreateMomentViewModel.clearRecords()
-            showToast("오늘의 기억이 '과거'에 저장되었습니다.")
-        } catch (_: Exception) { }
-    }
-
-// 이 함수는 이제 필요 없으므로 삭제하거나 주석 처리하세요.
-    /*
-    private fun mapToDataDaily(r: DailyRecord): DailyRecord {
-        return r // 같은 타입이므로 단순히 반환만 함
-    }
-    */
 
     private fun mapToDataDaily(r: FeatureDailyRecord): DataDailyRecord {
         return DataDailyRecord(

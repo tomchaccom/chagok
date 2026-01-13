@@ -58,22 +58,44 @@ class PastRepository(private val context: Context) {
     }
 
     // Add a single DailyRecord: group into existing DayEntry by date or create a new DayEntry
+    // PastRepository.kt 내의 함수들을 아래와 같이 교체/수정하세요.
+
+    /**
+     * [해결] 동일한 날짜 레이블을 가진 엔트리를 찾아 사진을 합치거나 새로 추가합니다.
+     */
+    fun addOrUpdateDayEntry(newEntry: DayEntry) {
+        // 1. 동일한 날짜 레이블을 가진 기존 엔트리의 인덱스를 찾습니다.
+        val existingIndex = entries.indexOfFirst { it.dateLabel == newEntry.dateLabel }
+
+        if (existingIndex != -1) {
+            // 2. 이미 해당 날짜가 있다면, 기존 사진 리스트에 새 사진들을 합칩니다.
+            val existingEntry = entries[existingIndex]
+            // 중복된 ID를 가진 사진은 제외하고 합칩니다.
+            val mergedPhotos = (existingEntry.photos + newEntry.photos).distinctBy { it.id }
+            entries[existingIndex] = existingEntry.copy(photos = mergedPhotos)
+        } else {
+            // 3. 해당 날짜가 없으면 리스트의 맨 앞에 새로 추가합니다.
+            val newId = idCounter++
+            entries.add(0, newEntry.copy(id = newId))
+        }
+
+        // 4. 변경된 전체 리스트를 저장합니다.
+        saveToStorage()
+    }
+
+    /**
+     * 단일 레코드를 추가할 때도 위의 로직을 타도록 변경하여 일관성을 유지합니다.
+     */
     fun addDailyRecord(record: DailyRecord) {
         try {
-            val recordDate = if (record.date.isNotBlank()) record.date else java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
-            val dateLabel = formatDateLabel(recordDate)
-            val idx = entries.indexOfFirst { it.dateLabel == dateLabel }
-            if (idx >= 0) {
-                val old = entries[idx]
-                val newPhotos = mutableListOf<DailyRecord>()
-                newPhotos.add(record)
-                newPhotos.addAll(old.photos)
-                entries[idx] = old.copy(photos = newPhotos)
-                saveToStorage()
-            } else {
-                val newDay = DayEntry(id = 0L, dateLabel = dateLabel, photos = listOf(record))
-                addDayEntry(newDay)
+            val recordDate = if (record.date.isNotBlank()) record.date else {
+                java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault()).format(java.util.Date())
             }
+            val dateLabel = formatDateLabel(recordDate)
+
+            // 위에서 만든 통합 로직용 DayEntry 객체 생성
+            val tempEntry = DayEntry(id = 0L, dateLabel = dateLabel, photos = listOf(record))
+            addOrUpdateDayEntry(tempEntry)
         } catch (_: Exception) {
         }
     }
