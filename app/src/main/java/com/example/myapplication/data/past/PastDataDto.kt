@@ -12,6 +12,6 @@ data class DayEntry(
     val photos: List<DailyRecord>
 ) {
     // 대표 사진은 isFeatured=true를 우선으로, 없으면 첫 번째 사진
-    val representativePhoto: DailyRecord?
-        get() = photos.firstOrNull { it.isFeatured } ?: photos.firstOrNull()
+    val representativePhoto: DailyRecord
+        get() = photos.firstOrNull { it.isFeatured } ?: photos.first()
 }

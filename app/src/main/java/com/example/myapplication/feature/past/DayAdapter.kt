@@ -49,38 +49,28 @@ class DayAdapter(
 
             // 2. 내용(메모) 표시
             // 내용이 없으면 "내용 없음" 같은 기본 문구를 넣을 수도 있습니다.
-            tvSummary.text = if (day.dayMemo.isNotEmpty()) day.dayMemo else "기록된 내용이 없습니다."
+            val repPhoto = day.representativePhoto
+            tvSummary.text = if (repPhoto?.memo != null) repPhoto?.memo else "기록된 내용이 없습니다."
 
             // 3. 썸네일 이미지 로드 (기존 로직 유지)
-            val repPhoto = day.representativePhoto
             if (repPhoto != null) {
                 // 60dp 크기로 로드 (XML의 CardView 크기에 맞춤)
                 val sizePx = (60 * itemView.context.resources.displayMetrics.density).toInt()
                 ImageLoader.loadInto(
                     imgThumbnail,
-                    repPhoto.imageUri,
+                    repPhoto.photoUri,
                     R.drawable.ic_launcher_background,
                     sizePx,
                     sizePx
                 )
-            tvDate.text = day.dateLabel
-            // dayMemo는 더 이상 사용하지 않음 — 대표 사진의 memo를 우선 표시
-            val rep: DailyRecord? = day.representativePhoto
-            tvMemo.text = rep?.memo ?: ""
-            val repPhoto: DailyRecord? = rep
-            if (repPhoto != null) {
-                if (thumbnailPx == 0) {
-                    val density = itemView.context.resources.displayMetrics.density
-                    thumbnailPx = (56 * density).toInt()
-                }
-                ImageLoader.loadInto(ivThumb, repPhoto.photoUri, R.drawable.ic_launcher_background, reqWidth = thumbnailPx, reqHeight = thumbnailPx)
-            } else {
-                imgThumbnail.setImageResource(R.drawable.ic_launcher_background)
             }
         }
     }
 }
 class DayDiffCallback : DiffUtil.ItemCallback<DayEntry>() {
-    override fun areItemsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean = oldItem.id == newItem.id
-    override fun areContentsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean = oldItem == newItem
+    override fun areItemsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean =
+        oldItem.id == newItem.id
+
+    override fun areContentsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean =
+        oldItem == newItem
 }

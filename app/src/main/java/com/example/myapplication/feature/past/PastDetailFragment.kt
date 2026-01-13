@@ -92,7 +92,7 @@ class PastDetailFragment : Fragment() {
 
                 // 사진 선택이 안 되어있으면 기본 메모 표시
                 if (viewModel.selectedPhotoIndex.value == null) {
-                    updateMemo(day.dayMemo, "오늘의 메모")
+                    updateMemo(day.representativePhoto.memo, "오늘의 메모")
                 }
             }
         }
@@ -102,10 +102,10 @@ class PastDetailFragment : Fragment() {
             val day = viewModel.selectedDay.value
             if (day != null) {
                 if (idx == null) {
-                    updateMemo(day.dayMemo, "오늘의 메모")
+                    updateMemo(day.representativePhoto.memo, "오늘의 메모")
                 } else {
                     val photoMemo = day.photos.getOrNull(idx)?.memo
-                    updateMemo(photoMemo ?: day.dayMemo, "사진 메모")
+                    updateMemo(photoMemo ?: day.representativePhoto.memo, "사진 메모")
                 }
                 photoAdapter.setSelectedIndex(idx)
             }

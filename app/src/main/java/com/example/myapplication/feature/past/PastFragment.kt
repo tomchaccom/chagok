@@ -101,27 +101,28 @@ class PastFragment : Fragment() {
             }
         }
 
-        viewModel.selectedDay.observe(viewLifecycleOwner) { day ->
-            if (day == null) showList() else showDetailFor(day)
-        }
 
-        viewModel.selectedPhotoIndex.observe(viewLifecycleOwner) { idx ->
-            val day = viewModel.selectedDay.value
-            if (day == null) {
-                tvMemoTitle.text = ""
-                tvMemoContent.text = ""
-            } else {
-                val repMemo = day.representativePhoto?.memo ?: ""
-                if (idx == null) {
-                    tvMemoTitle.text = "오늘 메모"
-                    tvMemoContent.text = repMemo
-                } else {
-                    tvMemoTitle.text = "사진 메모"
-                    tvMemoContent.text = day.photos.getOrNull(idx)?.memo ?: repMemo
-                }
-            }
-            photoAdapter.setSelectedIndex(idx)
-        }
+//        viewModel.selectedDay.observe(viewLifecycleOwner) { day ->
+//            if (day == null) showList() else showDetailFor(day)
+//        }
+//
+//        viewModel.selectedPhotoIndex.observe(viewLifecycleOwner) { idx ->
+//            val day = viewModel.selectedDay.value
+//            if (day == null) {
+//                tvMemoTitle.text = ""
+//                tvMemoContent.text = ""
+//            } else {
+//                val repMemo = day.representativePhoto?.memo ?: ""
+//                if (idx == null) {
+//                    tvMemoTitle.text = "오늘 메모"
+//                    tvMemoContent.text = repMemo
+//                } else {
+//                    tvMemoTitle.text = "사진 메모"
+//                    tvMemoContent.text = day.photos.getOrNull(idx)?.memo ?: repMemo
+//                }
+//            }
+//            photoAdapter.setSelectedIndex(idx)
+//        }
     }
 
     // 7. setupWindowInsets 함수 정의 (onViewCreated 바깥에 있어야 합니다)
@@ -131,6 +132,8 @@ class PastFragment : Fragment() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+    }
+
     private fun importPresentToPastBeforeVm(repo: PastRepository) {
         try {
             val saved = com.example.myapplication.feature.present.CreateMomentViewModel.getSavedRecords()
@@ -184,20 +187,11 @@ class PastFragment : Fragment() {
             dateStr
         }
     }
+//
+//    private fun showList() {
+//        detailContainer.visibility = View.GONE
+//        rvDays.visibility = View.VISIBLE
+//    }
 
-    private fun showList() {
-        detailContainer.visibility = View.GONE
-        rvDays.visibility = View.VISIBLE
-    }
 
-    private fun showDetailFor(day: DayEntry) {
-        rvDays.visibility = View.GONE
-        detailContainer.visibility = View.VISIBLE
-        tvDetailDate.text = day.dateLabel
-        tvMemoTitle.text = "오늘 메모"
-        // 대표 사진의 memo를 기본으로 표시
-        tvMemoContent.text = day.representativePhoto?.memo ?: ""
-        photoAdapter.submitList(day.photos)
-        photoAdapter.setSelectedIndex(null)
-    }
 }
