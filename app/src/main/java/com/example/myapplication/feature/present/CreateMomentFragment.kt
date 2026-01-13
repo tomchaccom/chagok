@@ -91,6 +91,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         setupSaveButton()
         observeViewModel()
         observeUiState()
+
     }
 
     /* ---------------- UI 및 이벤트 설정 (기존 기능 복구) ---------------- */
@@ -145,15 +146,25 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
             createViewModel.uiState.collect { state ->
-                // 종합 점수 텍스트 갱신 (예: 3.5점)
+                // 1. 종합 점수 및 라벨 업데이트 (이미 해결된 부분)
                 binding.cesScoreValue.text = String.format("%.1f점", state.cesWeightedScore)
-
-                // 점수 설명 갱신 (예: 보통)
                 binding.cesScoreDescription.text = "(${state.cesDescription})"
 
-                // 저장 성공 시 화면 종료 등 추가 로직
-                if (state.savedSuccessfully) {
-                    parentFragmentManager.popBackStack()
+                // 2. 개별 슬라이더 숫자 텍스트 업데이트 (추가된 부분)
+                // Identity (정체성)
+                binding.layoutIdentity.sliderValueText.text = state.cesInput.identity.toString()
+
+                // Connectivity (연결성)
+                binding.layoutConnectivity.sliderValueText.text = state.cesInput.connectivity.toString()
+
+                // Perspective (관점)
+                binding.layoutPerspective.sliderValueText.text = state.cesInput.perspective.toString()
+
+                // 3. (선택사항) 수정 모드 진입 시 슬라이더 바 위치 동기화
+                if (state.editMode) {
+                    binding.layoutIdentity.sliderMain.value = state.cesInput.identity.toFloat()
+                    binding.layoutConnectivity.sliderMain.value = state.cesInput.connectivity.toFloat()
+                    binding.layoutPerspective.sliderMain.value = state.cesInput.perspective.toFloat()
                 }
             }
         }
