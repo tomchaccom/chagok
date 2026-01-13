@@ -16,6 +16,7 @@ import com.example.myapplication.data.past.PastRepository
 import com.example.myapplication.data.past.DayEntry
 import com.example.myapplication.data.present.DailyRecord as DataDailyRecord
 import com.example.myapplication.feature.present.DailyRecord as FeatureDailyRecord
+import android.widget.Toast
 
 class PastFragment : Fragment() {
 
@@ -37,6 +38,10 @@ class PastFragment : Fragment() {
         savedInstanceState: Bundle?
     ): View? {
         return inflater.inflate(R.layout.fragment_past, container, false)
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -192,6 +197,7 @@ class PastFragment : Fragment() {
 
             // Clear present records immediately since we've imported them before VM creation
             com.example.myapplication.feature.present.CreateMomentViewModel.clearRecords()
+            showToast("오늘의 기억이 '과거'에 저장되었습니다.")
          } catch (_: Exception) {
             // ignore
         }
