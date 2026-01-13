@@ -51,6 +51,7 @@ class PresentViewModel(private val repository: PresentRepository) : ViewModel() 
                     }
                     it.copy(practices = updatedPractices)
                 }
+
             } catch (e: Exception) {
                 Log.e("PresentViewModel", "Error updating practice: ${e.message}", e)
                 _errorMessage.value = "실천 상태 업데이트에 실패했습니다"

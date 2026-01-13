@@ -1,5 +1,6 @@
 package com.example.myapplication.feature.present
 
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -17,6 +18,10 @@ import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.launch
 import kotlin.collections.reversed
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.myapplication.data.future.GoalRepository
+import java.time.LocalDate
+import android.widget.TextView
 
 class PresentFragment : BaseFragment<FragmentPresentBinding>() {
 
@@ -25,7 +30,16 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
 
     // 어댑터 정의
     private lateinit var practiceAdapter: PracticeAdapter
+
+    private lateinit var practices_left_badge: TextView
+
     private lateinit var momentAdapter: MomentAdapter // RecordAdapter -> MomentAdapter로 변경
+
+    // AdapterDataObserver를 보관하여 onDestroyView에서 해제
+    private var practiceAdapterObserver: RecyclerView.AdapterDataObserver? = null
+
+    // 사용자가 토글한 실천 상태를 임시로 저장합니다 (로컬 우선 적용)
+    private val localOverrides: MutableMap<String, Boolean?> = mutableMapOf()
 
     override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentPresentBinding {
         return FragmentPresentBinding.inflate(inflater, container, false)
@@ -34,11 +48,30 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // binding을 사용하여 뱃지 TextView를 먼저 초기화합니다. (어댑터 옵저버가 즉시 갱신할 수 있도록)
+        practices_left_badge = binding.practicesLeftBadge
+
         setupRecyclerViews()
         setupClickListeners()
         observeUiState()
         observeLoadingState()
         observeErrorState()
+
+        // Present 화면이 보일 때 goals.json에 있는 오늘 목표를 로드하여 Practice로 표시
+        loadTodayPracticesFromGoals()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        // Adapter observer 해제
+        practiceAdapterObserver?.let {
+            try {
+                practiceAdapter.unregisterAdapterDataObserver(it)
+            } catch (_: Exception) {
+                // 이미 해제되었거나 adapter가 초기화되지 않았을 수 있음
+            }
+            practiceAdapterObserver = null
+        }
     }
 
     override fun onResume() {
@@ -55,11 +88,39 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         // 주의: 실제 앱에서는 Room DB나 서버 데이터를 PresentViewModel에서 불러오는 것이 좋습니다.
         val savedRecords = CreateMomentViewModel.getSavedRecords()
         updateRecordUi(savedRecords)
+
+        // goals에 변화가 있을 수 있으므로 다시 로드
+        loadTodayPracticesFromGoals()
     }
 
     private fun setupRecyclerViews() {
         // 1. Practice RecyclerView (기존 유지)
         practiceAdapter = PracticeAdapter { practice, isAchieved ->
+            // 즉시 UI 반영: 어댑터의 현재 리스트를 복사하여 해당 항목의 상태를 변경 후 다시 제출
+            try {
+                // 로컬 오버라이드에 우선 저장
+                localOverrides[practice.id] = isAchieved
+
+                val current = practiceAdapter.currentList.toMutableList()
+                val idx = current.indexOfFirst { it.id == practice.id }
+                if (idx >= 0) {
+                    // data class라면 copy로 상태 변경
+                    current[idx] = current[idx].copy(isAchieved = isAchieved)
+                    // submitList의 commit 콜백으로 뱃지 갱신
+                    practiceAdapter.submitList(current) {
+                        updatePracticesLeftBadge(practiceAdapter.currentList)
+                    }
+                } else {
+                    // 아이템이 없다면 어댑터 리스트를 강제로 갱신
+                    practiceAdapter.submitList(current) {
+                        updatePracticesLeftBadge(practiceAdapter.currentList)
+                    }
+                }
+            } catch (_: Exception) {
+                // 안전하게 실패: adapter가 아직 준비 안 된 경우 등
+            }
+
+            // 변경을 ViewModel(또는 저장소)에 알려 영구 저장/동기화 처리
             viewModel.onPracticeStateChanged(practice.id, isAchieved)
         }
         // 명시적으로 LayoutManager 설정(가끔 XML 속성으로는 동작하지 않을 수 있음)
@@ -67,8 +128,33 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         binding.practicesRecyclerView.adapter = practiceAdapter
         binding.practicesRecyclerView.visibility = View.VISIBLE
 
-        // --- 제출: 초기 더미 데이터 (실제 데이터가 로드될 때까지 보이도록)
-        practiceAdapter.submitList(generateDummyPractices())
+        // Adapter 데이터 변경을 감지하여 뱃지 갱신
+        val observer = object : RecyclerView.AdapterDataObserver() {
+            override fun onChanged() {
+                updatePracticesLeftBadge(practiceAdapter.currentList)
+            }
+
+            override fun onItemRangeInserted(positionStart: Int, itemCount: Int) {
+                updatePracticesLeftBadge(practiceAdapter.currentList)
+            }
+
+            override fun onItemRangeRemoved(positionStart: Int, itemCount: Int) {
+                updatePracticesLeftBadge(practiceAdapter.currentList)
+            }
+
+            override fun onItemRangeChanged(positionStart: Int, itemCount: Int) {
+                updatePracticesLeftBadge(practiceAdapter.currentList)
+            }
+
+            override fun onItemRangeMoved(fromPosition: Int, toPosition: Int, itemCount: Int) {
+                updatePracticesLeftBadge(practiceAdapter.currentList)
+            }
+        }
+        practiceAdapter.registerAdapterDataObserver(observer)
+        practiceAdapterObserver = observer
+
+        // 초기 뱃지 상태 업데이트 (어댑터가 비어있지 않다면 즉시 반영)
+        updatePracticesLeftBadge(practiceAdapter.currentList)
 
         // 2. Moment Carousel (ViewPager2) - 변경됨
         momentAdapter = MomentAdapter { record ->
@@ -81,18 +167,9 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         }
 
         // 3. Indicator 연결 (TabLayout + ViewPager2)
-        TabLayoutMediator(binding.recordsIndicator, binding.recordsCarousel) { tab, position ->
+        TabLayoutMediator(binding.recordsIndicator, binding.recordsCarousel) { _, _ ->
             // 탭 텍스트 없이 점만 표시
         }.attach()
-    }
-
-    // 더미 Practice 리스트 생성 (UI 확인용)
-    private fun generateDummyPractices(): List<Practice> {
-        return listOf(
-            Practice(id = "p1", title = "물 한 잔 마시기", subtitle = "하루 1회", isAchieved = null),
-            Practice(id = "p2", title = "잠깐 스트레칭", subtitle = "하루 2회", isAchieved = null),
-            Practice(id = "p3", title = "10분 명상", subtitle = "하루 1회", isAchieved = null)
-        )
     }
 
     private fun setupClickListeners() {
@@ -147,7 +224,6 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         return date == today
     }
 
-
     private fun updateRecordUi(records: List<DailyRecord>) {
         // 최신순 정렬
         val sortedRecords = records.reversed()
@@ -176,11 +252,11 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
                     binding.apply {
                         greetingText.text = uiState.userProfile.greeting
                         greetingPrompt.text = uiState.userProfile.prompt
-                        practicesLeftBadge.text = "${uiState.practicesLeft}개 남음"
 
-                        // Practice 리스트 갱신 — 실제 데이터가 비어 있을 때는 기존(더미) 유지
-                        if (uiState.practices.isNotEmpty()) {
-                            practiceAdapter.submitList(uiState.practices)
+                        // 받은 리스트와 로컬 리스트를 병합하여 로컬 변경 우선 반영
+                        val merged = mergeWithLocal(uiState.practices)
+                        practiceAdapter.submitList(merged) {
+                            updatePracticesLeftBadge(practiceAdapter.currentList)
                         }
                     }
                 }
@@ -208,6 +284,64 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
                     }
                 }
             }
+        }
+    }
+
+    // GoalRepository에서 오늘 날짜와 같은 Goal을 Practice로 변환하여 어댑터에 제출
+    private fun loadTodayPracticesFromGoals() {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                GoalRepository.initialize(requireContext())
+                val today = LocalDate.now()
+                val todaysGoals = GoalRepository.getAll()
+                    .filter { it.date == today }
+                    .map { goal ->
+                        Practice(
+                            id = "goal-${goal.title.hashCode()}",
+                            title = goal.title,
+                            subtitle = "목표",
+                            isAchieved = null
+                        )
+                    }
+                val merged = mergeWithLocal(todaysGoals)
+                practiceAdapter.submitList(merged) {
+                    // 실제 리스트가 어댑터에 적용된 직후 뱃지 갱신
+                    updatePracticesLeftBadge(practiceAdapter.currentList)
+                }
+
+            }
+        } catch (_: Exception) {
+            // 안전하게 실패하면 아무 것도 하지 않음
+        }
+    }
+
+    // remote(뷰모델/파일)에서 받은 리스트와 어댑터의 currentList를 병합합니다.
+    // 로컬(어댑터)에 있는 항목이 동일 id를 갖는 경우 로컬 항목을 우선 사용합니다.
+    private fun mergeWithLocal(remote: List<Practice>): List<Practice> {
+        val local = practiceAdapter.currentList
+        val localMap = local.associateBy { it.id }
+        val remoteMap = remote.associateBy { it.id }
+
+        val allIds = (remote.map { it.id } + local.map { it.id }).distinct()
+
+        return allIds.mapNotNull { id ->
+            // 1) 로컬 어댑터에 있는 항목 우선
+            val base = localMap[id] ?: remoteMap[id]
+            base?.let {
+                // 2) 사용자가 토글한 값(localOverrides)이 있으면 적용
+                if (localOverrides.containsKey(id)) {
+                    it.copy(isAchieved = localOverrides[id])
+                } else it
+            }
+        }
+    }
+
+    private fun updatePracticesLeftBadge(practices: List<Practice>) {
+        // 남은 개수 계산: isAchieved == true 인 경우 완료로 간주
+        val remainingCount = practices.count { it.isAchieved != true }.coerceAtLeast(0)
+        // UI 스레드에서 안전하게 갱신
+        practices_left_badge.post {
+            practices_left_badge.text = resources.getString(R.string.practices_left, remainingCount)
         }
     }
 }
