@@ -5,45 +5,50 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="10dp"
+    android:layout_marginTop="12dp"
     android:layout_marginHorizontal="16dp"
     app:cardBackgroundColor="@android:color/white"
-    app:cardCornerRadius="20dp"
-    app:cardElevation="2dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="3dp"
     app:strokeWidth="0dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingVertical="14dp"
-        android:paddingHorizontal="20dp"> <ImageView
-        android:id="@+id/goal_icon"
-        android:layout_width="65dp"
-        android:layout_height="48dp"
-        android:src="@drawable/chagok_app"
-        android:scaleType="fitCenter"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"/>
+        android:paddingVertical="4dp"
+        android:paddingStart="6dp"
+        android:paddingEnd="20dp">
+
+        <ImageView
+            android:id="@+id/goal_icon"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="-4dp"
+            android:layout_marginBottom="-4dp"
+            android:src="@drawable/chagok_app2"
+            android:scaleType="fitCenter"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="24dp" android:layout_marginEnd="12dp"
+            android:layout_marginStart="8dp"
             android:orientation="vertical"
-            app:layout_constraintStart_toEndOf="@id/goal_icon"
-            app:layout_constraintTop_toTopOf="@id/goal_icon"
             app:layout_constraintBottom_toBottomOf="@id/goal_icon"
-            app:layout_constraintEnd_toStartOf="@id/ivChevron">
+            app:layout_constraintEnd_toStartOf="@id/ivChevron"
+            app:layout_constraintStart_toEndOf="@id/goal_icon"
+            app:layout_constraintTop_toTopOf="@id/goal_icon">
 
             <TextView
                 android:id="@+id/goal_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="#1A1A1A"
-                android:textSize="17sp"
-                android:textStyle="bold"
                 android:includeFontPadding="false"
+                android:textColor="#1A1A1A"
+                android:textSize="18sp"
+                android:textStyle="bold"
                 tools:text="일본 여행하기" />
 
             <TextView
@@ -52,19 +57,19 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
                 android:textColor="#888888"
-                android:textSize="13sp"
+                android:textSize="14sp"
                 tools:text="2025.10.15" />
         </LinearLayout>
 
         <ImageView
             android:id="@+id/ivChevron"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:src="@drawable/ic_chevron_right"
-            app:tint="#E0E0E0"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            app:tint="#D1D1D1" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
