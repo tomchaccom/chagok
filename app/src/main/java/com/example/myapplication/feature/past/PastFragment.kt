@@ -13,6 +13,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.myapplication.R
 import com.example.myapplication.data.past.PastRepository
+import com.example.myapplication.data.past.DayEntry
+import com.example.myapplication.data.present.DailyRecord as DataDailyRecord
+import com.example.myapplication.feature.present.DailyRecord as FeatureDailyRecord
 
 class PastFragment : Fragment() {
 
@@ -62,7 +65,11 @@ class PastFragment : Fragment() {
 
         // ViewModel: repository 주입용 factory 사용 (없으면 Hilt 또는 기본 생성자 사용)
         val repo = PastRepository(requireContext())
-        val factory = com.example.myapplication.feature.past.PastViewModelFactory(repo)
+
+        // Import any present saved records into repository BEFORE creating ViewModel
+        importPresentToPastBeforeVm(repo)
+
+        val factory = PastViewModelFactory(repo)
         viewModel = ViewModelProvider(this, factory).get(PastViewModel::class.java)
 
         // Day list
@@ -167,12 +174,65 @@ class PastFragment : Fragment() {
         }
     }
 
+    private fun importPresentToPastBeforeVm(repo: PastRepository) {
+        try {
+            val saved = com.example.myapplication.feature.present.CreateMomentViewModel.getSavedRecords()
+            
+            if (saved.isEmpty()) return
+
+            // no per-record logging in release; skip loop
+
+            val groups = saved.groupBy { rec -> if (rec.date.isBlank()) currentDateIso() else rec.date }
+            for ((dateIso, records) in groups) {
+                val dateLabel = formatDateLabel(dateIso)
+                val photos: List<DataDailyRecord> = records.reversed().map { mapToDataDaily(it) }
+                val day = DayEntry(id = 0L, dateLabel = dateLabel, photos = photos)
+                repo.addDayEntry(day)
+            }
+
+            // Clear present records immediately since we've imported them before VM creation
+            com.example.myapplication.feature.present.CreateMomentViewModel.clearRecords()
+         } catch (_: Exception) {
+            // ignore
+        }
+    }
+
+    private fun mapToDataDaily(r: FeatureDailyRecord): DataDailyRecord {
+        return DataDailyRecord(
+            id = r.id,
+            photoUri = r.photoUri,
+            memo = r.memo,
+            score = r.score,
+            cesMetrics = com.example.myapplication.data.present.CesMetrics(r.cesMetrics.identity, r.cesMetrics.connectivity, r.cesMetrics.perspective, r.cesMetrics.weightedScore),
+            meaning = com.example.myapplication.data.present.Meaning.valueOf(r.meaning.name),
+            date = r.date,
+            isFeatured = r.isFeatured
+        )
+    }
+
+    private fun currentDateIso(): String {
+        val fmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+        return fmt.format(java.util.Date())
+    }
+
+    private fun formatDateLabel(dateStr: String): String {
+        return try {
+            val inFmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.getDefault())
+            val d = inFmt.parse(dateStr)
+            if (d == null) return dateStr
+            val outFmt = java.text.SimpleDateFormat("yyyy년 M월 d일", java.util.Locale.getDefault())
+            outFmt.format(d)
+        } catch (_: Exception) {
+            dateStr
+        }
+    }
+
     private fun showList() {
         detailContainer.visibility = View.GONE
         rvDays.visibility = View.VISIBLE
     }
 
-    private fun showDetailFor(day: com.example.myapplication.data.past.DayEntry) {
+    private fun showDetailFor(day: DayEntry) {
         rvDays.visibility = View.GONE
         detailContainer.visibility = View.VISIBLE
         tvDetailDate.text = day.dateLabel

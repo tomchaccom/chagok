@@ -15,6 +15,14 @@ class PastViewModel(
     val days: LiveData<List<DayEntry>> = _days
 
     init {
+        refresh()
+    }
+
+    /**
+     * Reload entries from repository on IO and publish to LiveData.
+     * Call this after external changes to repository (e.g. import from Present).
+     */
+    fun refresh() {
         viewModelScope.launch(Dispatchers.IO) {
             val list = repository.loadPastEntries()
             _days.postValue(list)
