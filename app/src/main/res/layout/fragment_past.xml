@@ -1,133 +1,155 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:padding="16dp">
 
-    <!-- ========================= -->
-    <!-- 메인 콘텐츠 영역 (기존 화면) -->
-    <!-- ========================= -->
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="16dp">
-
-        <TextView
-            android:id="@+id/tvTitle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="과거 기록"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:paddingBottom="12dp" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvDays"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1" />
-
-        <!-- 상세 화면 (초기 숨김) -->
-        <LinearLayout
-            android:id="@+id/detailContainer"
-            android:visibility="gone"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp">
-
-                <ImageButton
-                    android:id="@+id/btnBack"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:src="@drawable/ic_arrow_back_24"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:contentDescription="back" />
-
-                <TextView
-                    android:id="@+id/tvDetailDate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="2002년 9월 7일"
-                    android:textSize="18sp"
-                    android:layout_gravity="center_vertical"
-                    android:paddingStart="8dp" />
-            </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvPhotos"
-                android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1"
-                android:layout_marginBottom="12dp"
-                android:overScrollMode="never"
-                android:nestedScrollingEnabled="false" />
-
-            <LinearLayout
-                android:id="@+id/memoCard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@android:drawable/dialog_holo_light_frame"
-                android:padding="12dp"
-                android:orientation="vertical"
-                android:layout_marginTop="8dp">
-
-                <TextView
-                    android:id="@+id/tvMemoTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="오늘 메모"
-                    android:textSize="12sp"
-                    android:textColor="#888888" />
-
-                <TextView
-                    android:id="@+id/tvMemoContent"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="일자별 메모 또는 사진 메모가 여기에 표시됩니다."
-                    android:textSize="16sp"
-                    android:paddingTop="6dp" />
-            </LinearLayout>
-        </LinearLayout>
-    </LinearLayout>
-
-    <!-- ========================= -->
-    <!-- 🟢 차곡이 + 말풍선 오버레이 -->
-    <!-- ========================= -->
-    <LinearLayout
-        android:id="@+id/chagokBubbleContainer"
+    <TextView
+        android:id="@+id/tvTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"
-        android:orientation="vertical"
-        android:gravity="end">
+        android:text="과거 기록"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
-        <!-- 💬 말풍선 -->
-        <TextView
-            android:id="@+id/tvChagokBubble"
-            android:layout_width="70dp"
-            android:layout_height="56dp"
-            android:text="이 날의 기억을 눌러보세요!"
-            android:textSize="12sp"
-            android:textColor="@color/text_primary"
-            android:padding="4dp"
-            android:layout_marginBottom="8dp" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvDays"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle"
+        tools:listitem="@layout/item_day_record_placeholder" />
 
-        <!-- 🟢 차곡이 -->
-        <ImageView
-            android:id="@+id/imgChagokPast"
-            android:layout_width="72dp"
-            android:layout_height="56dp"
-            android:adjustViewBounds="true"
-            android:src="@drawable/chagok_happy" />
-    </LinearLayout>
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupMainList"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="visible"
+        app:constraint_referenced_ids="tvTitle,rvDays" />
 
-</FrameLayout>
+
+    <ImageButton
+        android:id="@+id/btnBack"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="뒤로 가기"
+        android:src="@drawable/ic_arrow_back_24"
+        android:scaleType="centerInside"
+        app:tint="@android:color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvDetailDate"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="2024년 3월 20일"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btnBack"
+        app:layout_constraintTop_toTopOf="@id/btnBack" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvPhotos"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:nestedScrollingEnabled="false"
+        android:overScrollMode="never"
+        app:layout_constraintBottom_toTopOf="@id/cvMemo"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnBack" />
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/cvMemo"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="80dp"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="2dp"
+        app:cardBackgroundColor="@android:color/white"
+        app:strokeWidth="1dp"
+        app:strokeColor="#E0E0E0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:id="@+id/tvMemoTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="오늘의 메모"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="#4CAF50"
+                android:layout_marginBottom="8dp"/>
+            <TextView
+                android:id="@+id/tvMemoContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="해변에서 보낸 멋진 하루. 날씨가 완벽했고 석양은 오랜만에 본 최고의 석양이었어요."
+                android:textSize="16sp"
+                android:textColor="#424242"
+                android:lineSpacingExtra="4dp"/>
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <androidx.constraintlayout.widget.Group
+        android:id="@+id/groupDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:constraint_referenced_ids="btnBack,tvDetailDate,rvPhotos,cvMemo" />
+
+
+    <ImageView
+        android:id="@+id/imgChagokPast"
+        android:layout_width="72dp"
+        android:layout_height="56dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:adjustViewBounds="true"
+        android:src="@drawable/chagok_happy"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/tvChagokBubble"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="4dp"
+        android:background="@drawable/bg_bubble_rounded"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="8dp"
+        android:text="이 날의 기억을 눌러보세요!"
+        android:textColor="#333333"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toTopOf="@id/imgChagokPast"
+        app:layout_constraintEnd_toEndOf="@id/imgChagokPast"
+        app:layout_constraintStart_toStartOf="@id/imgChagokPast" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -40,7 +40,7 @@ class PastFragment : Fragment() {
         // View 참조
         rvDays = view.findViewById(R.id.rvDays)
         rvPhotos = view.findViewById(R.id.rvPhotos)
-        detailContainer = view.findViewById(R.id.detailContainer)
+        detailContainer = view.findViewById(R.id.groupDetail)
         btnBack = view.findViewById(R.id.btnBack)
         tvDetailDate = view.findViewById(R.id.tvDetailDate)
         tvMemoContent = view.findViewById(R.id.tvMemoContent)
