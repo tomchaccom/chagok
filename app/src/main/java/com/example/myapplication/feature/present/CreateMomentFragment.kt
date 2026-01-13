@@ -117,8 +117,25 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
             }
             updateChagok(msg, value)
             createViewModel.setCesIdentity(value.toInt())
+
+            val msg2 = when(value.toInt()) {
+                1, 2 ->"주변과 조금 떨어져 있는 기분이었나요?"
+                3 ->"적당한 거리에서 함께 호흡했네요."
+                else -> "모든 순간이 긴밀하게 연결된 느낌이었어요!"
+            }
+            updateChagok(msg2, value)
+
+            createViewModel.setCesConnectivity(value.toInt())
+            val msg3 = when(value.toInt()) {
+                1, 2 -> "하나의 모습에 집중한 시간이었나요?"
+                3 -> "균형 잡힌 시선으로 바라보았네요."
+                else -> "더 넓은 세상을 발견한 값진 순간이었어요!"
+            }
+            updateChagok(msg3, value)
+            createViewModel.setCesPerspective(value.toInt())
         }
-        // ... Connectivity, Perspective 슬라이더 로직 생략 (기존 코드와 동일)
+
+
     }
 
     private fun updateChagok(message: String, value: Float) {
