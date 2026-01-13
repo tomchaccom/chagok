@@ -35,4 +35,11 @@
     <string name="highlight_theme_connectivity_body">이 기억이 평소 다른 생각이나 사건을 떠올릴 때 얼마나 자주 연결되는지를 나타냅니다.\n기억 네트워크 안에서 이 사건이 얼마나 중심적인 역할을 하는지를 의미합니다.</string>
     <string name="highlight_theme_perspective_title">관점 변화 · 가장 큰 영향을 준 기억</string>
     <string name="highlight_theme_perspective_body">이 기억 이후 세상을 바라보는 관점이나 행동의 기준이 얼마나 달라졌는지를 나타냅니다.\n미래의 선택과 판단에 영향을 주는 기준점이 된 기억입니다.</string>
+    <string name="mtrl_picker_save">확인</string>
+    <string name="mtrl_picker_cancel">취소</string>
+    <string name="mtrl_picker_confirm">확인</string>
+    <string name="mtrl_picker_toggle_to_year_selection">연도 선택으로 전환</string>
+    <string name="mtrl_picker_toggle_to_day_selection">날짜 선택으로 전환</string>
+
+
 </resources>

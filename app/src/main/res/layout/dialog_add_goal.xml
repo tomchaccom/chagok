@@ -6,7 +6,6 @@
     android:padding="24dp"
     android:background="@drawable/bg_dialog_round">
 
-
     <ImageButton
         android:id="@+id/btnClose"
         android:layout_width="40dp"
@@ -20,8 +19,8 @@
 
     <ImageView
         android:id="@+id/ivDialogChagok"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
         android:src="@drawable/chagok_ques"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -51,17 +50,34 @@
         android:textSize="15sp"
         app:layout_constraintTop_toBottomOf="@id/tvDialogQuestion" />
 
-    <TextView
-        android:id="@+id/tvTargetDate"
+    <LinearLayout
+        android:id="@+id/layoutDateContainer"
         android:layout_width="match_parent"
         android:layout_height="54dp"
         android:layout_marginTop="12dp"
         android:background="@drawable/bg_edittext"
+        android:clickable="true"
+        android:focusable="true"
         android:gravity="center_vertical"
+        android:orientation="horizontal"
         android:paddingHorizontal="16dp"
-        android:text="날짜 선택 (2026.01.13)"
-        android:textColor="#555555"
-        app:layout_constraintTop_toBottomOf="@id/etGoalTitle" />
+        app:layout_constraintTop_toBottomOf="@id/etGoalTitle">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:src="@drawable/ic_calendar_24"
+            app:tint="#4CAF50" />
+
+        <TextView
+            android:id="@+id/tvTargetDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:text="날짜 선택 (2026.01.13)"
+            android:textColor="#555555"
+            android:textSize="15sp" />
+    </LinearLayout>
 
     <android.widget.Button
         android:id="@+id/btnSaveGoal"
@@ -73,6 +89,6 @@
         android:textColor="@android:color/white"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintTop_toBottomOf="@id/tvTargetDate" />
+        app:layout_constraintTop_toBottomOf="@id/layoutDateContainer" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
