@@ -1,94 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:layout_margin="8dp"
-    app:cardBackgroundColor="@color/surface"
-    app:cardCornerRadius="16dp">
+    android:layout_width="300dp"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="16dp"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="2dp">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
 
-        <!-- Photo -->
         <ImageView
-            android:id="@+id/record_photo"
-            android:layout_width="0dp"
+            android:id="@+id/recordPhoto"
+            android:layout_width="match_parent"
             android:layout_height="200dp"
             android:scaleType="centerCrop"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:srcCompat="@tools:sample/backgrounds/scenic" />
+            android:src="@android:drawable/ic_menu_gallery" />
 
-        <!-- Date badge -->
-        <TextView
-            android:id="@+id/record_date"
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:background="@drawable/badge_background"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
-            android:textColor="@color/badge_text"
-            android:textSize="12sp"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="2025-01-10" />
+            android:orientation="vertical"
+            android:padding="16dp">
 
-        <!-- Meaning badge -->
-        <TextView
-            android:id="@+id/meaning_badge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="4dp"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            tools:text="✅ 기억" />
+            <TextView
+                android:id="@+id/meaningBadge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:textSize="10sp"
+                android:textColor="@android:color/white" />
 
-        <!-- Memo -->
-        <TextView
-            android:id="@+id/record_memo"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:padding="12dp"
-            android:textColor="@color/text_primary"
-            android:textSize="14sp"
-            app:layout_constraintTop_toBottomOf="@id/record_photo"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            tools:text="오늘 하루 정말 보람찼다!" />
+            <TextView
+                android:id="@+id/recordMemo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:textColor="#333333"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end" />
 
-        <!-- CES label -->
-        <TextView
-            android:id="@+id/record_ces_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
-            android:layout_marginTop="4dp"
-            android:text="CES"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp"
-            app:layout_constraintTop_toBottomOf="@id/record_memo"
-            app:layout_constraintStart_toStartOf="parent" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center_vertical">
 
-        <!-- CES value -->
-        <TextView
-            android:id="@+id/record_ces_value"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:textColor="@color/text_secondary"
-            android:textSize="12sp"
-            app:layout_constraintStart_toEndOf="@id/record_ces_label"
-            app:layout_constraintBaseline_toBaselineOf="@id/record_ces_label"
-            tools:text="3.5" />
+                <TextView
+                    android:id="@+id/recordCesValue"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="#4CAF50"
+                    android:textStyle="bold" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+                <View android:layout_width="0dp" android:layout_weight="1" android:layout_height="0dp" />
 
+                <ImageButton
+                    android:id="@+id/btnEditRecord"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@android:drawable/ic_menu_edit"
+                    app:tint="#888888" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/recordDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:textColor="#BBBBBB"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </LinearLayout>
 </com.google.android.material.card.MaterialCardView>

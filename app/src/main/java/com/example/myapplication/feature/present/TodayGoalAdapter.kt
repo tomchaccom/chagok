@@ -5,22 +5,14 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-// 1. 바인딩 클래스 임포트 확인 (자동 임포트가 안 되면 수동으로 경로 확인)
 import com.example.myapplication.databinding.ItemTodayGoalBinding
 
-// 목표 데이터 클래스 (ViewModel에서 사용하는 클래스 타입과 일치해야 함)
-data class TodayGoal(
-    val id: String,
-    val title: String,
-    val isAchieved: Boolean = false
-)
-
+// Adapter가 사용하는 데이터 타입을 'Practice'로 통일합니다.
 class TodayGoalAdapter(
-    private val onAction: (TodayGoal, Boolean) -> Unit
-) : ListAdapter<TodayGoal, TodayGoalAdapter.ViewHolder>(DiffCallback) {
+    private val onCheckedChange: (Practice, Boolean) -> Unit
+) : ListAdapter<Practice, TodayGoalAdapter.ViewHolder>(PracticeDiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        // 2. 바인딩 인스턴스 생성 방식 확인
         val binding = ItemTodayGoalBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
@@ -28,28 +20,29 @@ class TodayGoalAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val item = getItem(position)
-        holder.bind(item)
+        holder.bind(getItem(position))
     }
 
     inner class ViewHolder(private val binding: ItemTodayGoalBinding) :
-        RecyclerView.ViewHolder(binding.root) { // 3. binding.root가 정확히 View 타입인지 확인
+        RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(item: TodayGoal) {
-            // 4. XML의 ID가 tvTodayGoalTitle, btnComplete로 되어 있는지 확인
+        fun bind(item: Practice) {
+            // 1. XML ID 확인: tvTodayGoalTitle
             binding.tvTodayGoalTitle.text = item.title
 
+            // 2. 완료 버튼 클릭 시 onCheckedChange 호출 (onAction -> onCheckedChange로 수정)
             binding.btnComplete.setOnClickListener {
-                onAction(item, true)
+                onCheckedChange(item, true)
             }
         }
     }
 
     companion object {
-        private val DiffCallback = object : DiffUtil.ItemCallback<TodayGoal>() {
-            override fun areItemsTheSame(oldItem: TodayGoal, newItem: TodayGoal): Boolean =
+        // DiffUtil의 타입도 Practice로 통일합니다.
+        private val PracticeDiffCallback = object : DiffUtil.ItemCallback<Practice>() {
+            override fun areItemsTheSame(oldItem: Practice, newItem: Practice): Boolean =
                 oldItem.id == newItem.id
-            override fun areContentsTheSame(oldItem: TodayGoal, newItem: TodayGoal): Boolean =
+            override fun areContentsTheSame(oldItem: Practice, newItem: Practice): Boolean =
                 oldItem == newItem
         }
     }

@@ -16,6 +16,7 @@ data class DailyRecord(
     val isFeatured: Boolean
 )
 
+
 /**
  * CES 지수 (정체성, 연결성, 관점 + 가중치 점수)
  */
