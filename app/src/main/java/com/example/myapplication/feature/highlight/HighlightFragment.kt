@@ -6,7 +6,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -36,6 +35,7 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        setupThemeSelector()
         observeUiState()
     }
 
@@ -48,90 +48,103 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    // 1. 차곡이 메시지 및 가이드 업데이트
+                    // 1. 데이터 유무에 따른 가이드 텍스트 처리
                     if (state.showEmptyState) {
-                        binding.tvHighlightGuide.text = "아직 기록이 없어요. 사진기 든 차곡이와 함께 첫 기록을 남겨볼까요?"
-                        binding.tvEmptyChartMessage.visibility = View.VISIBLE
+                        binding.explanationTitle.text = "기록을 쌓아주세요"
+                        binding.explanationBody.text = "차곡이가 당신의 기록을 분석할 준비를 하고 있어요!"
                     } else {
-                        binding.tvHighlightGuide.text = "기록을 살펴보니 당신의 삶은 이 지표들을 중심으로 움직이고 있네요!"
-                        binding.tvEmptyChartMessage.visibility = View.GONE
-                    }
-
-                    // 2. 랭킹 데이터 바인딩
-                    bindRankings(state.sections)
-
-                    // 3. 통합 그래프 바인딩 (대표 섹션 혹은 전체 평균 그래프)
-                    state.sections.firstOrNull { it.canShowGraph }?.let { representativeSection ->
-                        bindLineChart(representativeSection)
+                        // 현재 선택된 토글 버튼에 따라 UI 업데이트
+                        updateUiBySelectedMetric(state)
                     }
                 }
             }
         }
     }
 
-    private fun bindRankings(sections: List<HighlightRankSection>) {
-        // 점수 순으로 정렬 (내림차순)
-        val sortedSections = sections.sortedByDescending { it.averageScore }
+    private fun setupThemeSelector() {
+        // 초기값 설정 (나다움 버튼)
+        binding.themeToggleGroup.check(R.id.theme_identity_button)
 
-        // 1위: Identity (예시 매칭 - 실제 데이터에 따라 title 매칭)
-        val rank1 = sortedSections.getOrNull(0)
-        bindRankItem(binding.layoutRankIdentity, rank1, "1", true)
-
-        // 2위: Connectivity
-        val rank2 = sortedSections.getOrNull(1)
-        bindRankItem(binding.layoutRankConnectivity, rank2, "2", false)
-
-        // 3위: Perspective
-        val rank3 = sortedSections.getOrNull(2)
-        bindRankItem(binding.layoutRankPerspective, rank3, "3", false)
+        binding.themeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
+            if (isChecked) {
+                // 버튼 클릭 시 UI 강제 갱신을 위해 viewModel에 알리거나 로컬 UI 즉시 변경
+                // 여기서는 현재 수집 중인 state를 기반으로 다시 그림
+                viewLifecycleOwner.lifecycleScope.launch {
+                    updateUiBySelectedMetric(viewModel.uiState.value)
+                }
+            }
+        }
     }
 
-    private fun bindRankItem(
-        rankBinding: ViewHighlightRankItemBinding,
-        section: HighlightRankSection?,
-        rank: String,
-        isFirst: Boolean
-    ) {
-        rankBinding.root.visibility = if (section != null) View.VISIBLE else View.GONE
-        section?.let {
-            rankBinding.tvRankBadge.text = rank
-            rankBinding.tvRankTitle.text = it.metric.title
-            rankBinding.tvRankScore.text = String.format("%.1f점", it.averageScore)
+    private fun updateUiBySelectedMetric(state: HighlightUiState) {
+        val selectedMetric = when (binding.themeToggleGroup.checkedButtonId) {
+            R.id.theme_identity_button -> HighlightMetric.IDENTITY
+            R.id.theme_connectivity_button -> HighlightMetric.CONNECTIVITY
+            R.id.theme_perspective_button -> HighlightMetric.PERSPECTIVE
+            else -> HighlightMetric.IDENTITY
+        }
 
-            // 1등은 초록색 배지, 나머지는 회색
-            val badgeColor = if (isFirst) "#4CAF50" else "#888888"
-            rankBinding.tvRankBadge.backgroundTintList = ColorStateList.valueOf(Color.parseColor(badgeColor))
+        val section = state.sections.find { it.metric == selectedMetric } ?: return
+
+        // 1. 설명 텍스트 업데이트
+        binding.explanationTitle.text = section.metric.title
+        binding.explanationBody.text = getMetricDescription(section.metric)
+
+        // 2. 랭킹 바인딩 (Top 3)
+        bindMomentRank(binding.layoutRank1, section.items.getOrNull(0), "1")
+        bindMomentRank(binding.layoutRank2, section.items.getOrNull(1), "2")
+        bindMomentRank(binding.layoutRank3, section.items.getOrNull(2), "3")
+
+        // 3. 그래프 바인딩
+        if (section.canShowGraph) {
+            bindLineChart(section)
+        }
+    }
+
+    private fun bindMomentRank(
+        rankBinding: ViewHighlightRankItemBinding,
+        item: HighlightRankItem?,
+        rank: String
+    ) {
+        if (item == null) {
+            rankBinding.root.visibility = View.GONE
+            return
+        }
+        rankBinding.root.visibility = View.VISIBLE
+        rankBinding.tvRankBadge.text = rank
+        rankBinding.tvRankMemo.text = item.memo
+        rankBinding.tvRankDate.text = "2026.01.13" // 실제 데이터 date 연결 권장
+        rankBinding.tvRankScore.text = "${item.score}점"
+
+        // 1위는 강조 컬러
+        val color = if (rank == "1") "#4CAF50" else "#888888"
+        rankBinding.tvRankBadge.backgroundTintList = ColorStateList.valueOf(Color.parseColor(color))
+    }
+
+    private fun getMetricDescription(metric: HighlightMetric): String {
+        return when (metric) {
+            HighlightMetric.IDENTITY -> "이 지표는 기록이 당신의 정체성에 얼마나 깊이 뿌리내렸는지 보여줘요."
+            HighlightMetric.CONNECTIVITY -> "이 지표는 기록이 타인 또는 세상과 얼마나 연결되어 있는지 보여줘요."
+            HighlightMetric.PERSPECTIVE -> "이 지표는 기록이 당신의 생각이나 관점을 얼마나 확장시켰는지 보여줘요."
         }
     }
 
     private fun bindLineChart(section: HighlightRankSection) {
         val points = section.graphPoints
-        if (points.isEmpty()) return
-
-        // 꺾은선 그래프용 커스텀 차트 생성 (차트 뷰 동적 추가 또는 FrameLayout 활용)
         val chart = LineChart(requireContext()).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
+            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
         }
         binding.chartContainer.removeAllViews()
         binding.chartContainer.addView(chart)
 
-        val entries = points.mapIndexed { index, point ->
-            Entry(index.toFloat(), point.value.toFloat())
-        }
-
-        val dataSet = LineDataSet(entries, section.metric.title).apply {
+        val entries = points.mapIndexed { i, p -> Entry(i.toFloat(), p.value.toFloat()) }
+        val dataSet = LineDataSet(entries, "").apply {
             color = Color.parseColor("#4CAF50")
-            setCircleColor(Color.parseColor("#4CAF50"))
             lineWidth = 3f
-            circleRadius = 5f
             setDrawValues(false)
-            mode = LineDataSet.Mode.CUBIC_BEZIER // 부드러운 곡선
-            setDrawFilled(true)
-            fillColor = Color.parseColor("#4CAF50")
-            fillAlpha = 30
+            setDrawCircles(true)
+            setCircleColor(Color.parseColor("#4CAF50"))
+            mode = LineDataSet.Mode.CUBIC_BEZIER
         }
 
         chart.apply {
@@ -139,19 +152,9 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
             description.isEnabled = false
             legend.isEnabled = false
             axisRight.isEnabled = false
-            xAxis.apply {
-                position = XAxis.XAxisPosition.BOTTOM
-                valueFormatter = IndexAxisValueFormatter(points.map { it.label })
-                setDrawGridLines(false)
-                granularity = 1f
-            }
-            axisLeft.apply {
-                axisMinimum = 0f
-                axisMaximum = 5.5f
-                setDrawGridLines(true)
-                gridColor = Color.parseColor("#F0F0F0")
-            }
-            animateXY(800, 800)
+            xAxis.position = XAxis.XAxisPosition.BOTTOM
+            xAxis.valueFormatter = IndexAxisValueFormatter(points.map { it.label })
+            animateX(500)
             invalidate()
         }
     }
