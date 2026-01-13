@@ -89,7 +89,7 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
         setupMemoInput()
         setupFeaturedCheckbox()
         setupSaveButton()
-
+        observeViewModel()
         observeUiState()
     }
 
@@ -109,23 +109,30 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
     }
 
     private fun setupCesSliders() {
+        // 1. Identity (정체성) 슬라이더
         binding.layoutIdentity.sliderMain.addOnChangeListener { _, value, _ ->
-            val msg = when(value.toInt()) {
+            val msg1 = when(value.toInt()) {
                 1, 2 -> "조금은 낯선 모습이었나요?"
                 3 -> "평소의 당신다운 모습이네요."
                 else -> "완벽하게 '나'다운 순간이었어요!"
             }
-            updateChagok(msg, value)
-            createViewModel.setCesIdentity(value.toInt())
+            updateChagok(msg1, value) // 상단 말풍선 메시지 업데이트
+            createViewModel.setCesIdentity(value.toInt()) // ViewModel 상태 업데이트 및 점수 자동 계산
+        }
 
+        // 2. Connectivity (연결성) 슬라이더
+        binding.layoutConnectivity.sliderMain.addOnChangeListener { _, value, _ ->
             val msg2 = when(value.toInt()) {
-                1, 2 ->"주변과 조금 떨어져 있는 기분이었나요?"
-                3 ->"적당한 거리에서 함께 호흡했네요."
+                1, 2 -> "주변과 조금 떨어져 있는 기분이었나요?"
+                3 -> "적당한 거리에서 함께 호흡했네요."
                 else -> "모든 순간이 긴밀하게 연결된 느낌이었어요!"
             }
             updateChagok(msg2, value)
-
             createViewModel.setCesConnectivity(value.toInt())
+        }
+
+        // 3. Perspective (관점) 슬라이더
+        binding.layoutPerspective.sliderMain.addOnChangeListener { _, value, _ ->
             val msg3 = when(value.toInt()) {
                 1, 2 -> "하나의 모습에 집중한 시간이었나요?"
                 3 -> "균형 잡힌 시선으로 바라보았네요."
@@ -134,8 +141,22 @@ class CreateMomentFragment : BaseFragment<FragmentCreateMomentBinding>() {
             updateChagok(msg3, value)
             createViewModel.setCesPerspective(value.toInt())
         }
+    }
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            createViewModel.uiState.collect { state ->
+                // 종합 점수 텍스트 갱신 (예: 3.5점)
+                binding.cesScoreValue.text = String.format("%.1f점", state.cesWeightedScore)
 
+                // 점수 설명 갱신 (예: 보통)
+                binding.cesScoreDescription.text = "(${state.cesDescription})"
 
+                // 저장 성공 시 화면 종료 등 추가 로직
+                if (state.savedSuccessfully) {
+                    parentFragmentManager.popBackStack()
+                }
+            }
+        }
     }
 
     private fun updateChagok(message: String, value: Float) {
