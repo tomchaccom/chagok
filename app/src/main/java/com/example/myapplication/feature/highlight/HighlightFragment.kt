@@ -1,12 +1,12 @@
 package com.example.myapplication.feature.highlight
 
+import android.content.res.ColorStateList
+import android.graphics.Color
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.content.ContentProviderCompat
-import androidx.core.content.ContentProviderCompat.requireContext
-import androidx.core.view.isVisible
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -14,25 +14,18 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.myapplication.R
 import com.example.myapplication.core.base.BaseFragment
 import com.example.myapplication.databinding.FragmentHighlightBinding
-import kotlinx.coroutines.launch
-import com.example.myapplication.databinding.ItemHighlightSectionBinding
-import androidx.core.content.ContextCompat
-import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import com.example.myapplication.databinding.ViewHighlightRankItemBinding
 import com.github.mikephil.charting.charts.LineChart
+import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-
-
-
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
+import kotlinx.coroutines.launch
 
 class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
 
     private val viewModel: HighlightViewModel by activityViewModels()
-    private lateinit var identityAdapter: HighlightRankAdapter
-    private lateinit var connectivityAdapter: HighlightRankAdapter
-    private lateinit var perspectiveAdapter: HighlightRankAdapter
 
     override fun inflateBinding(
         inflater: LayoutInflater,
@@ -43,8 +36,6 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupAdapters()
-        setupThemeSelector()
         observeUiState()
     }
 
@@ -57,232 +48,111 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    binding.highlightEmptyCard.isVisible = state.showEmptyState
-                    bindSections(state.sections)
+                    // 1. 차곡이 메시지 및 가이드 업데이트
+                    if (state.showEmptyState) {
+                        binding.tvHighlightGuide.text = "아직 기록이 없어요. 사진기 든 차곡이와 함께 첫 기록을 남겨볼까요?"
+                        binding.tvEmptyChartMessage.visibility = View.VISIBLE
+                    } else {
+                        binding.tvHighlightGuide.text = "기록을 살펴보니 당신의 삶은 이 지표들을 중심으로 움직이고 있네요!"
+                        binding.tvEmptyChartMessage.visibility = View.GONE
+                    }
+
+                    // 2. 랭킹 데이터 바인딩
+                    bindRankings(state.sections)
+
+                    // 3. 통합 그래프 바인딩 (대표 섹션 혹은 전체 평균 그래프)
+                    state.sections.firstOrNull { it.canShowGraph }?.let { representativeSection ->
+                        bindLineChart(representativeSection)
+                    }
                 }
             }
         }
     }
 
-    private fun setupAdapters() {
-        identityAdapter = HighlightRankAdapter(
-            getString(R.string.highlight_metric_identity_badge)
-        ) { item ->
-            navigateToPresent(item.recordId)
-        }
-        connectivityAdapter = HighlightRankAdapter(
-            getString(R.string.highlight_metric_connectivity_badge)
-        ) { item ->
-            navigateToPresent(item.recordId)
-        }
-        perspectiveAdapter = HighlightRankAdapter(
-            getString(R.string.highlight_metric_perspective_badge)
-        ) { item ->
-            navigateToPresent(item.recordId)
-        }
+    private fun bindRankings(sections: List<HighlightRankSection>) {
+        // 점수 순으로 정렬 (내림차순)
+        val sortedSections = sections.sortedByDescending { it.averageScore }
 
-        binding.sectionIdentity.sectionList.layoutManager =
-            androidx.recyclerview.widget.LinearLayoutManager(requireContext())
-        binding.sectionIdentity.sectionList.adapter = identityAdapter
-        binding.sectionConnectivity.sectionList.layoutManager =
-            androidx.recyclerview.widget.LinearLayoutManager(requireContext())
-        binding.sectionConnectivity.sectionList.adapter = connectivityAdapter
-        binding.sectionPerspective.sectionList.layoutManager =
-            androidx.recyclerview.widget.LinearLayoutManager(requireContext())
-        binding.sectionPerspective.sectionList.adapter = perspectiveAdapter
+        // 1위: Identity (예시 매칭 - 실제 데이터에 따라 title 매칭)
+        val rank1 = sortedSections.getOrNull(0)
+        bindRankItem(binding.layoutRankIdentity, rank1, "1", true)
+
+        // 2위: Connectivity
+        val rank2 = sortedSections.getOrNull(1)
+        bindRankItem(binding.layoutRankConnectivity, rank2, "2", false)
+
+        // 3위: Perspective
+        val rank3 = sortedSections.getOrNull(2)
+        bindRankItem(binding.layoutRankPerspective, rank3, "3", false)
     }
 
-    private fun setupThemeSelector() {
-        binding.themeToggleGroup.check(binding.themeIdentityButton.id)
-        updateTheme(HighlightMetric.IDENTITY)
-
-        binding.themeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (!isChecked) {
-                return@addOnButtonCheckedListener
-            }
-            val metric = when (checkedId) {
-                binding.themeIdentityButton.id -> HighlightMetric.IDENTITY
-                binding.themeConnectivityButton.id -> HighlightMetric.CONNECTIVITY
-                binding.themePerspectiveButton.id -> HighlightMetric.PERSPECTIVE
-                else -> HighlightMetric.IDENTITY
-            }
-            updateTheme(metric)
-        }
-    }
-
-    private fun bindSections(sections: List<HighlightRankSection>) {
-        val identitySection = sections.firstOrNull { it.metric == HighlightMetric.IDENTITY }
-        val connectivitySection = sections.firstOrNull { it.metric == HighlightMetric.CONNECTIVITY }
-        val perspectiveSection = sections.firstOrNull { it.metric == HighlightMetric.PERSPECTIVE }
-
-        bindSection(binding.sectionIdentity, identitySection, identityAdapter)
-        bindSection(binding.sectionConnectivity, connectivitySection, connectivityAdapter)
-        bindSection(binding.sectionPerspective, perspectiveSection, perspectiveAdapter)
-    }
-
-    private fun updateTheme(metric: HighlightMetric) {
-        val explanation = when (metric) {
-            HighlightMetric.IDENTITY -> ThemeExplanation(
-                letter = R.string.highlight_metric_letter_identity,
-                title = R.string.highlight_theme_identity_title,
-                body = R.string.highlight_theme_identity_body,
-                guide = 0
-            )
-            HighlightMetric.CONNECTIVITY -> ThemeExplanation(
-                letter = R.string.highlight_metric_letter_connectivity,
-                title = R.string.highlight_theme_connectivity_title,
-                body = R.string.highlight_theme_connectivity_body,
-                guide = 0
-            )
-            HighlightMetric.PERSPECTIVE -> ThemeExplanation(
-                letter = R.string.highlight_metric_letter_perspective,
-                title = R.string.highlight_theme_perspective_title,
-                body = R.string.highlight_theme_perspective_body,
-                guide = 0
-            )
-        }
-
-        binding.explanationLetter.setText(explanation.letter)
-        binding.explanationTitle.setText(explanation.title)
-        binding.explanationBody.setText(explanation.body)
-        if (explanation.guide == 0) {
-            binding.explanationGuide.isVisible = false
-        } else {
-            binding.explanationGuide.isVisible = true
-            binding.explanationGuide.setText(explanation.guide)
-        }
-
-        binding.sectionIdentity.root.isVisible = metric == HighlightMetric.IDENTITY
-        binding.sectionConnectivity.root.isVisible = metric == HighlightMetric.CONNECTIVITY
-        binding.sectionPerspective.root.isVisible = metric == HighlightMetric.PERSPECTIVE
-    }
-
-    private fun bindSection(
-        sectionBinding: ItemHighlightSectionBinding,
+    private fun bindRankItem(
+        rankBinding: ViewHighlightRankItemBinding,
         section: HighlightRankSection?,
-        adapter: HighlightRankAdapter
+        rank: String,
+        isFirst: Boolean
     ) {
-        if (section == null) {
-            adapter.submitList(emptyList())
-            sectionBinding.sectionGraphContainer.isVisible = false
-            sectionBinding.sectionGraphEmpty.isVisible = true
-            return
-        }
+        rankBinding.root.visibility = if (section != null) View.VISIBLE else View.GONE
+        section?.let {
+            rankBinding.tvRankBadge.text = rank
+            rankBinding.tvRankTitle.text = it.metric.title
+            rankBinding.tvRankScore.text = String.format("%.1f점", it.averageScore)
 
-        sectionBinding.sectionTitle.text = section.metric.title
-        adapter.submitList(section.items)
-
-        sectionBinding.sectionGraphContainer.isVisible = section.canShowGraph
-        sectionBinding.sectionGraphEmpty.isVisible = !section.canShowGraph
-
-        if (section.canShowGraph) {
-            bindLineChart(
-                chart = sectionBinding.sectionGraphChart,
-                points = section.graphPoints,
-                metric = section.metric
-            )
-
+            // 1등은 초록색 배지, 나머지는 회색
+            val badgeColor = if (isFirst) "#4CAF50" else "#888888"
+            rankBinding.tvRankBadge.backgroundTintList = ColorStateList.valueOf(Color.parseColor(badgeColor))
         }
     }
 
+    private fun bindLineChart(section: HighlightRankSection) {
+        val points = section.graphPoints
+        if (points.isEmpty()) return
 
-
-    private fun navigateToPresent(recordId: String) {
-        val bottomNavigation = requireActivity()
-            .findViewById<com.google.android.material.bottomnavigation.BottomNavigationView>(
-                R.id.bottomNavigation
+        // 꺾은선 그래프용 커스텀 차트 생성 (차트 뷰 동적 추가 또는 FrameLayout 활용)
+        val chart = LineChart(requireContext()).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
             )
-        bottomNavigation.selectedItemId = R.id.navigation_present
-        // TODO: PresentFragment와 연결하여 recordId로 스크롤 이동을 지원하세요.
-    }
-
-    private data class ThemeExplanation(
-        val letter: Int,
-        val title: Int,
-        val body: Int,
-        val guide: Int
-    )
-
-    companion object {
-        private const val MIN_GRAPH_POINTS = 3
-    }
-
-
-    private fun bindLineChart(
-        chart: LineChart,
-        points: List<HighlightGraphPoint>,
-        metric: HighlightMetric
-    ) {
-        val color = getGraphColor(metric)
+        }
+        binding.chartContainer.removeAllViews()
+        binding.chartContainer.addView(chart)
 
         val entries = points.mapIndexed { index, point ->
             Entry(index.toFloat(), point.value.toFloat())
         }
 
-        val dataSet = LineDataSet(entries, "").apply {
-            this.color = color
-            lineWidth = 2.5f
-
-            setDrawCircles(true)
-            circleRadius = 4f
-            setCircleColor(color)
-
+        val dataSet = LineDataSet(entries, section.metric.title).apply {
+            color = Color.parseColor("#4CAF50")
+            setCircleColor(Color.parseColor("#4CAF50"))
+            lineWidth = 3f
+            circleRadius = 5f
             setDrawValues(false)
-            mode = LineDataSet.Mode.CUBIC_BEZIER
+            mode = LineDataSet.Mode.CUBIC_BEZIER // 부드러운 곡선
+            setDrawFilled(true)
+            fillColor = Color.parseColor("#4CAF50")
+            fillAlpha = 30
         }
 
-        chart.data = LineData(dataSet)
-
         chart.apply {
+            data = LineData(dataSet)
             description.isEnabled = false
             legend.isEnabled = false
             axisRight.isEnabled = false
-
             xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
-                granularity = 1f
+                valueFormatter = IndexAxisValueFormatter(points.map { it.label })
                 setDrawGridLines(false)
-                valueFormatter = IndexAxisValueFormatter(
-                    points.map { it.label }
-                )
+                granularity = 1f
             }
-
             axisLeft.apply {
                 axisMinimum = 0f
-                granularity = 1f
+                axisMaximum = 5.5f
+                setDrawGridLines(true)
+                gridColor = Color.parseColor("#F0F0F0")
             }
-
-            animateX(400)
+            animateXY(800, 800)
             invalidate()
         }
     }
-    private fun getGraphColor(metric: HighlightMetric): Int {
-        return when (metric) {
-            HighlightMetric.IDENTITY ->
-                requireContext().resources.getColor(
-                    R.color.graph_identity,
-                    requireContext().theme
-                )
-
-            HighlightMetric.CONNECTIVITY ->
-                requireContext().resources.getColor(
-                    R.color.graph_connectivity,
-                    requireContext().theme
-                )
-
-            HighlightMetric.PERSPECTIVE ->
-                requireContext().resources.getColor(
-                    R.color.graph_perspective,
-                    requireContext().theme
-                )
-        }
-    }
-
-
 }
-
-
-
-
-
-
