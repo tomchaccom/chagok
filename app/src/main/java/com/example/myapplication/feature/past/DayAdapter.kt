@@ -10,67 +10,65 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
 import com.example.myapplication.data.past.DayEntry
-import com.example.myapplication.data.past.PhotoItem
 import com.example.myapplication.util.ImageLoader
 
 class DayAdapter(
-    private val onClick: (DayEntry) -> Unit
-) : ListAdapter<DayEntry, DayAdapter.DayVH>(DayDiffCallback()) {
+    private val onDayClick: (DayEntry) -> Unit
+) : ListAdapter<DayEntry, DayAdapter.DayViewHolder>(DayDiffCallback()) {
 
-    private var thumbnailPx: Int = 0
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayVH {
-        val v = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_day_entry, parent, false)
-        return DayVH(v)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): DayViewHolder {
+        // 새로 만든 카드 UI 레이아웃 연결
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_day_record_placeholder, parent, false)
+        return DayViewHolder(view, onDayClick)
     }
 
-    override fun getItemId(position: Int): Long {
-        // DayEntry에 포함된 고유 id 사용
-        return try { getItem(position).id } catch (_: Throwable) { position.toLong() }
-    }
-
-    override fun onBindViewHolder(holder: DayVH, position: Int) {
+    override fun onBindViewHolder(holder: DayViewHolder, position: Int) {
         holder.bind(getItem(position))
     }
 
-    inner class DayVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val ivThumb: ImageView = itemView.findViewById(R.id.ivThumb)
-        private val tvDate: TextView = itemView.findViewById(R.id.tvDate)
-        private val tvMemo: TextView = itemView.findViewById(R.id.tvMemo)
+    override fun getItemId(position: Int): Long = getItem(position).id
 
-        init {
-            itemView.setOnClickListener {
-                val pos = bindingAdapterPosition
-                if (pos != RecyclerView.NO_POSITION) {
-                    onClick(getItem(pos))
-                }
-            }
-        }
+    class DayViewHolder(
+        itemView: View,
+        private val onDayClick: (DayEntry) -> Unit
+    ) : RecyclerView.ViewHolder(itemView) {
+
+        private val tvDayNumber: TextView = itemView.findViewById(R.id.tvDayNumber)
+        private val tvDayOfWeek: TextView = itemView.findViewById(R.id.tvDayOfWeek)
+        private val tvSummary: TextView = itemView.findViewById(R.id.tvSummary)
+        private val imgThumbnail: ImageView = itemView.findViewById(R.id.imgThumbnail)
 
         fun bind(day: DayEntry) {
-            tvDate.text = day.dateLabel
-            tvMemo.text = day.dayMemo
-            val rep: PhotoItem? = day.representativePhoto
-            if (rep != null) {
-                if (thumbnailPx == 0) {
-                    val density = itemView.context.resources.displayMetrics.density
-                    thumbnailPx = (56 * density).toInt()
-                }
-                ImageLoader.loadInto(ivThumb, rep.imageUri, R.drawable.ic_launcher_background, reqWidth = thumbnailPx, reqHeight = thumbnailPx)
+            itemView.setOnClickListener { onDayClick(day) }
+
+            // 날짜 표시 로직 (예: "2024년 3월 20일")
+            val dateParts = day.dateLabel.split(" ")
+            if (dateParts.size >= 3) {
+                // "20" (일)
+                tvDayNumber.text = dateParts.last().replace("일", "")
+                // "2024년 3월"
+                tvDayOfWeek.text = "${dateParts[0]} ${dateParts[1]}"
             } else {
-                ivThumb.setImageResource(android.R.drawable.ic_menu_report_image)
+                tvDayNumber.text = day.dateLabel
+                tvDayOfWeek.text = ""
+            }
+
+            tvSummary.text = day.dayMemo
+
+            // 썸네일 이미지 로드
+            val repPhoto = day.representativePhoto
+            if (repPhoto != null) {
+                val sizePx = (48 * itemView.context.resources.displayMetrics.density).toInt()
+                ImageLoader.loadInto(imgThumbnail, repPhoto.imageUri, R.drawable.ic_launcher_background, sizePx, sizePx)
+            } else {
+                imgThumbnail.setImageResource(R.drawable.ic_launcher_background)
             }
         }
     }
 }
 
-private class DayDiffCallback : DiffUtil.ItemCallback<DayEntry>() {
-    override fun areItemsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean {
-        return oldItem.id == newItem.id
-    }
-
-    override fun areContentsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean {
-        return oldItem == newItem
-    }
+class DayDiffCallback : DiffUtil.ItemCallback<DayEntry>() {
+    override fun areItemsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean = oldItem.id == newItem.id
+    override fun areContentsTheSame(oldItem: DayEntry, newItem: DayEntry): Boolean = oldItem == newItem
 }
