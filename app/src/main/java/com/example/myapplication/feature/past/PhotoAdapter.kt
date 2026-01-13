@@ -10,12 +10,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
-import com.example.myapplication.data.past.PhotoItem
+import com.example.myapplication.feature.present.DailyRecord
 import com.example.myapplication.util.ImageLoader
 
 class PhotoAdapter(
     private val onPhotoClick: (position: Int) -> Unit
-) : ListAdapter<PhotoItem, PhotoAdapter.PhotoVH>(PhotoDiffCallback()) {
+) : ListAdapter<DailyRecord, PhotoAdapter.PhotoVH>(PhotoDiffCallback()) {
 
     private var selectedIndex: Int? = null
 
@@ -38,7 +38,7 @@ class PhotoAdapter(
     }
 
     override fun getItemId(position: Int): Long {
-        return try { getItem(position).imageUri.hashCode().toLong() } catch (_: Exception) { position.toLong() }
+        return try { getItem(position).id.hashCode().toLong() } catch (_: Exception) { position.toLong() }
     }
 
     inner class PhotoVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -54,11 +54,11 @@ class PhotoAdapter(
             }
         }
 
-        fun bind(photo: PhotoItem, position: Int) {
+        fun bind(photo: DailyRecord, position: Int) {
             // 썸네일 사이즈로 로드 (이미지뷰 높이 110dp -> 픽셀로 변환)
             val density = itemView.context.resources.displayMetrics.density
             val hPx = (110 * density).toInt()
-            ImageLoader.loadInto(ivPhoto, photo.imageUri, R.drawable.ic_launcher_background, reqWidth = hPx, reqHeight = hPx)
+            ImageLoader.loadInto(ivPhoto, photo.photoUri, R.drawable.ic_launcher_background, reqWidth = hPx, reqHeight = hPx)
             ivPhoto.visibility = View.VISIBLE
 
             val isSelected = (selectedIndex == position)
@@ -68,12 +68,12 @@ class PhotoAdapter(
     }
 }
 
-private class PhotoDiffCallback : DiffUtil.ItemCallback<PhotoItem>() {
-    override fun areItemsTheSame(oldItem: PhotoItem, newItem: PhotoItem): Boolean {
-        return oldItem.imageUri == newItem.imageUri
+private class PhotoDiffCallback : DiffUtil.ItemCallback<DailyRecord>() {
+    override fun areItemsTheSame(oldItem: DailyRecord, newItem: DailyRecord): Boolean {
+        return oldItem.id == newItem.id
     }
 
-    override fun areContentsTheSame(oldItem: PhotoItem, newItem: PhotoItem): Boolean {
+    override fun areContentsTheSame(oldItem: DailyRecord, newItem: DailyRecord): Boolean {
         return oldItem == newItem
     }
 }

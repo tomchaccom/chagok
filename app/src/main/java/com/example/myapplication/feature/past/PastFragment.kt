@@ -131,6 +131,19 @@ class PastFragment : Fragment() {
             dayAdapter.submitList(days)
         }
 
+        // Fallback: ViewModel의 LiveData가 아직 발행되지 않았을 수 있으므로
+        // 저장소에서 즉시 동기적으로 더미 데이터를 가져와 표시합니다.
+        val current = viewModel.days.value
+        if (current == null || current.isEmpty()) {
+            try {
+                val syncList = repo.loadPastEntries()
+                if (syncList.isNotEmpty()) {
+                    dayAdapter.submitList(syncList)
+                }
+            } catch (_: Exception) {
+            }
+        }
+
         viewModel.selectedDay.observe(viewLifecycleOwner) { day ->
             if (day == null) showList() else showDetailFor(day)
         }
@@ -141,12 +154,13 @@ class PastFragment : Fragment() {
                 tvMemoTitle.text = ""
                 tvMemoContent.text = ""
             } else {
+                val repMemo = day.representativePhoto?.memo ?: ""
                 if (idx == null) {
                     tvMemoTitle.text = "오늘 메모"
-                    tvMemoContent.text = day.dayMemo
+                    tvMemoContent.text = repMemo
                 } else {
                     tvMemoTitle.text = "사진 메모"
-                    tvMemoContent.text = day.photos.getOrNull(idx)?.memo ?: day.dayMemo
+                    tvMemoContent.text = day.photos.getOrNull(idx)?.memo ?: repMemo
                 }
             }
             photoAdapter.setSelectedIndex(idx)
@@ -163,7 +177,9 @@ class PastFragment : Fragment() {
         detailContainer.visibility = View.VISIBLE
         tvDetailDate.text = day.dateLabel
         tvMemoTitle.text = "오늘 메모"
-        tvMemoContent.text = day.dayMemo
+        // 대표 사진의 memo를 기본으로 표시
+        tvMemoContent.text = day.representativePhoto?.memo ?: ""
         photoAdapter.submitList(day.photos)
+        photoAdapter.setSelectedIndex(null)
     }
 }

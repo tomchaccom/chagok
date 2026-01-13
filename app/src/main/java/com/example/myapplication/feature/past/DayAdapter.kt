@@ -9,8 +9,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
+import com.example.myapplication.feature.present.DailyRecord
 import com.example.myapplication.data.past.DayEntry
-import com.example.myapplication.data.past.PhotoItem
 import com.example.myapplication.util.ImageLoader
 
 class DayAdapter(
@@ -50,14 +50,16 @@ class DayAdapter(
 
         fun bind(day: DayEntry) {
             tvDate.text = day.dateLabel
-            tvMemo.text = day.dayMemo
-            val rep: PhotoItem? = day.representativePhoto
-            if (rep != null) {
+            // dayMemo는 더 이상 사용하지 않음 — 대표 사진의 memo를 우선 표시
+            val rep: DailyRecord? = day.representativePhoto
+            tvMemo.text = rep?.memo ?: ""
+            val repPhoto: DailyRecord? = rep
+            if (repPhoto != null) {
                 if (thumbnailPx == 0) {
                     val density = itemView.context.resources.displayMetrics.density
                     thumbnailPx = (56 * density).toInt()
                 }
-                ImageLoader.loadInto(ivThumb, rep.imageUri, R.drawable.ic_launcher_background, reqWidth = thumbnailPx, reqHeight = thumbnailPx)
+                ImageLoader.loadInto(ivThumb, repPhoto.photoUri, R.drawable.ic_launcher_background, reqWidth = thumbnailPx, reqHeight = thumbnailPx)
             } else {
                 ivThumb.setImageResource(android.R.drawable.ic_menu_report_image)
             }
