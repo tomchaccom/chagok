@@ -11,25 +11,35 @@ import java.util.*
 
 class DailyCleanupWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     override fun doWork(): Result {
+
+        android.util.Log.d("CleanupWorker", "작업 시작됨: ${java.util.Date()}")
         return try {
             val repo = PastRepository(applicationContext)
             val saved = CreateMomentViewModel.getSavedRecords()
+
 
             if (saved.isNotEmpty()) {
                 val groups = saved.groupBy { it.date.ifBlank { currentDateIso() } }
                 for ((date, records) in groups) {
                     val dateLabel = formatDateLabel(date)
-                    // 🌟 여기 records는 List<data.present.DailyRecord>여야 함
-                    val newDay = DayEntry(id = 0L, dateLabel = dateLabel, photos = records.reversed())
-                    repo.addOrUpdateDayEntry(newDay)
+                    // 🌟 실천 완료(isAchieved)된 기록만 과거로 넘기는 필터링 추가 권장
+                    val achievedRecords = records.filter { it.isAchieved }
+                    if (achievedRecords.isNotEmpty()) {
+                        val newDay = DayEntry(id = 0L, dateLabel = dateLabel, photos = achievedRecords)
+                        repo.addOrUpdateDayEntry(newDay)
+                    }
                 }
 
+                // 🌟 중요: 먼저 PastRepository의 변경사항을 확실히 파일에 기록
+                repo.ensurePersisted()
+
+                // 그 다음 현재 데이터를 비움
                 CreateMomentViewModel.clearRecords()
-                // 🌟 주의: CreateMomentViewModel에서 persistToStorage를 public으로 바꿔야 함
-                CreateMomentViewModel.persistToStorage()
             }
+            android.util.Log.d("CleanupWorker", "과거 데이터 통합 성공")
             Result.success()
         } catch (e: Exception) {
+            android.util.Log.e("CleanupWorker", "에러 발생: ${e.message}")
             Result.failure()
         }
     }

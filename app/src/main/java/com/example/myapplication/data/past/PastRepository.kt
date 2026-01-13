@@ -17,30 +17,20 @@ class PastRepository(private val context: Context) {
 
     init {
         val loaded = loadFromStorage()
-        // Validate loaded entries: require at least one entry with a non-blank dateLabel and at least one photo
-        val hasValid = loaded.any { it.dateLabel.isNotBlank() && it.photos.isNotEmpty() }
-        if (hasValid) {
+        if (loaded.isNotEmpty()) {
             entries.addAll(loaded)
         } else {
-            val dummy = createDummyEntries()
-            entries.addAll(dummy)
-            // persist dummy to storage (overwrite whatever was there)
-            try {
-                ensurePersisted()
-            } catch (_: Exception) {
+            // 🌟 파일이 아예 없을 때만 더미를 만듭니다.
+            // 기존에 데이터가 있었는데 파싱 에러로 안 불러와진 경우 덮어쓰면 안 됩니다.
+            if (!storageFile.exists()) {
+                entries.addAll(createDummyEntries())
+                saveToStorage()
             }
         }
-        // ensure idCounter is greater than any existing id
         val maxId = entries.maxOfOrNull { it.id } ?: 0L
         idCounter = maxId + 1
-        // If file doesn't exist or is empty, ensure we persist the current entries now
-        try {
-            if (!storageFile.exists() || storageFile.length() == 0L) {
-                ensurePersisted()
-            }
-        } catch (_: Exception) {
-        }
     }
+
 
     // 기존 API: 로컬 메모리(또는 파일)에서 불러온 리스트 반환
     fun loadPastEntries(): List<DayEntry> {

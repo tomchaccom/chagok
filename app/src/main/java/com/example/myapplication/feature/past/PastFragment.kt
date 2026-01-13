@@ -134,9 +134,7 @@ class PastFragment : Fragment() {
     }
     override fun onResume() {
         super.onResume()
-        // 화면으로 다시 돌아올 때마다 최신 데이터를 불러옵니다.
-        if (::viewModel.isInitialized) {
-            viewModel.loadDays()
-        }
+        // 🌟 과거 화면으로 돌아올 때마다 최신 파일을 다시 읽어옵니다.
+        viewModel.loadDays()
     }
 }

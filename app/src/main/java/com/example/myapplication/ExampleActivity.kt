@@ -13,6 +13,9 @@ class ExampleActivity : BaseActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        scheduleDailyCleanup()
+
         setupBottomNavigation()
         if (savedInstanceState == null) {
             findViewById<BottomNavigationView>(R.id.bottomNavigation).selectedItemId =
@@ -43,5 +46,30 @@ class ExampleActivity : BaseActivity() {
                 else -> false
             }
         }
+    }
+
+    private fun scheduleDailyCleanup() {
+        val calendar = java.util.Calendar.getInstance().apply {
+            set(java.util.Calendar.HOUR_OF_DAY, 23)
+            set(java.util.Calendar.MINUTE, 59)
+            set(java.util.Calendar.SECOND, 0)
+        }
+
+        // 이미 시간이 지났다면 내일 밤으로 설정
+        if (calendar.timeInMillis <= System.currentTimeMillis()) {
+            calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
+        }
+
+        val initialDelay = calendar.timeInMillis - System.currentTimeMillis()
+
+        val workRequest = androidx.work.OneTimeWorkRequestBuilder<com.example.myapplication.data.future.DailyCleanupWorker>()
+            .setInitialDelay(initialDelay, java.util.concurrent.TimeUnit.MILLISECONDS)
+            .build()
+
+        androidx.work.WorkManager.getInstance(this).enqueueUniqueWork(
+            "DailyPastMigration",
+            androidx.work.ExistingWorkPolicy.REPLACE,
+            workRequest
+        )
     }
 }
