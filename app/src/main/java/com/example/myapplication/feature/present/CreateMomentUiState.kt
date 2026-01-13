@@ -1,5 +1,6 @@
 package com.example.myapplication.feature.present
 
+import com.example.myapplication.data.present.Meaning as DataMeaning
 /**
  * CreateMomentUiState
  *
@@ -21,7 +22,7 @@ data class CreateMomentUiState(
     val cesWeightedScore: Float = 3.0f,
     val cesDescription: String = "보통",
     val timeState: com.example.myapplication.core.util.TimeState = com.example.myapplication.core.util.TimeState.PRESENT,
-    val meaning: Meaning = Meaning.REMEMBER,
+    val meaning: DataMeaning = DataMeaning.REMEMBER,
     val isFeatured: Boolean = false,
     val showFeaturedConflictDialog: Boolean = false,
     val allowFeaturedReplacement: Boolean = false,

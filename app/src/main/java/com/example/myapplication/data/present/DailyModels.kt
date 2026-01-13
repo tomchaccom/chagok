@@ -13,7 +13,8 @@ data class DailyRecord(
     val cesMetrics: CesMetrics,
     val meaning: Meaning,
     val date: String,
-    val isFeatured: Boolean
+    val isFeatured: Boolean,
+    val isAchieved : Boolean = true
 )
 
 

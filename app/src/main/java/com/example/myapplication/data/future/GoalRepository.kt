@@ -124,6 +124,7 @@ object GoalRepository {
             file.writeText(arr.toString())
         } catch (_: Exception) {}
     }
+    // GoalRepository.kt 또는 DailyWorker.kt 내 로직
 
 
 }

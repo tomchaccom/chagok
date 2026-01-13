@@ -15,7 +15,7 @@ import com.example.myapplication.data.past.DayEntry
 import com.example.myapplication.data.present.DailyRecord as DataDailyRecord
 import com.example.myapplication.feature.present.DailyRecord as FeatureDailyRecord
 import android.widget.Toast
-
+import com.example.myapplication.data.present.DailyRecord
 class PastFragment : Fragment() {
 
     private lateinit var viewModel: PastViewModel
@@ -134,29 +134,36 @@ class PastFragment : Fragment() {
         }
     }
 
+
     private fun importPresentToPastBeforeVm(repo: PastRepository) {
         try {
-            val saved = com.example.myapplication.feature.present.CreateMomentViewModel.getSavedRecords()
+            // ViewModel에서 가져오는 레코드는 이제 data.present.DailyRecord 타입입니다.
+            val saved: List<DailyRecord> = com.example.myapplication.feature.present.CreateMomentViewModel.getSavedRecords()
 
             if (saved.isEmpty()) return
-
-            // no per-record logging in release; skip loop
 
             val groups = saved.groupBy { rec -> if (rec.date.isBlank()) currentDateIso() else rec.date }
             for ((dateIso, records) in groups) {
                 val dateLabel = formatDateLabel(dateIso)
-                val photos: List<DataDailyRecord> = records.reversed().map { mapToDataDaily(it) }
+
+                // 타입이 동일하므로 mapToDataDaily 함수를 호출할 필요 없이 바로 사용 가능합니다.
+                val photos: List<DailyRecord> = records.reversed()
+
                 val day = DayEntry(id = 0L, dateLabel = dateLabel, photos = photos)
                 repo.addDayEntry(day)
             }
 
-            // Clear present records immediately since we've imported them before VM creation
             com.example.myapplication.feature.present.CreateMomentViewModel.clearRecords()
             showToast("오늘의 기억이 '과거'에 저장되었습니다.")
-         } catch (_: Exception) {
-            // ignore
-        }
+        } catch (_: Exception) { }
     }
+
+// 이 함수는 이제 필요 없으므로 삭제하거나 주석 처리하세요.
+    /*
+    private fun mapToDataDaily(r: DailyRecord): DailyRecord {
+        return r // 같은 타입이므로 단순히 반환만 함
+    }
+    */
 
     private fun mapToDataDaily(r: FeatureDailyRecord): DataDailyRecord {
         return DataDailyRecord(

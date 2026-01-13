@@ -15,6 +15,15 @@ import org.json.JSONObject
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
+import java.util.UUID
+import com.example.myapplication.data.present.DailyRecord
+// CreateMomentViewModel.kt 상단
+import com.example.myapplication.data.present.DailyRecord as DataRecord
+import com.example.myapplication.data.present.CesMetrics as DataCes
+import com.example.myapplication.data.present.Meaning as DataMeaning
+// 만약 feature.present 에도 동일한 이름이 있다면 아래처럼 구별됩니다.
+import com.example.myapplication.feature.present.DailyRecord as FeatureRecord
+
 
 /**
  * CreateMomentViewModel
@@ -32,6 +41,7 @@ class CreateMomentViewModel : ViewModel() {
     val uiState: StateFlow<CreateMomentUiState> = _uiState.asStateFlow()
     private var editingRecordId: String? = null
     private var editingRecordDate: String? = null
+    val meaning: DataMeaning = DataMeaning.REMEMBER
 
     // 저장된 기록을 임시로 메모리에 보관 (싱글톤으로 변경 가능)
     companion object {
@@ -69,6 +79,22 @@ class CreateMomentViewModel : ViewModel() {
                 savedRecords.removeAt(idx)
                 persistToStorage()
             }
+        }
+        // 이 함수가 companion object 안에 있는지 반드시 확인하세요!
+        fun performDailyCleanup() {
+            // 1. 최신 데이터 로드
+            loadFromStorage()
+
+            // 2. 기록이 완료된(isAchieved == true) 데이터만 필터링
+            // DataRecord가 Data 패키지의 모델인지 확인 (Alias 사용)
+            val filteredList = savedRecords.filter { it.isAchieved }
+
+            // 3. 리스트 갱신 및 파일 저장
+            savedRecords.clear()
+            savedRecords.addAll(filteredList)
+            persistToStorage()
+
+            Log.d("Cleanup", "밤 11:59 미실천 데이터 정리 완료")
         }
 
         private fun persistToStorage() {
@@ -108,40 +134,59 @@ class CreateMomentViewModel : ViewModel() {
                 val content = file.readText()
                 val arr = JSONArray(content)
                 savedRecords.clear()
+
                 for (i in 0 until arr.length()) {
                     val obj = arr.getJSONObject(i)
-                    val cesObj = obj.getJSONObject("cesMetrics")
-                    val ces = CesMetrics(
-                        identity = cesObj.optInt("identity", 3),
-                        connectivity = cesObj.optInt("connectivity", 3),
-                        perspective = cesObj.optInt("perspective", 3),
-                        weightedScore = cesObj.optDouble("weightedScore", 5.0).toFloat()
-                    )
-                    val r = DailyRecord(
+
+                    // 1. DataCes (별칭) 객체 안전하게 추출 및 생성
+                    val cesObj = obj.optJSONObject("cesMetrics")
+                    val ces = if (cesObj != null) {
+                        DataCes(
+                            identity = cesObj.optInt("identity", 3),
+                            connectivity = cesObj.optInt("connectivity", 3),
+                            perspective = cesObj.optInt("perspective", 3),
+                            weightedScore = cesObj.optDouble("weightedScore", 3.0).toFloat()
+                        )
+                    } else {
+                        DataCes(3, 3, 3, 3.0f)
+                    }
+
+                    // 2. DataMeaning (별칭) Enum 변환
+                    val meaningStr = obj.optString("meaning", "REMEMBER")
+                    val meaning = try {
+                        DataMeaning.valueOf(meaningStr)
+                    } catch (e: IllegalArgumentException) {
+                        DataMeaning.REMEMBER
+                    }
+
+                    // 3. DataRecord (별칭) 객체 생성
+                    val r = DataRecord(
                         id = obj.optString("id", UUID.randomUUID().toString()),
                         photoUri = obj.optString("photoUri", ""),
                         memo = obj.optString("memo", ""),
                         score = obj.optInt("score", DEFAULT_SCORE),
                         cesMetrics = ces,
-                        meaning = Meaning.valueOf(obj.optString("meaning", "REMEMBER")),
+                        meaning = meaning,
                         date = obj.optString("date", ""),
-                        isFeatured = obj.optBoolean("isFeatured", false)
+                        isFeatured = obj.optBoolean("isFeatured", false),
+                        isAchieved = obj.optBoolean("isAchieved", true)
                     )
                     savedRecords.add(r)
                 }
             } catch (e: Exception) {
-                Log.e("CreateMomentVM", "load error: ${e.message}", e)
+                Log.e("CreateMomentVM", "load error: ${e.message}")
             }
         }
     }
 
     fun startEdit(recordId: String) {
-        val record = savedRecords.find { it.id == recordId }
-        if (record == null) {
+        // 1. DataRecord(별칭) 타입의 레코드를 찾습니다.
+        val record: DataRecord = savedRecords.find { it.id == recordId } ?: run {
             _uiState.update { it.copy(errorMessage = "수정할 기록을 찾을 수 없습니다") }
             return
         }
 
+        // 2. 오늘 기록인지 확인 (수정 가능 여부)
         if (!isRecordEditable(record)) {
             _uiState.update { it.copy(errorMessage = "오늘 기록만 수정할 수 있습니다") }
             return
@@ -149,12 +194,17 @@ class CreateMomentViewModel : ViewModel() {
 
         editingRecordId = recordId
         editingRecordDate = record.date
+
+        // 3. 기록된 CES 지표를 CesInput(입력용 객체)으로 변환
         val cesInput = CesInput(
             identity = record.cesMetrics.identity,
             connectivity = record.cesMetrics.connectivity,
             perspective = record.cesMetrics.perspective
         )
+
         val weightedScore = record.cesMetrics.weightedScore
+
+        // 4. UI 상태 업데이트
         _uiState.update {
             it.copy(
                 selectedPhotoUri = record.photoUri,
@@ -162,7 +212,7 @@ class CreateMomentViewModel : ViewModel() {
                 cesInput = cesInput,
                 cesWeightedScore = weightedScore,
                 cesDescription = describeCesScore(weightedScore),
-                meaning = record.meaning,
+                meaning = meaning, // DataMeaning(별칭) 타입
                 isFeatured = record.isFeatured,
                 editMode = true,
                 timeState = TimeState.PRESENT,
@@ -172,6 +222,11 @@ class CreateMomentViewModel : ViewModel() {
                 allowFeaturedReplacement = false
             )
         }
+
+    }
+    // ViewModel 내부 함수
+    fun setMeaning(meaning: DataMeaning) { // <--- 인자 타입을 DataMeaning으로
+        _uiState.update { it.copy(meaning = meaning) }
     }
 
     /**
@@ -222,10 +277,6 @@ class CreateMomentViewModel : ViewModel() {
     /**
      * 기억/잊기 선택
      */
-    fun setMeaning(meaning: Meaning) {
-        _uiState.update { it.copy(meaning = meaning) }
-    }
-
     /**
      * 오늘의 대표 기억 체크 토글
      */
@@ -421,8 +472,9 @@ class CreateMomentViewModel : ViewModel() {
         }
     }
 
-    private fun buildCesMetrics(input: CesInput): CesMetrics {
-        return CesMetrics(
+    // CreateMomentViewModel.kt 내부
+    private fun buildCesMetrics(input: CesInput): DataCes { // 반환 타입을 별칭으로 변경
+        return DataCes(
             identity = input.identity,
             connectivity = input.connectivity,
             perspective = input.perspective,
@@ -432,5 +484,42 @@ class CreateMomentViewModel : ViewModel() {
 
     private fun isPresentState(): Boolean = _uiState.value.timeState == TimeState.PRESENT
 
+    // 밤 11:59에 실행될 핵심 정리 로직
+    fun performDailyCleanup() {
+        loadFromStorage()
+        // 기록이 완료된(isAchieved == true) 데이터만 남기고 나머지는 삭제
+        val filteredList = savedRecords.filter { it.isAchieved }
+        savedRecords.clear()
+        savedRecords.addAll(filteredList)
+        persistToStorage()
+    }
 
+    private fun persistToStorage() {
+        val ctx = appContext ?: return
+        try {
+            val file = File(ctx.filesDir, FILE_NAME)
+            val arr = JSONArray()
+            for (r in savedRecords) {
+                val obj = JSONObject().apply {
+                    put("id", r.id)
+                    put("photoUri", r.photoUri)
+                    put("memo", r.memo)
+                    put("score", r.score)
+                    put("date", r.date)
+                    put("isFeatured", r.isFeatured)
+                    put("isAchieved", r.isAchieved) // 필드 추가
+                    put("cesMetrics", JSONObject().apply {
+                        put("identity", r.cesMetrics.identity)
+                        put("connectivity", r.cesMetrics.connectivity)
+                        put("perspective", r.cesMetrics.perspective)
+                        put("weightedScore", r.cesMetrics.weightedScore)
+                    })
+                }
+                arr.put(obj)
+            }
+            file.writeText(arr.toString())
+        } catch (e: Exception) { Log.e("VM", "Save Error", e) }
+    }
 }
+
+
