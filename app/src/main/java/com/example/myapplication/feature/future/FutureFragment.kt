@@ -3,13 +3,16 @@ package com.example.myapplication.feature.future
 import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
@@ -17,11 +20,13 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.textfield.TextInputEditText
-import java.util.*
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.*
 import androidx.appcompat.view.ContextThemeWrapper
 import com.example.myapplication.data.future.GoalRepository
 
@@ -61,36 +66,44 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showAddDialog() {
-        // 1. Material 테마를 입힌 Context 생성
+
+        // showAddDialog() 함수 시작 부분에 추가
+        Locale.setDefault(Locale.KOREAN)
         val contextWrapper = ContextThemeWrapper(requireContext(), com.google.android.material.R.style.Theme_MaterialComponents_DayNight_Dialog)
-
-        // 2. 생성한 wrapper를 사용하여 LayoutInflater 생성
         val themedInflater = LayoutInflater.from(contextWrapper)
+        val dlgView = themedInflater.inflate(R.layout.dialog_add_goal, null)
 
-        // 3. themedInflater를 사용하여 뷰 인플레이트
-        val dlgView = themedInflater.inflate(R.layout.dialog_add_goal_future, null)
-
-        // XML의 TextInputEditText에 맞춰 타입을 변경하거나 상위 클래스인 EditText 사용
-        val etTitle = dlgView.findViewById<EditText>(R.id.etTitle)
-        val tvDate = dlgView.findViewById<EditText>(R.id.tvDate)
+        val etTitle = dlgView.findViewById<EditText>(R.id.etGoalTitle)
+        // 변수명을 layoutDate로 가져왔습니다.
+        val layoutDate = dlgView.findViewById<LinearLayout>(R.id.layoutDateContainer)
+        val tvDate = dlgView.findViewById<TextView>(R.id.tvTargetDate)
+        val btnClose = dlgView.findViewById<ImageButton>(R.id.btnClose)
+        val btnSave = dlgView.findViewById<Button>(R.id.btnSaveGoal)
 
         var selectedDate = LocalDate.now()
-        tvDate.setText(selectedDate.format(dateFormatter))
+        tvDate.text = selectedDate.format(dateFormatter)
 
-        val datePickerListener = DatePickerDialog.OnDateSetListener { _, year, month, day ->
-            selectedDate = LocalDate.of(year, month + 1, day)
-            tvDate.setText(selectedDate.format(dateFormatter))
+        // 1. layoutDate (변수명 일치) 하나에만 클릭 리스너를 설정
+        layoutDate.setOnClickListener {
+            val datePicker = MaterialDatePicker.Builder.datePicker()
+                .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                .setTheme(R.style.ThemeOverlay_App_DatePicker)
+                .build()
+
+            datePicker.addOnPositiveButtonClickListener { selection ->
+                val instant = Instant.ofEpochMilli(selection)
+                selectedDate = instant.atZone(ZoneId.of("UTC")).toLocalDate()
+                tvDate.text = selectedDate.format(dateFormatter)
+            }
+
+            if (!datePicker.isAdded) {
+                datePicker.show(parentFragmentManager, "MATERIAL_DATE_PICKER")
+            }
         }
-        
-        // 날짜 선택 탭에서 선택된 날짜를 보여줌 -> tvDate에 저장
+
+        // 2. 텍스트를 눌러도 레이아웃 클릭이 실행되도록 연결
         tvDate.setOnClickListener {
-            DatePickerDialog(
-                contextWrapper,
-                datePickerListener,
-                selectedDate.year,
-                selectedDate.monthValue - 1,
-                selectedDate.dayOfMonth
-            ).show()
+            layoutDate.performClick()
         }
 
         val dialog = AlertDialog.Builder(contextWrapper)
@@ -98,12 +111,11 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
             .setCancelable(true)
             .create()
 
-        dlgView.findViewById<View>(R.id.btnCancel).setOnClickListener {
+        btnClose?.setOnClickListener {
             dialog.dismiss()
         }
 
-        // XML에서 MaterialButton은 Button을 상속받으므로 그대로 유지 가능
-        dlgView.findViewById<Button>(R.id.btnAdd).setOnClickListener {
+        btnSave.setOnClickListener {
             val title = etTitle.text.toString().trim()
             if (title.isEmpty()) {
                 etTitle.error = "목표를 입력하세요"
@@ -115,13 +127,6 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
         }
 
         dialog.show()
-
-        // ✅ 추가: 다이얼로그 자체의 배경을 투명하게 설정하여 카드뷰의 모서리가 깎여 보이게 함
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-    }
-
-    private fun updateDateText(tv: TextView, millis: Long) {
-        val fmt = java.text.SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
-        tv.text = fmt.format(Date(millis))
     }
 }

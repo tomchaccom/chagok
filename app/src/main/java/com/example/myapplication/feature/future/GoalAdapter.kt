@@ -35,8 +35,9 @@ class GoalAdapter : RecyclerView.Adapter<GoalAdapter.VH>() {
         val g = items[position]
         holder.title.text = g.title
         holder.date.text = g.date.format(dateFormatter)
-        // 아이콘은 placeholder로 시스템 drawable 사용 (원하면 교체)
-        holder.icon.setImageResource(android.R.drawable.ic_menu_compass)
+
+        // [수정] 시스템 아이콘(나침반) 대신 우리 앱 아이콘(chagok_app)으로 교체합니다.
+        holder.icon.setImageResource(R.drawable.chagok_app)
     }
 
     override fun getItemCount(): Int = items.size
