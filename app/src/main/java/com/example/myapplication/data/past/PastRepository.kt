@@ -5,9 +5,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
 
-import com.example.myapplication.feature.present.DailyRecord
-import com.example.myapplication.feature.present.CesMetrics
-import com.example.myapplication.feature.present.Meaning
+import com.example.myapplication.data.present.DailyRecord
+import com.example.myapplication.data.present.CesMetrics
+import com.example.myapplication.data.present.Meaning
 
 class PastRepository(private val context: Context) {
     private val storageFile = File(context.filesDir, "past_entries.json")

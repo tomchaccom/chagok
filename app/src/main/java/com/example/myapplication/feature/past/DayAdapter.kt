@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
-import com.example.myapplication.feature.present.DailyRecord
+import com.example.myapplication.data.present.DailyRecord
 import com.example.myapplication.data.past.DayEntry
 import com.example.myapplication.util.ImageLoader
 

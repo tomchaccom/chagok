@@ -1,6 +1,6 @@
 package com.example.myapplication.data.past
 
-import com.example.myapplication.feature.present.DailyRecord
+import com.example.myapplication.data.present.DailyRecord
 
 /**
  * 하루 단위 기록
