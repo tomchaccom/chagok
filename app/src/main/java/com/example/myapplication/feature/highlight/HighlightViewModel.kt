@@ -63,6 +63,7 @@ class HighlightViewModel(
         selector: (DailyRecord) -> Int
     ): HighlightRankSection {
 
+        // 1. 점수와 날짜순으로 정렬
         val sorted = records.sortedWith(
             compareByDescending<DailyRecord> { selector(it) }
                 .thenByDescending { parseDate(it.date) }
@@ -70,6 +71,7 @@ class HighlightViewModel(
 
         val topRecords = sorted.take(MAX_RANK_COUNT)
 
+        // 2. items를 먼저 생성해야 avg 계산 시 사용할 수 있습니다.
         val items = topRecords.mapIndexed { index, record ->
             HighlightRankItem(
                 recordId = record.id,
@@ -80,6 +82,9 @@ class HighlightViewModel(
             )
         }
 
+        // 3. 이제 items.map { it.score }.average()가 가능합니다.
+        val avg = if (items.isEmpty()) 0.0 else items.map { it.score }.average()
+
         val graphPoints = topRecords.mapIndexed { index, record ->
             HighlightGraphPoint(
                 label = "${index + 1}",
@@ -89,13 +94,14 @@ class HighlightViewModel(
 
         val canShowGraph = graphPoints.size >= 3
 
+        // 4. 생성자에 인자 이름(named arguments)을 명시해서 실수 방지
         return HighlightRankSection(
             metric = metric,
             items = items,
             graphPoints = graphPoints,
-            canShowGraph = canShowGraph
+            canShowGraph = canShowGraph,
+            averageScore = avg
         )
-
     }
 
 
