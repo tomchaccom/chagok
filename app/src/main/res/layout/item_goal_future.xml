@@ -23,8 +23,6 @@
             android:id="@+id/goal_icon"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:layout_marginTop="-4dp"
-            android:layout_marginBottom="-4dp"
             android:src="@drawable/chagok_app2"
             android:scaleType="fitCenter"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -37,7 +35,7 @@
             android:layout_marginStart="8dp"
             android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="@id/goal_icon"
-            app:layout_constraintEnd_toStartOf="@id/ivChevron"
+            app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/goal_icon"
             app:layout_constraintTop_toTopOf="@id/goal_icon">
 
@@ -60,16 +58,6 @@
                 android:textSize="14sp"
                 tools:text="2025.10.15" />
         </LinearLayout>
-
-        <ImageView
-            android:id="@+id/ivChevron"
-            android:layout_width="18dp"
-            android:layout_height="18dp"
-            android:src="@drawable/ic_chevron_right"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:tint="#D1D1D1" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </com.google.android.material.card.MaterialCardView>
