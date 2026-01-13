@@ -6,6 +6,10 @@ import com.example.myapplication.feature.present.DailyRecord
 import com.example.myapplication.feature.present.Practice
 import com.example.myapplication.feature.present.PresentUiState
 import com.example.myapplication.feature.present.UserProfile
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 
 // PresentRepository.kt
@@ -50,6 +54,42 @@ class PresentRepository(private val presentApi: PresentApi) {
             presentApi.addGoal(text)
         } catch (e: Exception) {
             Log.e("PresentRepository", "Error adding practice: ${e.message}", e)
+        }
+    }
+
+    // PresentRepository.kt에 추가
+    suspend fun convertGoalToRecord(goalTitle: String) {
+        try {
+            // 1. 오늘 날짜 및 기본 CES 지수 설정
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+            // 2. 새로운 DailyRecord 객체 생성
+            val newRecord = DailyRecord(
+                id = UUID.randomUUID().toString(),
+                photoUri = "",
+                memo = "[미래 실천] $goalTitle",
+                score = 5,
+                // 🌟 CesMetrics 필드 추가 (기본값 3, 3, 3, 3f 설정)
+                cesMetrics = CesMetrics(
+                    identity = 3,
+                    connectivity = 3,
+                    perspective = 3,
+                    weightedScore = 3f
+                ),
+                // 🌟 Meaning 필드 추가 (기본값 REMEMBER)
+                meaning = Meaning.REMEMBER,
+                date = today,
+                // 🌟 isFeatured 필드 추가
+                isFeatured = false
+            )
+
+            // 3. 실제 DB나 API에 저장하는 로직 호출
+            // presentApi.saveRecord(newRecord)
+
+            Log.d("PresentRepository", "성공적으로 변환됨: ${newRecord.memo}")
+
+        } catch (e: Exception) {
+            Log.e("PresentRepository", "Error converting goal to record: ${e.message}")
         }
     }
 }
