@@ -16,6 +16,7 @@ import com.example.myapplication.databinding.FragmentPresentBinding
 import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.launch
 import kotlin.collections.reversed
+import androidx.recyclerview.widget.LinearLayoutManager
 
 class PresentFragment : BaseFragment<FragmentPresentBinding>() {
 
@@ -61,7 +62,13 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         practiceAdapter = PracticeAdapter { practice, isAchieved ->
             viewModel.onPracticeStateChanged(practice.id, isAchieved)
         }
+        // 명시적으로 LayoutManager 설정(가끔 XML 속성으로는 동작하지 않을 수 있음)
+        binding.practicesRecyclerView.layoutManager = LinearLayoutManager(requireContext())
         binding.practicesRecyclerView.adapter = practiceAdapter
+        binding.practicesRecyclerView.visibility = View.VISIBLE
+
+        // --- 제출: 초기 더미 데이터 (실제 데이터가 로드될 때까지 보이도록)
+        practiceAdapter.submitList(generateDummyPractices())
 
         // 2. Moment Carousel (ViewPager2) - 변경됨
         momentAdapter = MomentAdapter { record ->
@@ -77,6 +84,15 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         TabLayoutMediator(binding.recordsIndicator, binding.recordsCarousel) { tab, position ->
             // 탭 텍스트 없이 점만 표시
         }.attach()
+    }
+
+    // 더미 Practice 리스트 생성 (UI 확인용)
+    private fun generateDummyPractices(): List<Practice> {
+        return listOf(
+            Practice(id = "p1", title = "물 한 잔 마시기", subtitle = "하루 1회", isAchieved = null),
+            Practice(id = "p2", title = "잠깐 스트레칭", subtitle = "하루 2회", isAchieved = null),
+            Practice(id = "p3", title = "10분 명상", subtitle = "하루 1회", isAchieved = null)
+        )
     }
 
     private fun setupClickListeners() {
@@ -162,8 +178,10 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
                         greetingPrompt.text = uiState.userProfile.prompt
                         practicesLeftBadge.text = "${uiState.practicesLeft}개 남음"
 
-                        // Practice 리스트 갱신
-                        practiceAdapter.submitList(uiState.practices)
+                        // Practice 리스트 갱신 — 실제 데이터가 비어 있을 때는 기존(더미) 유지
+                        if (uiState.practices.isNotEmpty()) {
+                            practiceAdapter.submitList(uiState.practices)
+                        }
                     }
                 }
             }
