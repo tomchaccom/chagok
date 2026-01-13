@@ -1,5 +1,6 @@
 package com.example.myapplication.feature.present
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -9,6 +10,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -33,15 +37,101 @@ class CreateMomentViewModel : ViewModel() {
     companion object {
         private val savedRecords = mutableListOf<DailyRecord>()
         private const val DEFAULT_SCORE = 5
+        private const val FILE_NAME = "present_records.json"
+        private var appContext: Context? = null
+
+        fun initialize(context: Context) {
+            appContext = context.applicationContext
+            loadFromStorage()
+        }
 
         fun getSavedRecords(): List<DailyRecord> = savedRecords.toList()
 
         fun addRecord(record: DailyRecord) {
             savedRecords.add(record)
+            persistToStorage()
         }
 
         fun clearRecords() {
             savedRecords.clear()
+            persistToStorage()
+        }
+
+        fun updateRecordInMemory(updated: DailyRecord) {
+            val index = savedRecords.indexOfFirst { it.id == updated.id }
+            if (index == -1) savedRecords.add(updated) else savedRecords[index] = updated
+            persistToStorage()
+        }
+
+        fun removeRecord(id: String) {
+            val idx = savedRecords.indexOfFirst { it.id == id }
+            if (idx >= 0) {
+                savedRecords.removeAt(idx)
+                persistToStorage()
+            }
+        }
+
+        private fun persistToStorage() {
+            val ctx = appContext ?: return
+            try {
+                val file = File(ctx.filesDir, FILE_NAME)
+                val arr = JSONArray()
+                for (r in savedRecords) {
+                    val obj = JSONObject()
+                    obj.put("id", r.id)
+                    obj.put("photoUri", r.photoUri)
+                    obj.put("memo", r.memo)
+                    obj.put("score", r.score)
+                    obj.put("date", r.date)
+                    obj.put("isFeatured", r.isFeatured)
+                    // cesMetrics
+                    val ces = JSONObject()
+                    ces.put("identity", r.cesMetrics.identity)
+                    ces.put("connectivity", r.cesMetrics.connectivity)
+                    ces.put("perspective", r.cesMetrics.perspective)
+                    ces.put("weightedScore", r.cesMetrics.weightedScore)
+                    obj.put("cesMetrics", ces)
+
+                    arr.put(obj)
+                }
+                file.writeText(arr.toString())
+            } catch (e: Exception) {
+                Log.e("CreateMomentVM", "persist error: ${e.message}", e)
+            }
+        }
+
+        private fun loadFromStorage() {
+            val ctx = appContext ?: return
+            try {
+                val file = File(ctx.filesDir, FILE_NAME)
+                if (!file.exists()) return
+                val content = file.readText()
+                val arr = JSONArray(content)
+                savedRecords.clear()
+                for (i in 0 until arr.length()) {
+                    val obj = arr.getJSONObject(i)
+                    val cesObj = obj.getJSONObject("cesMetrics")
+                    val ces = CesMetrics(
+                        identity = cesObj.optInt("identity", 3),
+                        connectivity = cesObj.optInt("connectivity", 3),
+                        perspective = cesObj.optInt("perspective", 3),
+                        weightedScore = cesObj.optDouble("weightedScore", 5.0).toFloat()
+                    )
+                    val r = DailyRecord(
+                        id = obj.optString("id", UUID.randomUUID().toString()),
+                        photoUri = obj.optString("photoUri", ""),
+                        memo = obj.optString("memo", ""),
+                        score = obj.optInt("score", DEFAULT_SCORE),
+                        cesMetrics = ces,
+                        meaning = Meaning.valueOf(obj.optString("meaning", "REMEMBER")),
+                        date = obj.optString("date", ""),
+                        isFeatured = obj.optBoolean("isFeatured", false)
+                    )
+                    savedRecords.add(r)
+                }
+            } catch (e: Exception) {
+                Log.e("CreateMomentVM", "load error: ${e.message}", e)
+            }
         }
     }
 

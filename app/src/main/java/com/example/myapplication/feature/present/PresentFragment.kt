@@ -20,6 +20,7 @@ import kotlin.collections.reversed
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.data.future.GoalRepository
+import com.example.myapplication.data.present.PracticeRepository
 import java.time.LocalDate
 import android.widget.TextView
 
@@ -52,6 +53,22 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         practices_left_badge = binding.practicesLeftBadge
 
         setupRecyclerViews()
+
+        // 저장된 present records 및 practice 상태 초기화
+        try {
+            CreateMomentViewModel.initialize(requireContext())
+        } catch (_: Exception) {
+        }
+        PracticeRepository.initialize(requireContext())
+        // 저장된 practice 상태를 로드하여 로컬 오버라이드에 적용
+        try {
+            val saved = PracticeRepository.load()
+            if (saved.isNotEmpty()) {
+                localOverrides.putAll(saved)
+            }
+        } catch (_: Exception) {
+        }
+
         setupClickListeners()
         observeUiState()
         observeLoadingState()
@@ -115,6 +132,11 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
                     practiceAdapter.submitList(current) {
                         updatePracticesLeftBadge(practiceAdapter.currentList)
                     }
+                }
+                // 변경된 토글 상태를 파일로 저장
+                try {
+                    PracticeRepository.save(localOverrides)
+                } catch (_: Exception) {
                 }
             } catch (_: Exception) {
                 // 안전하게 실패: adapter가 아직 준비 안 된 경우 등
