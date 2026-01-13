@@ -61,7 +61,7 @@ class PhotoAdapter(
         }
 
         fun bind(photo: PhotoItem, position: Int) {
-            // ... (이미지 로드 코드는 기존과 동일) ...
+            // ... (이미지 로드 및 density 변수 선언부는 기존 유지) ...
             val density = itemView.context.resources.displayMetrics.density
             val hPx = (110 * density).toInt()
             ImageLoader.loadInto(ivPhoto, photo.imageUri, R.drawable.ic_launcher_background, reqWidth = hPx, reqHeight = hPx)
@@ -70,15 +70,19 @@ class PhotoAdapter(
             // 선택 여부 확인
             val isSelected = (selectedIndex == position)
 
-            // 1. 오버레이 (연한 초록색 빛) 보이기/숨기기
-            overlay.isVisible = isSelected
+            // [수정 1] 사진 위를 덮는 초록색 막은 이제 필요 없으니 숨깁니다.
+            overlay.isVisible = false
 
-            // 2. ★ 핵심 수정 ★: 테두리는 CardView가 직접 그립니다.
+            // [수정 2] 테두리 설정 (CardView 속성 이용)
             if (isSelected) {
-                cardRoot.strokeWidth = (4 * density).toInt() // 두께 4dp
-                cardRoot.strokeColor = Color.parseColor("#80E1A6") // 선명한 연두색
+                // 두께를 4 -> 2 로 줄임 (원하시는 두께로 숫자 조절 가능)
+                cardRoot.strokeWidth = (2 * density).toInt()
+
+                // 색상은 그대로 유지
+                cardRoot.strokeColor = Color.parseColor("#80E1A6")
             } else {
-                cardRoot.strokeWidth = 0 // 선택 안 되면 테두리 없음
+                // 선택 안 됐을 때는 테두리 없음
+                cardRoot.strokeWidth = 0
             }
         }
     }
