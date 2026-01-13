@@ -38,8 +38,22 @@
     <string name="mtrl_picker_save">확인</string>
     <string name="mtrl_picker_cancel">취소</string>
     <string name="mtrl_picker_confirm">확인</string>
+    <string name="mtrl_picker_announce_current_selection">현재 선택된 날짜: %1$s</string>
+    <string name="mtrl_picker_day_of_week_column_header">요일 열: %1$s</string>
+    <string name="mtrl_picker_navigate_to_year_description">연도로 이동</string>
+    <string name="mtrl_picker_toggle_to_calendar_input_mode">달력 입력 모드로 전환</string>
+    <string name="mtrl_picker_toggle_to_text_input_mode">텍스트 입력 모드로 전환</string>
     <string name="mtrl_picker_toggle_to_year_selection">연도 선택으로 전환</string>
     <string name="mtrl_picker_toggle_to_day_selection">날짜 선택으로 전환</string>
 
+    <string-array name="mtrl_calendar_days_of_week">
+        <item>일</item>
+        <item>월</item>
+        <item>화</item>
+        <item>수</item>
+        <item>목</item>
+        <item>금</item>
+        <item>토</item>
+    </string-array>
 
 </resources>

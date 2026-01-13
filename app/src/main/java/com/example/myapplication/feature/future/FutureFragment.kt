@@ -60,6 +60,9 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showAddDialog() {
+
+        // showAddDialog() 함수 시작 부분에 추가
+        Locale.setDefault(Locale.KOREAN)
         val contextWrapper = ContextThemeWrapper(requireContext(), com.google.android.material.R.style.Theme_MaterialComponents_DayNight_Dialog)
         val themedInflater = LayoutInflater.from(contextWrapper)
         val dlgView = themedInflater.inflate(R.layout.dialog_add_goal, null)
@@ -77,7 +80,6 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
         // 1. layoutDate (변수명 일치) 하나에만 클릭 리스너를 설정
         layoutDate.setOnClickListener {
             val datePicker = MaterialDatePicker.Builder.datePicker()
-                .setTitleText("목표 날짜를 선택하세요")
                 .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
                 .setTheme(R.style.ThemeOverlay_App_DatePicker)
                 .build()
