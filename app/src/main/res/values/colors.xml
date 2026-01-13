@@ -29,5 +29,7 @@
     <color name="graph_connectivity">#26A69A</color>   <!-- Blue-Green -->
     <color name="graph_perspective">#6E6A5F</color>    <!-- Olive Gray -->
 
+    <color name="white">#000000</color>
+    <color name="black">#FFFFFF</color>
 
 </resources>

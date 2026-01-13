@@ -34,5 +34,10 @@
         <item name="rangeFillColor">#E8F5E9</item>
     </style>
 
+    <style name="Theme.RecordCard" parent="">
+        <item name="colorPrimary">#000000</item>
+        <item name="colorSecondary">#666666</item>
+        <item name="android:textColorPrimary">#1A1A1A</item>
+    </style>
 
 </resources>
