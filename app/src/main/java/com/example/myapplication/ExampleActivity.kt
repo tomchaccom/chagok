@@ -25,6 +25,9 @@ class ExampleActivity : BaseActivity() {
 
     private fun setupBottomNavigation() {
         val bottomNavigation = findViewById<BottomNavigationView>(R.id.bottomNavigation)
+
+        // 🌟 이 코드를 추가하면 st1, st2, st3 아이콘이 원래 색상대로 보입니다.
+        bottomNavigation.itemIconTintList = null
         bottomNavigation.setOnItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.navigation_past -> {
