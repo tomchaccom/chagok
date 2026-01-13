@@ -43,6 +43,27 @@ class PastDetailFragment : Fragment() {
         tvMemoContent = view.findViewById(R.id.tvMemoContent)
         btnBack = view.findViewById(R.id.btnBack)
 
+        // PastDetailFragment.kt 의 onViewCreated 내부
+
+        val rvPhotos: RecyclerView = view.findViewById(R.id.rvPhotos) // XML에 RecyclerView 있어야 함
+
+// 3열 격자 모양으로 설정
+        rvPhotos.layoutManager = GridLayoutManager(requireContext(), 3)
+
+        val photoList = listOf(
+            PhotoItem("1", "url1"),
+            PhotoItem("2", "url2"),
+            PhotoItem("3", "url3"),
+            // ... 데이터 추가
+        )
+
+        val adapter = PhotoGridAdapter(photoList) { selectedPhoto ->
+            // 사진 클릭 시 할 일 (예: 아래 텍스트 변경)
+            // tvPhotoMemo.text = "선택된 사진 메모..."
+        }
+
+        rvPhotos.adapter = adapter
+
         // 시스템 바(상단바) 여백 처리
         setupWindowInsets(view)
 

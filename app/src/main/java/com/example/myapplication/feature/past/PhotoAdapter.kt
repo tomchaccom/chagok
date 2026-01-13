@@ -55,15 +55,18 @@ class PhotoAdapter(
         }
 
         fun bind(photo: PhotoItem, position: Int) {
-            // 썸네일 사이즈로 로드 (이미지뷰 높이 110dp -> 픽셀로 변환)
+            // ... (이미지 로드 코드는 그대로 유지) ...
+
             val density = itemView.context.resources.displayMetrics.density
             val hPx = (110 * density).toInt()
             ImageLoader.loadInto(ivPhoto, photo.imageUri, R.drawable.ic_launcher_background, reqWidth = hPx, reqHeight = hPx)
             ivPhoto.visibility = View.VISIBLE
 
             val isSelected = (selectedIndex == position)
+
+            // [수정] 배경색 변경 코드를 삭제하고 visibility만 조절합니다.
+            // XML에 설정된 @drawable/bg_photo_selected가 보이게 됩니다.
             overlay.isVisible = isSelected
-            overlay.setBackgroundColor(if (isSelected) Color.parseColor("#330000FF") else Color.TRANSPARENT)
         }
     }
 }
