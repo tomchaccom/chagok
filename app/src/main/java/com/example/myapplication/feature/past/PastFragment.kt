@@ -40,7 +40,7 @@ class PastFragment : Fragment() {
 
         // 2. Repository 및 데이터 임포트 (데이터를 먼저 파일에 저장해야 ViewModel이 읽을 수 있음)
         val repo = PastRepository(requireContext())
-        importPresentToPastBeforeVm(repo)
+        // importPresentToPastBeforeVm(repo)
 
         // 3. ViewModel 설정 (Shared ViewModel)
         val factory = PastViewModelFactory(repo)
