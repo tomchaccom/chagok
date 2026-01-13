@@ -5,6 +5,7 @@ import com.example.myapplication.data.past.DayEntry
 import com.example.myapplication.data.past.PastRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class PastViewModel(
     private val repository: PastRepository
@@ -52,5 +53,21 @@ class PastViewModel(
     fun togglePhoto(index: Int) {
         _selectedPhotoIndex.value =
             if (_selectedPhotoIndex.value == index) null else index
+    }
+    // PastViewModel.kt
+    // PastViewModel.kt
+    fun loadDays() {
+        viewModelScope.launch(Dispatchers.IO) {
+            // 1. IO 스레드에서 데이터 로드
+            val list = repository.loadPastEntries()
+
+            // 2. 새로운 리스트 객체 생성 (메모리 주소 변경으로 변경 감지 보장)
+            val newList = list.toList()
+
+            // 3. 메인 스레드에 안전하게 전달
+            withContext(Dispatchers.Main) {
+                _days.value = newList
+            }
+        }
     }
 }
