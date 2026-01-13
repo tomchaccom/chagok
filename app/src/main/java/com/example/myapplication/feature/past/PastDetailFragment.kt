@@ -37,7 +37,7 @@ class PastDetailFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         // 뷰 연결
-        rvPhotos = view.findViewById(R.id.rvPhotos)
+        rvPhotos = view.findViewById(R.id.rvDetailPhotos)
         tvDetailDate = view.findViewById(R.id.tvDetailDate)
         tvMemoTitle = view.findViewById(R.id.tvMemoTitle)
         tvMemoContent = view.findViewById(R.id.tvMemoContent)
@@ -45,7 +45,7 @@ class PastDetailFragment : Fragment() {
 
         // PastDetailFragment.kt 의 onViewCreated 내부
 
-        val rvPhotos: RecyclerView = view.findViewById(R.id.rvPhotos) // XML에 RecyclerView 있어야 함
+        val rvPhotos: RecyclerView = view.findViewById(R.id.rvDetailPhotos) // XML에 RecyclerView 있어야 함
 
 // 3열 격자 모양으로 설정
         rvPhotos.layoutManager = GridLayoutManager(requireContext(), 3)
