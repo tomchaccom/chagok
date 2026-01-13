@@ -74,4 +74,20 @@ class PresentViewModel(private val repository: PresentRepository) : ViewModel() 
     fun clearErrorMessage() {
         _errorMessage.value = null
     }
+
+    // PresentViewModel.kt
+    fun saveNewRecord(photoUri: String, memo: String, score: Int) {
+        val newRecord = DailyRecord(
+            id = System.currentTimeMillis().toString(), // 임시 ID
+            photoUri = photoUri,
+            memo = memo,
+            score = score,
+            cesMetrics = CesMetrics(3, 3, 3, 3.0f), // 임시 값
+            date = "2026.01.13",
+            meaning = Meaning.REMEMBER,
+            isFeatured = false
+        )
+        repository.addRecord(newRecord)
+        loadPresentData() // 저장 후 즉시 리스트 새로고침
+    }
 }
