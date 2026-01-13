@@ -5,7 +5,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="10dp"
+    android:layout_marginBottom="12dp"
     app:cardBackgroundColor="@android:color/white"
     app:cardCornerRadius="16dp"
     app:cardElevation="2dp"
@@ -38,12 +38,12 @@
             app:layout_constraintEnd_toStartOf="@id/btnComplete"
             app:layout_constraintStart_toEndOf="@id/ivTodayGoalIcon"
             app:layout_constraintTop_toTopOf="parent"
-            tools:text="일본 여행 가기 (오늘!)" />
+            tools:text="오늘의 목표 제목" />
 
         <ImageButton
             android:id="@+id/btnComplete"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
             android:background="@drawable/bg_count_tag"
             android:src="@drawable/ic_chevron_right"
             app:tint="#4CAF50"
