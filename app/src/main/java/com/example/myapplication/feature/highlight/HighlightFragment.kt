@@ -3,6 +3,7 @@ package com.example.myapplication.feature.highlight
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +22,7 @@ import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
 import kotlinx.coroutines.launch
+
 
 class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
 
@@ -48,59 +50,88 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { state ->
-                    // 1. 데이터 유무에 따른 가이드 텍스트 처리
+                    // 🌟 무조건 탭 버튼 그룹은 보이게 설정 (기록 유무와 상관없이)
+                    binding.themeToggleGroup.visibility = View.VISIBLE
+
                     if (state.showEmptyState) {
-                        binding.explanationTitle.text = "기록을 쌓아주세요"
-                        binding.explanationBody.text = "차곡이가 당신의 기록을 분석할 준비를 하고 있어요!"
+                        // 데이터가 3개 미만일 때: 가이드 메시지만 노출
+                        binding.explanationTitle.text = "기록을 더 쌓아주세요"
+                        binding.explanationBody.text = "최소 3개의 기록이 있어야 통계와 AI 분석이 가능해요."
+
+                        binding.standardContentLayout.visibility = View.GONE
+                        binding.aiResultCard.visibility = View.GONE
                     } else {
-                        // 현재 선택된 토글 버튼에 따라 UI 업데이트
-                        updateUiBySelectedMetric(state)
+                        // 데이터가 3개 이상일 때: 현재 선택된 탭에 따라 화면 분기
+                        if (binding.themeToggleGroup.checkedButtonId == R.id.theme_ai_button) {
+                            binding.standardContentLayout.visibility = View.GONE
+                            binding.aiResultCard.visibility = View.VISIBLE
+                        } else {
+                            binding.standardContentLayout.visibility = View.VISIBLE
+                            binding.aiResultCard.visibility = View.GONE
+                            updateUiBySelectedMetric(state) // 통계/리스트 업데이트
+                        }
                     }
                 }
             }
         }
     }
 
-    /*private fun setupThemeSelector() {
-        // 초기값 설정 (나다움 버튼)
+    private fun setupThemeSelector() {
         binding.themeToggleGroup.check(R.id.theme_identity_button)
 
         binding.themeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
-                // 버튼 클릭 시 UI 강제 갱신을 위해 viewModel에 알리거나 로컬 UI 즉시 변경
-                // 여기서는 현재 수집 중인 state를 기반으로 다시 그림
-                viewLifecycleOwner.lifecycleScope.launch {
-                    updateUiBySelectedMetric(viewModel.uiState.value)
+                when (checkedId) {
+                    R.id.theme_ai_button -> {
+                        binding.standardContentLayout.visibility = View.GONE
+                        binding.aiResultCard.visibility = View.VISIBLE
+
+                        // 🌟 에러 해결: records 대신 sections에서 데이터를 추출해서 전달
+                        val itemsToAnalyze = viewModel.uiState.value.sections.flatMap { it.items }
+                        viewModel.fetchAiAnalysis(itemsToAnalyze)
+                    }
+                    else -> {
+                        binding.standardContentLayout.visibility = View.VISIBLE
+                        binding.aiResultCard.visibility = View.GONE
+
+                        updateMetricMessages(checkedId) // 차곡이 메시지 변경
+                        updateUiBySelectedMetric(viewModel.uiState.value)
+                    }
                 }
             }
         }
-    }*/
 
-    /*private fun updateUiBySelectedMetric(state: HighlightUiState) {
-        val selectedMetric = when (binding.themeToggleGroup.checkedButtonId) {
-            R.id.theme_identity_button -> HighlightMetric.IDENTITY
-            R.id.theme_connectivity_button -> HighlightMetric.CONNECTIVITY
-            R.id.theme_perspective_button -> HighlightMetric.PERSPECTIVE
-            else -> HighlightMetric.IDENTITY
-        }
-
-        val section = state.sections.find { it.metric == selectedMetric } ?: return
-
-        // 1. 설명 텍스트 업데이트
-        binding.explanationTitle.text = section.metric.title
-        binding.explanationBody.text = getMetricDescription(section.metric)
-
-        // 2. 랭킹 바인딩 (Top 3)
-        bindMomentRank(binding.layoutRank1, section.items.getOrNull(0), "1")
-        bindMomentRank(binding.layoutRank2, section.items.getOrNull(1), "2")
-        bindMomentRank(binding.layoutRank3, section.items.getOrNull(2), "3")
-
-        // 3. 그래프 바인딩
-        if (section.canShowGraph) {
-            bindLineChart(section)
+        // AI 상태 관찰 함수 호출 (에러 해결을 위해 아래 함수도 확인)
+        observeAiState()
+    }
+    private fun observeAiState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.aiState.collect { state ->
+                    // state의 타입을 명시적으로 체크합니다.
+                    when (state) {
+                        is AiUiState.Loading -> { // ViewModel 밖으로 꺼냈을 때
+                            binding.aiLoadingView.visibility = View.VISIBLE
+                            binding.tvAiContent.text = ""
+                        }
+                        is AiUiState.Success -> {
+                            binding.aiLoadingView.visibility = View.GONE
+                            binding.tvAiContent.text = state.message
+                        }
+                        is AiUiState.Error -> {
+                            binding.aiLoadingView.visibility = View.GONE
+                            binding.tvAiContent.text = state.error
+                        }
+                        else -> {
+                            binding.aiLoadingView.visibility = View.GONE
+                        }
+                    }
+                }
+            }
         }
     }
-*/
+
+
     private fun bindMomentRank(
         rankBinding: ViewHighlightRankItemBinding,
         item: HighlightRankItem?,
@@ -159,37 +190,7 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         }
     }
 
-    private fun setupThemeSelector() {
-        // 1. 초기 선택값 설정
-        binding.themeToggleGroup.check(R.id.theme_identity_button)
 
-        // 2. 버튼 클릭 리스너
-        binding.themeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
-            if (isChecked) {
-                when (checkedId) {
-                    R.id.theme_ai_button -> {
-                        // [AI 모드]
-                        binding.standardContentLayout.visibility = View.GONE
-                        binding.aiResultCard.visibility = View.VISIBLE
-
-                        val itemsToAnalyze = viewModel.uiState.value.sections.flatMap { it.items }
-                        viewModel.fetchAiAnalysis(itemsToAnalyze)
-                    }
-                    else -> {
-                        // [일반 지표 모드]
-                        binding.standardContentLayout.visibility = View.VISIBLE
-                        binding.aiResultCard.visibility = View.GONE
-
-                        // 🌟 1. 차곡이 메시지 즉시 업데이트
-                        updateMetricMessages(checkedId)
-
-                        // 🌟 2. 리스트 및 그래프 업데이트
-                        updateUiBySelectedMetric(viewModel.uiState.value)
-                    }
-                }
-            }
-        }
-    }
     private fun updateMetricMessages(checkedId: Int) {
         when (checkedId) {
             R.id.theme_identity_button -> {
@@ -238,28 +239,4 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         }
     }
 
-    // 🌟 AI 응답을 받아서 화면에 그려주는 함수 추가
-    private fun observeAiState() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.aiState.collect { state ->
-                    when (state) {
-                        is AiUiState.Loading -> {
-                            binding.aiLoadingView.visibility = View.VISIBLE
-                            binding.tvAiContent.text = ""
-                        }
-                        is AiUiState.Success -> {
-                            binding.aiLoadingView.visibility = View.GONE
-                            binding.tvAiContent.text = state.message
-                        }
-                        is AiUiState.Error -> {
-                            binding.aiLoadingView.visibility = View.GONE
-                            binding.tvAiContent.text = "오류 발생: ${state.error}"
-                        }
-                        else -> {}
-                    }
-                }
-            }
-        }
-    }
 }

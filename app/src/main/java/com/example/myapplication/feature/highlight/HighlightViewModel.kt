@@ -1,5 +1,6 @@
 package com.example.myapplication.feature.highlight
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope // 🌟 추가: 코루틴 사용을 위해 필수
 import com.example.myapplication.data.Ai.RetrofitClient
@@ -54,7 +55,7 @@ class HighlightViewModel(
         }
     }
 
-    fun refreshIfNeeded() {
+    /*fun refreshIfNeeded() {
         val records = repository.getTodayRecords()
         val signature = records.map { record ->
             listOf(
@@ -71,7 +72,7 @@ class HighlightViewModel(
 
         lastSignature = signature
         _uiState.value = buildUiState(records)
-    }
+    }*/
 
     private fun buildUiState(records: List<DataRecord>): HighlightUiState {
         if (records.size < MIN_RECORDS_FOR_ANALYSIS) {
@@ -135,6 +136,24 @@ class HighlightViewModel(
     companion object {
         private const val MAX_RANK_COUNT = 5
         private const val MIN_RECORDS_FOR_ANALYSIS = 3
+    }
+    fun refreshIfNeeded() {
+        val records = repository.getTodayRecords()
+
+        // 🔍 로그 추가: 실제 가져온 기록의 개수를 확인합니다.
+        Log.d("Highlight", "가져온 기록 개수: ${records.size}")
+
+        // 기록이 있다면 상세 내용도 확인
+        records.forEach {
+            Log.d("Highlight", "기록 ID: ${it.id}, 날짜: ${it.date}, 메모: ${it.memo}")
+        }
+
+        // ... (기존 signature 체크 로직) ...
+
+        _uiState.value = buildUiState(records)
+
+        // 🔍 로그 추가: 최종 상태 확인
+        Log.d("Highlight", "showEmptyState 결과: ${_uiState.value.showEmptyState}")
     }
 }
 

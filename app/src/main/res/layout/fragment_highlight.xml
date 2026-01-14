@@ -110,13 +110,20 @@
                             android:textSize="12sp" />
                     </LinearLayout>
 
+                    <ImageView
+                        android:id="@+id/iv_ai_chagok"
+                        android:layout_width="80dp"
+                        android:layout_height="80dp"
+                        android:layout_marginBottom="12dp"
+                        android:src="@drawable/chagok_pho3"
+                        android:visibility="gone" />
+
                     <TextView
                         android:id="@+id/tv_ai_content"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="12dp"
-                        android:lineSpacingExtra="5dp"
-                        android:textColor="#333333"
+                        android:lineSpacingExtra="8sp"  android:textColor="#333333"
                         android:textSize="14sp" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
