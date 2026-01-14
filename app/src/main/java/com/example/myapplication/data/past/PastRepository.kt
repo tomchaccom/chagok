@@ -26,7 +26,7 @@ class PastRepository(private val context: Context) {
         } else {
             // 파일이 아예 없을 때만 더미를 생성
             if (!storageFile.exists()) {
-                entries.addAll(createDummyEntries())
+                // entries.addAll(createDummyEntries())
                 saveToStorage()
             }
         }
@@ -80,8 +80,10 @@ class PastRepository(private val context: Context) {
 
     private fun formatDateLabel(dateStr: String): String {
         return try {
+            // 입력 형식이 마침표이든 하이픈이든 모두 처리
+            val normalizedDate = dateStr.replace(".", "-")
             val inFmt = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
-            val d = inFmt.parse(dateStr) ?: return dateStr
+            val d = inFmt.parse(normalizedDate) ?: return dateStr
             val outFmt = SimpleDateFormat("yyyy년 M월 d일", Locale.getDefault())
             outFmt.format(d)
         } catch (e: Exception) {

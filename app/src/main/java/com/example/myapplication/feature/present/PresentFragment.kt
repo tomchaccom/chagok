@@ -30,7 +30,9 @@ import com.example.myapplication.feature.present.DailyRecord as FeatureDailyReco
 
 class PresentFragment : BaseFragment<FragmentPresentBinding>() {
 
-    private val viewModel: PresentViewModel by activityViewModels { PresentViewModelFactory() }
+    private val viewModel: PresentViewModel by activityViewModels {
+        PresentViewModelFactory(requireActivity().application)
+    }
 
     private lateinit var todayGoalAdapter: TodayGoalAdapter
     private lateinit var recordAdapter: RecordAdapter
