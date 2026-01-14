@@ -168,27 +168,43 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
             if (isChecked) {
                 when (checkedId) {
                     R.id.theme_ai_button -> {
-                        // 🌟 AI 분석 모드: 기존 레이아웃 숨기고 AI 카드 보이기
+                        // [AI 모드]
                         binding.standardContentLayout.visibility = View.GONE
                         binding.aiResultCard.visibility = View.VISIBLE
 
-                        // 🌟 수정된 데이터 전달 로직: sections의 모든 아이템을 합쳐서 보냄
                         val itemsToAnalyze = viewModel.uiState.value.sections.flatMap { it.items }
                         viewModel.fetchAiAnalysis(itemsToAnalyze)
                     }
                     else -> {
-                        // 🌟 일반 지표 모드: AI 카드 숨기고 기존 레이아웃 보이기
+                        // [일반 지표 모드]
                         binding.standardContentLayout.visibility = View.VISIBLE
                         binding.aiResultCard.visibility = View.GONE
 
-                        // 지표에 따른 UI 업데이트 실행
+                        // 🌟 1. 차곡이 메시지 즉시 업데이트
+                        updateMetricMessages(checkedId)
+
+                        // 🌟 2. 리스트 및 그래프 업데이트
                         updateUiBySelectedMetric(viewModel.uiState.value)
                     }
                 }
             }
         }
-        // AI 상태 구독 시작 (onCreateView나 onViewCreated에서 호출)
-        observeAiState()
+    }
+    private fun updateMetricMessages(checkedId: Int) {
+        when (checkedId) {
+            R.id.theme_identity_button -> {
+                binding.explanationTitle.text = "나다운 기억 (Identity)"
+                binding.explanationBody.text = "이 지표는 기록이 당신의 정체성에 얼마나 깊이 뿌리내렸는지 보여줘요."
+            }
+            R.id.theme_connectivity_button -> {
+                binding.explanationTitle.text = "연결된 기억 (Connectivity)"
+                binding.explanationBody.text = "이 지표는 기록이 타인 또는 세상과 얼마나 연결되어 있는지 보여줘요."
+            }
+            R.id.theme_perspective_button -> {
+                binding.explanationTitle.text = "새로운 관점 (Perspective)"
+                binding.explanationBody.text = "이 지표는 기록이 당신의 생각이나 관점을 얼마나 확장시켰는지 보여줘요."
+            }
+        }
     }
 
 
