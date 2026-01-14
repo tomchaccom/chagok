@@ -29,7 +29,7 @@ class PresentRepository(private val presentApi: PresentApi) {
             )
         } catch (e: Exception) {
             PresentUiState(
-                userProfile = UserProfile("오류", "연결 실패"),
+                userProfile = UserProfile("안녕하세요 사용자님!", "연결 실패"),
                 todayRecords = _savedRecords.toList() // ✅ 에러 시에도 저장된 데이터는 보여줌
             )
         }
