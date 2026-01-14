@@ -82,7 +82,8 @@ class HighlightViewModel(
                 rank = index + 1,
                 photoUri = record.photoUri,
                 memo = record.memo,
-                score = selector(record)
+                score = selector(record),
+                date = record.date
             )
         }
 
@@ -95,7 +96,7 @@ class HighlightViewModel(
             )
         }
 
-        val canShowGraph = graphPoints.size >= 3
+        val canShowGraph = graphPoints.size >= MIN_RECORDS_FOR_ANALYSIS
 
         return HighlightRankSection(
             metric = metric,
