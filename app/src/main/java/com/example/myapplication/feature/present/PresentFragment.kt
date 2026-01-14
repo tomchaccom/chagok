@@ -92,10 +92,13 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
     // 🌟 파라미터 타입을 별칭(DataDailyRecord)으로 변경
     private fun updateRecordUi(records: List<DataDailyRecord>) {
         val sortedRecords = records.reversed()
+        val isListEmpty = records.isEmpty()
+
         recordAdapter.submitList(sortedRecords)
 
         binding.apply {
             recordRecyclerView.isVisible = sortedRecords.isNotEmpty()
+            ivChagokOnButton.isVisible = !isListEmpty
             emptyStateLayout.isVisible = sortedRecords.isEmpty()
         }
     }
