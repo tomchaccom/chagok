@@ -13,7 +13,9 @@ class AddPracticeModal : BottomSheetDialogFragment() {
     private var _binding: FragmentAddPracticeBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: PresentViewModel by activityViewModels { PresentViewModelFactory() }
+    private val viewModel: PresentViewModel by activityViewModels {
+        PresentViewModelFactory(requireActivity().application)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

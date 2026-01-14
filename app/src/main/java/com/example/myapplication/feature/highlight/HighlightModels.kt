@@ -1,5 +1,7 @@
 package com.example.myapplication.feature.highlight
 
+import java.time.LocalDate
+
 enum class HighlightMetric(val title: String) {
     IDENTITY("나다운 기억 TOP 5"),
     CONNECTIVITY("무의식의 나 TOP 5"),
@@ -11,7 +13,8 @@ data class HighlightRankItem(
     val rank: Int,
     val photoUri: String,
     val memo: String,
-    val score: Int
+    val score: Int,
+    val date : String
 )
 
 data class HighlightRankSection(

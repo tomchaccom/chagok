@@ -30,7 +30,9 @@ import com.example.myapplication.feature.present.DailyRecord as FeatureDailyReco
 
 class PresentFragment : BaseFragment<FragmentPresentBinding>() {
 
-    private val viewModel: PresentViewModel by activityViewModels { PresentViewModelFactory() }
+    private val viewModel: PresentViewModel by activityViewModels {
+        PresentViewModelFactory(requireActivity().application)
+    }
 
     private lateinit var todayGoalAdapter: TodayGoalAdapter
     private lateinit var recordAdapter: RecordAdapter
@@ -92,10 +94,13 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
     // 🌟 파라미터 타입을 별칭(DataDailyRecord)으로 변경
     private fun updateRecordUi(records: List<DataDailyRecord>) {
         val sortedRecords = records.reversed()
+        val isListEmpty = records.isEmpty()
+
         recordAdapter.submitList(sortedRecords)
 
         binding.apply {
             recordRecyclerView.isVisible = sortedRecords.isNotEmpty()
+            ivChagokOnButton.isVisible = !isListEmpty
             emptyStateLayout.isVisible = sortedRecords.isEmpty()
         }
     }

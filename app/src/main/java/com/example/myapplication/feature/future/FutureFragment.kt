@@ -84,7 +84,7 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
                     }
                     else -> null
                 }
-            }
+            }.filter { !it.isAchieved } // 🌟 여기에 필터 추가 (완료된 것은 제외)
             goalAdapter.submitList(correctedList)
         }
 
@@ -175,4 +175,6 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
         dialog.show()
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
+
+
 }

@@ -128,16 +128,41 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <android.widget.Button
-            android:id="@+id/btnRecordNow"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="56dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:background="@drawable/bg_black_button"
-            android:text="이 순간 기록하기"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:paddingTop="10dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <android.widget.Button
+                android:id="@+id/btnRecordNow"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_black_button"
+                android:text="또 기록하러 가기"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:elevation="2dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <ImageView
+                android:id="@+id/ivChagokOnButton"
+                android:layout_width="85dp"
+                android:layout_height="85dp"
+                android:src="@drawable/chagok_pic"
+                android:visibility="gone"
+                android:elevation="50dp"
+                android:translationY="-15dp"
+                android:layout_marginEnd="-5dp"
+                app:layout_constraintBottom_toBottomOf="@+id/btnRecordNow"
+                app:layout_constraintEnd_toEndOf="@+id/btnRecordNow" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

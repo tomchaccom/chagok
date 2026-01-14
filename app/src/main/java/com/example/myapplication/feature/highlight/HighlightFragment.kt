@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -35,8 +36,10 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         setupThemeSelector()
         observeUiState()
+        observeAiState()
     }
 
     override fun onResume() {
@@ -44,17 +47,32 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         viewModel.refreshIfNeeded()
     }
 
-    private fun observeUiState() {
+    /**
+     * AI 분석 결과 관찰
+     * 🌟 해결책: 타입 체크 후 'as' 키워드나 스마트 캐스트를 위해 명확한 경로를 지정합니다.
+     */
+    private fun observeAiState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.uiState.collect { state ->
-                    // 1. 데이터 유무에 따른 가이드 텍스트 처리
-                    if (state.showEmptyState) {
-                        binding.explanationTitle.text = "기록을 쌓아주세요"
-                        binding.explanationBody.text = "차곡이가 당신의 기록을 분석할 준비를 하고 있어요!"
-                    } else {
-                        // 현재 선택된 토글 버튼에 따라 UI 업데이트
-                        updateUiBySelectedMetric(state)
+                viewModel.aiState.collect { state ->
+                    when (state) {
+                        is AiUiState.Loading -> {
+                            updateAiVisibility(loading = true)
+                        }
+                        is AiUiState.Success -> {
+                            updateAiVisibility(success = true)
+                            // 스마트 캐스트가 동작하여 message에 접근 가능합니다.
+                            binding.tvAiContent.text = state.message
+                        }
+                        is AiUiState.Error -> {
+                            updateAiVisibility(ready = true)
+                            // 스마트 캐스트가 동작하여 error에 접근 가능합니다.
+                            binding.tvAiContent.text = "오류가 발생했습니다: ${state.error}"
+                            Toast.makeText(requireContext(), state.error, Toast.LENGTH_SHORT).show()
+                        }
+                        else -> {
+                            updateAiVisibility(ready = true)
+                        }
                     }
                 }
             }
@@ -62,22 +80,82 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
     }
 
     private fun setupThemeSelector() {
-        // 초기값 설정 (나다움 버튼)
         binding.themeToggleGroup.check(R.id.theme_identity_button)
 
         binding.themeToggleGroup.addOnButtonCheckedListener { _, checkedId, isChecked ->
             if (isChecked) {
-                // 버튼 클릭 시 UI 강제 갱신을 위해 viewModel에 알리거나 로컬 UI 즉시 변경
-                // 여기서는 현재 수집 중인 state를 기반으로 다시 그림
-                viewLifecycleOwner.lifecycleScope.launch {
-                    updateUiBySelectedMetric(viewModel.uiState.value)
+                when (checkedId) {
+                    R.id.theme_ai_button -> {
+                        binding.standardContentLayout.visibility = View.GONE
+                        binding.aiResultCard.visibility = View.VISIBLE
+
+                        val currentAiState = viewModel.aiState.value
+                        if (currentAiState is AiUiState.Success) {
+                            updateAiVisibility(success = true)
+                            binding.tvAiContent.text = currentAiState.message
+                        } else {
+                            updateAiVisibility(ready = true)
+                        }
+                    }
+                    else -> {
+                        binding.standardContentLayout.visibility = View.VISIBLE
+                        binding.aiResultCard.visibility = View.GONE
+                        updateUiBySelectedMetric(viewModel.uiState.value)
+                    }
+                }
+            }
+        }
+
+        binding.btnStartAiAnalysis.setOnClickListener {
+            updateAiVisibility(loading = true)
+            val itemsToAnalyze = viewModel.uiState.value.sections.flatMap { it.items }
+            if (itemsToAnalyze.isNotEmpty()) {
+                viewModel.fetchAiAnalysis(itemsToAnalyze)
+            } else {
+                updateAiVisibility(ready = true)
+                Toast.makeText(requireContext(), "분석할 데이터가 부족합니다.", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun observeUiState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    if (state.showEmptyState) {
+                        binding.explanationTitle.text = "기록을 더 쌓아주세요"
+                        binding.explanationBody.text = "최소 3개의 기록이 있어야 통계와 AI 분석이 가능해요."
+                        binding.standardContentLayout.visibility = View.GONE
+                        binding.aiResultCard.visibility = View.GONE
+                    } else {
+                        if (binding.themeToggleGroup.checkedButtonId == R.id.theme_ai_button) {
+                            binding.standardContentLayout.visibility = View.GONE
+                            binding.aiResultCard.visibility = View.VISIBLE
+                        } else {
+                            binding.standardContentLayout.visibility = View.VISIBLE
+                            binding.aiResultCard.visibility = View.GONE
+                            updateUiBySelectedMetric(state)
+                        }
+                    }
                 }
             }
         }
     }
 
+    private fun updateAiVisibility(ready: Boolean = false, loading: Boolean = false, success: Boolean = false) {
+        binding.apply {
+            layoutAiReady.visibility = if (ready) View.VISIBLE else View.GONE
+            aiLoadingView.visibility = if (loading) View.VISIBLE else View.GONE
+            ivAiChagok.visibility = if (success) View.VISIBLE else View.GONE
+            tvAiContent.visibility = if (success) View.VISIBLE else View.GONE
+        }
+    }
+
     private fun updateUiBySelectedMetric(state: HighlightUiState) {
-        val selectedMetric = when (binding.themeToggleGroup.checkedButtonId) {
+        val selectedId = binding.themeToggleGroup.checkedButtonId
+        if (selectedId == R.id.theme_ai_button) return
+
+        val selectedMetric = when (selectedId) {
             R.id.theme_identity_button -> HighlightMetric.IDENTITY
             R.id.theme_connectivity_button -> HighlightMetric.CONNECTIVITY
             R.id.theme_perspective_button -> HighlightMetric.PERSPECTIVE
@@ -85,48 +163,25 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         }
 
         val section = state.sections.find { it.metric == selectedMetric } ?: return
-
-        // 1. 설명 텍스트 업데이트
         binding.explanationTitle.text = section.metric.title
         binding.explanationBody.text = getMetricDescription(section.metric)
 
-        // 2. 랭킹 바인딩 (Top 3)
         bindMomentRank(binding.layoutRank1, section.items.getOrNull(0), "1")
         bindMomentRank(binding.layoutRank2, section.items.getOrNull(1), "2")
         bindMomentRank(binding.layoutRank3, section.items.getOrNull(2), "3")
 
-        // 3. 그래프 바인딩
-        if (section.canShowGraph) {
-            bindLineChart(section)
-        }
+        if (section.canShowGraph) bindLineChart(section)
     }
 
-    private fun bindMomentRank(
-        rankBinding: ViewHighlightRankItemBinding,
-        item: HighlightRankItem?,
-        rank: String
-    ) {
-        if (item == null) {
-            rankBinding.root.visibility = View.GONE
-            return
-        }
+    private fun bindMomentRank(rankBinding: ViewHighlightRankItemBinding, item: HighlightRankItem?, rank: String) {
+        if (item == null) { rankBinding.root.visibility = View.GONE; return }
         rankBinding.root.visibility = View.VISIBLE
         rankBinding.tvRankBadge.text = rank
         rankBinding.tvRankMemo.text = item.memo
-        rankBinding.tvRankDate.text = "2026.01.13" // 실제 데이터 date 연결 권장
+        rankBinding.tvRankDate.text = "2026.01.14"
         rankBinding.tvRankScore.text = "${item.score}점"
-
-        // 1위는 강조 컬러
         val color = if (rank == "1") "#4CAF50" else "#888888"
         rankBinding.tvRankBadge.backgroundTintList = ColorStateList.valueOf(Color.parseColor(color))
-    }
-
-    private fun getMetricDescription(metric: HighlightMetric): String {
-        return when (metric) {
-            HighlightMetric.IDENTITY -> "이 지표는 기록이 당신의 정체성에 얼마나 깊이 뿌리내렸는지 보여줘요."
-            HighlightMetric.CONNECTIVITY -> "이 지표는 기록이 타인 또는 세상과 얼마나 연결되어 있는지 보여줘요."
-            HighlightMetric.PERSPECTIVE -> "이 지표는 기록이 당신의 생각이나 관점을 얼마나 확장시켰는지 보여줘요."
-        }
     }
 
     private fun bindLineChart(section: HighlightRankSection) {
@@ -136,7 +191,6 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
         }
         binding.chartContainer.removeAllViews()
         binding.chartContainer.addView(chart)
-
         val entries = points.mapIndexed { i, p -> Entry(i.toFloat(), p.value.toFloat()) }
         val dataSet = LineDataSet(entries, "").apply {
             color = Color.parseColor("#4CAF50")
@@ -146,16 +200,18 @@ class HighlightFragment : BaseFragment<FragmentHighlightBinding>() {
             setCircleColor(Color.parseColor("#4CAF50"))
             mode = LineDataSet.Mode.CUBIC_BEZIER
         }
-
         chart.apply {
-            data = LineData(dataSet)
-            description.isEnabled = false
-            legend.isEnabled = false
-            axisRight.isEnabled = false
-            xAxis.position = XAxis.XAxisPosition.BOTTOM
-            xAxis.valueFormatter = IndexAxisValueFormatter(points.map { it.label })
-            animateX(500)
-            invalidate()
+            data = LineData(dataSet); description.isEnabled = false; legend.isEnabled = false; axisRight.isEnabled = false
+            xAxis.position = XAxis.XAxisPosition.BOTTOM; xAxis.valueFormatter = IndexAxisValueFormatter(points.map { it.label })
+            animateX(500); invalidate()
+        }
+    }
+
+    private fun getMetricDescription(metric: HighlightMetric): String {
+        return when (metric) {
+            HighlightMetric.IDENTITY -> "이 지표는 기록이 당신의 정체성에 얼마나 깊이 뿌리내렸는지 보여줘요."
+            HighlightMetric.CONNECTIVITY -> "이 지표는 기록이 타인 또는 세상과 얼마나 연결되어 있는지 보여줘요."
+            HighlightMetric.PERSPECTIVE -> "이 지표는 기록이 당신의 생각이나 관점을 얼마나 확장시켰는지 보여줘요."
         }
     }
 }

@@ -19,9 +19,8 @@ class HighlightRankAdapter(
             binding.rankMemo.text = if (item.memo.isNotBlank()) item.memo else "메모가 없습니다."
             binding.rankScore.text = item.score.toString()
             // TODO: HighlightRankItem에 날짜/ICP 정보가 추가되면 아래 값을 실제 데이터로 대체하세요.
-            binding.rankDate.text = binding.root.context.getString(
-                com.example.myapplication.R.string.highlight_rank_date_placeholder
-            )
+            // 수정 후 예시
+            binding.rankDate.text = item.date
             binding.rankScore.alpha = rankAlpha(item.rank)
             binding.rankMemo.alpha = rankAlpha(item.rank)
 
