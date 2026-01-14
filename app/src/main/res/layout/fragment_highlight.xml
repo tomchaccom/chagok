@@ -38,33 +38,53 @@
                         android:id="@+id/theme_identity_button"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="0dp"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="나다움" />
+                        android:text="나다움"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/selecter_nav_text"
+                        app:backgroundTint="@android:color/transparent"
+                        app:rippleColor="#E8F5E9" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/theme_connectivity_button"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="0dp"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="연결성" />
+                        android:text="연결성"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/selecter_nav_text"
+                        app:backgroundTint="@android:color/transparent"
+                        app:rippleColor="#E8F5E9" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/theme_perspective_button"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="0dp"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="관점" />
+                        android:text="관점"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/selecter_nav_text"
+                        app:backgroundTint="@android:color/transparent"
+                        app:rippleColor="#E8F5E9" />
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/theme_ai_button"
                         style="@style/Widget.MaterialComponents.Button.TextButton"
                         android:layout_width="0dp"
+                        android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:layout_height="wrap_content"
-                        android:text="AI 분석" />
+                        android:text="AI 분석"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/selecter_nav_text"
+                        app:backgroundTint="@android:color/transparent"
+                        app:rippleColor="#E8F5E9" />
                 </com.google.android.material.button.MaterialButtonToggleGroup>
             </com.google.android.material.card.MaterialCardView>
 
