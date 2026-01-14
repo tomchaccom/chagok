@@ -33,5 +33,6 @@
 - Gemini API 사용 리포트 생성 기능 개발
 <br />
 <정재우> https://github.com/tesSer16
+
 - 과거, 미래 탭 개발
 - json 기반 로컬 데이터 구조 개발
