@@ -1,25 +1,43 @@
 package com.example.myapplication.feature.present
 
+import android.graphics.Paint
+import android.os.Build
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.appcompat.app.AlertDialog
 import androidx.core.view.isVisible
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.myapplication.R
 import com.example.myapplication.core.base.BaseFragment
+import com.example.myapplication.data.future.GoalRepository
+import com.example.myapplication.data.present.PracticeRepository
 import com.example.myapplication.databinding.FragmentPresentBinding
-import com.google.android.material.tabs.TabLayoutMediator
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+
+import com.example.myapplication.data.present.Meaning as DataMeaning
+
+// 🌟 데이터 충돌 방지를 위한 Alias(별칭) 설정
+import com.example.myapplication.data.future.Goal as DataGoal
+import com.example.myapplication.data.present.DailyRecord as DataDailyRecord // 추가: DailyRecord도 별칭 사용
+import com.example.myapplication.feature.present.DailyRecord as FeatureDailyRecord // 불필요시 삭제 가능
 
 class PresentFragment : BaseFragment<FragmentPresentBinding>() {
 
-    private val viewModel: PresentViewModel by activityViewModels { PresentViewModelFactory() }
-    private lateinit var practiceAdapter: PracticeAdapter
+    private val viewModel: PresentViewModel by activityViewModels {
+        PresentViewModelFactory(requireActivity().application)
+    }
+
+    private lateinit var todayGoalAdapter: TodayGoalAdapter
     private lateinit var recordAdapter: RecordAdapter
+
+    private val localOverrides: MutableMap<String, Boolean?> = mutableMapOf()
 
     override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?): FragmentPresentBinding {
         return FragmentPresentBinding.inflate(inflater, container, false)
@@ -28,58 +46,62 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        initLocalRepositories()
         setupRecyclerViews()
         setupClickListeners()
         observeUiState()
         observeLoadingState()
-        observeErrorState()
     }
 
     override fun onResume() {
         super.onResume()
-        // Fragment가 다시 보일 때마다 버튼 보이기
-        binding.createMomentButton.visibility = View.VISIBLE
-        binding.addRecordIcon.visibility = View.VISIBLE
-
-        // CreateMomentFragment에서 돌아올 때 데이터 갱신
-        refreshRecordsList()
+        refreshData()
     }
 
-    private fun refreshRecordsList() {
-        // CreateMomentViewModel에서 저장된 기록들을 다시 로드하여 RecordAdapter 갱신
-        val savedRecords = CreateMomentViewModel.getSavedRecords()
-        if (savedRecords.isNotEmpty()) {
-            binding.emptyRecordCard.visibility = View.GONE
-            binding.recordsCarousel.visibility = View.VISIBLE
-            binding.recordsIndicator.visibility = View.VISIBLE
-            recordAdapter.submitList(savedRecords.toList())
-        }
+    private fun refreshData() {
+        viewModel.loadPresentData()
+        // 🌟 CreateMomentViewModel에서 가져온 레코드를 DataDailyRecord 타입 리스트로 인식
+        val savedRecords: List<DataDailyRecord> = CreateMomentViewModel.getSavedRecords()
+        updateRecordUi(savedRecords)
+        loadTodayPracticesFromGoals()
     }
 
     private fun setupRecyclerViews() {
-        practiceAdapter = PracticeAdapter { practice, isAchieved ->
-            viewModel.onPracticeStateChanged(practice.id, isAchieved)
+        todayGoalAdapter = TodayGoalAdapter { goal ->
+            navigateToCreateMoment(goal)
         }
-        binding.practicesRecyclerView.adapter = practiceAdapter
 
-        recordAdapter = RecordAdapter()
-        binding.recordsCarousel.adapter = recordAdapter
+        binding.rvTodayGoals.apply {
+            layoutManager = LinearLayoutManager(requireContext())
+            adapter = todayGoalAdapter
+        }
 
-        // Link the TabLayout and ViewPager2 for the indicator
-        TabLayoutMediator(binding.recordsIndicator, binding.recordsCarousel) { tab, position ->
-            // No-op, we only need the dots
-        }.attach()
+        // 🌟 RecordAdapter 내부의 리스트 타입도 DataDailyRecord여야 합니다.
+        recordAdapter = RecordAdapter { record ->
+            showEditMomentDialog(record)
+        }
+        binding.recordRecyclerView.apply {
+            layoutManager = LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false)
+            adapter = recordAdapter
+        }
     }
 
     private fun setupClickListeners() {
-        binding.createMomentButton.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.container, CreateMomentFragment())
-                .addToBackStack(null)
-                .commit()
-        }
-        binding.addRecordIcon.setOnClickListener {
-            AddPracticeModal().show(childFragmentManager, AddPracticeModal.TAG)
+        binding.btnRecordNow.setOnClickListener { navigateToCreateMoment(null) }
+        binding.ivChagokHappy.setOnClickListener { navigateToCreateMoment(null) }
+    }
+
+    // 🌟 파라미터 타입을 별칭(DataDailyRecord)으로 변경
+    private fun updateRecordUi(records: List<DataDailyRecord>) {
+        val sortedRecords = records.reversed()
+        val isListEmpty = records.isEmpty()
+
+        recordAdapter.submitList(sortedRecords)
+
+        binding.apply {
+            recordRecyclerView.isVisible = sortedRecords.isNotEmpty()
+            ivChagokOnButton.isVisible = !isListEmpty
+            emptyStateLayout.isVisible = sortedRecords.isEmpty()
         }
     }
 
@@ -87,26 +109,68 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.uiState.collect { uiState ->
-                    binding.apply {
-                        greetingText.text = uiState.userProfile.greeting
-                        greetingPrompt.text = uiState.userProfile.prompt
-                        practicesLeftBadge.text = "${uiState.practicesLeft}개 남음"
-                        practiceAdapter.submitList(uiState.practices)
-
-                        // CreateMomentViewModel에서 저장된 기록들을 가져옴
-                        val savedRecords = CreateMomentViewModel.getSavedRecords()
-                        val hasRecords = savedRecords.isNotEmpty()
-                        emptyRecordCard.isVisible = !hasRecords
-                        recordsCarousel.isVisible = hasRecords
-                        recordsIndicator.isVisible = hasRecords
-
-                        if (hasRecords) {
-                            recordAdapter.submitList(savedRecords)
-                        }
-                    }
+                    binding.tvUserWelcome.text = uiState.userProfile.greeting
                 }
             }
         }
+    }
+
+    private fun loadTodayPracticesFromGoals() {
+        try {
+            GoalRepository.initialize(requireContext())
+
+            val todayDataGoals = GoalRepository.getAll()
+                .filter { it.date == LocalDate.now() }
+                .map { item ->
+                    DataGoal(
+                        id = item.id,
+                        title = item.title,
+                        date = item.date,
+                        isAchieved = item.isAchieved
+                    )
+                }
+
+            todayGoalAdapter.submitList(todayDataGoals) {
+                updateGoalCountBadge()
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    private fun updateGoalCountBadge() {
+        val remainingCount = todayGoalAdapter.currentList.count { !it.isAchieved }
+        binding.tvGoalCount.text = "${remainingCount}개 남음"
+    }
+
+    private fun navigateToCreateMoment(goal: DataGoal?) {
+        val fragment = CreateMomentFragment().apply {
+            arguments = Bundle().apply {
+                goal?.let {
+                    putString("GOAL_TITLE", it.title)
+                    putString("GOAL_ID", it.id)
+                }
+            }
+        }
+
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.container, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    // 🌟 파라미터 타입을 DataDailyRecord로 변경
+    private fun showEditMomentDialog(record: DataDailyRecord) {
+        AlertDialog.Builder(requireContext())
+            .setMessage("오늘의 기억을 수정하시겠습니까?")
+            .setPositiveButton("수정") { _, _ ->
+                parentFragmentManager.beginTransaction()
+                    .replace(R.id.container, CreateMomentFragment.newInstance(record.id))
+                    .addToBackStack(null)
+                    .commit()
+            }
+            .setNegativeButton("취소", null)
+            .show()
     }
 
     private fun observeLoadingState() {
@@ -119,16 +183,11 @@ class PresentFragment : BaseFragment<FragmentPresentBinding>() {
         }
     }
 
-    private fun observeErrorState() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.errorMessage.collect { errorMessage ->
-                    errorMessage?.let {
-                        showToast(it)
-                        viewModel.clearErrorMessage()
-                    }
-                }
-            }
-        }
+    private fun initLocalRepositories() {
+        PracticeRepository.initialize(requireContext())
+        try {
+            val saved = PracticeRepository.load()
+            if (saved.isNotEmpty()) localOverrides.putAll(saved)
+        } catch (_: Exception) {}
     }
 }

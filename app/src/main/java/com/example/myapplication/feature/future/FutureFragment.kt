@@ -1,26 +1,41 @@
 package com.example.myapplication.feature.future
 
-import android.app.DatePickerDialog
 import android.os.Build
 import android.os.Bundle
-import android.view.*
+import android.view.LayoutInflater
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AlertDialog
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import androidx.appcompat.view.ContextThemeWrapper
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
+import com.example.myapplication.data.future.Goal
+// 🌟 핵심: 반드시 'data' 패키지의 Goal을 임포트하여 타입 불일치를 해결합니다.
+
+import com.example.myapplication.data.future.Goal as DataGoal
+import com.example.myapplication.feature.future.Goal as FeatureGoal
+
+import com.example.myapplication.data.future.GoalRepository
+import com.example.myapplication.feature.present.CesMetrics
+import com.example.myapplication.feature.present.DailyRecord
+import com.example.myapplication.feature.present.Meaning
+import com.example.myapplication.feature.present.PresentViewModel
+import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.google.android.material.textfield.TextInputEditText
-import java.util.*
+import java.text.SimpleDateFormat
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import androidx.appcompat.view.ContextThemeWrapper
 import com.example.myapplication.data.future.GoalRepository
@@ -28,7 +43,8 @@ import com.example.myapplication.data.future.GoalRepository
 class FutureFragment : Fragment(R.layout.fragment_future) {
 
     private val vm: FutureViewModel by viewModels()
-    private lateinit var adapter: GoalAdapter
+    private val presentViewModel: PresentViewModel by activityViewModels()
+    private lateinit var goalAdapter: GoalAdapter
 
     @RequiresApi(Build.VERSION_CODES.O)
     private val dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd")
@@ -47,81 +63,126 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
         }
 
         val rv = view.findViewById<RecyclerView>(R.id.recyclerGoals)
-        adapter = GoalAdapter()
-        rv.layoutManager = LinearLayoutManager(requireContext())
-        rv.adapter = adapter
 
-        vm.goals.observe(viewLifecycleOwner) { list ->
-            adapter.submitList(list)
+        // 🌟 1. Parameter mismatch 해결: 어댑터 생성 시 콜백 전달
+        goalAdapter = GoalAdapter { clickedGoal ->
+            handleGoalCompletion(clickedGoal)
         }
 
-        val btnAdd = view.findViewById<FloatingActionButton>(R.id.fabAdd)
-        btnAdd.setOnClickListener { showAddDialog() }
+        rv.layoutManager = LinearLayoutManager(requireContext())
+        rv.adapter = goalAdapter
+
+        // 🌟 2. Argument type mismatch 해결: 패키지 경로를 data.future.Goal로 통일
+        // FutureFragment.kt 내부
+
+        // FutureFragment.kt 내부 onViewCreated
+        vm.goals.observe(viewLifecycleOwner) { list ->
+            // 리스트가 비어있지 않다면 첫 번째 아이템의 타입을 확인하여 안전하게 변환
+            val correctedList = list.mapNotNull { item ->
+                when (item) {
+                    is DataGoal -> item
+                    is FeatureGoal -> {
+                        // FeatureGoal을 DataGoal로 변환 (필드 복사)
+                        DataGoal(
+                            title = item.title,
+                            date = item.date
+                            // DataGoal에 isAchieved 등의 필드가 있다면 추가:
+                            // isAchieved = item.isAchieved
+                        )
+                    }
+                    else -> null
+                }
+            }.filter { !it.isAchieved } // 🌟 여기에 필터 추가 (완료된 것은 제외)
+            goalAdapter.submitList(correctedList)
+        }
+
+        view.findViewById<FloatingActionButton>(R.id.fabAdd).setOnClickListener {
+            showAddDialog()
+        }
+    }
+
+    private fun handleGoalCompletion(goal: Goal) {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+
+        val newRecord = DailyRecord(
+            id = UUID.randomUUID().toString(),
+            photoUri = "",
+            memo = "[미래 실천] ${goal.title}",
+            score = 5,
+            // 🌟 3. Float type mismatch 해결: 3 -> 3.0f (또는 3f)
+            cesMetrics = CesMetrics(3, 3, 3, 3.0f),
+            meaning = Meaning.REMEMBER,
+            date = today,
+            isFeatured = false
+        )
+
+        // 🌟 4. No parameter 'uri' found 해결:
+        // PresentViewModel의 saveNewRecord 정의에 맞춰 파라미터 이름을 'photoUri'로 수정합니다.
+        presentViewModel.saveNewRecord(
+            photoUri = newRecord.photoUri,
+            memo = newRecord.memo,
+            score = newRecord.score
+        )
+
+        Toast.makeText(requireContext(), "기억하기 탭으로 옮겨졌습니다!", Toast.LENGTH_SHORT).show()
+
+        // 🌟 5. Unresolved reference 'loadGoals' 해결:
+        // 필요한 경우 여기에 데이터를 다시 불러오는 vm.load() 등의 로직을 넣으세요.
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     private fun showAddDialog() {
-        // 1. Material 테마를 입힌 Context 생성
+        // ... (기존 showAddDialog 코드와 동일) ...
+        Locale.setDefault(Locale.KOREAN)
         val contextWrapper = ContextThemeWrapper(requireContext(), com.google.android.material.R.style.Theme_MaterialComponents_DayNight_Dialog)
-
-        // 2. 생성한 wrapper를 사용하여 LayoutInflater 생성
         val themedInflater = LayoutInflater.from(contextWrapper)
+        val dlgView = themedInflater.inflate(R.layout.dialog_add_goal, null)
 
-        // 3. themedInflater를 사용하여 뷰 인플레이트
-        val dlgView = themedInflater.inflate(R.layout.dialog_add_goal_future, null)
-
-        // XML의 TextInputEditText에 맞춰 타입을 변경하거나 상위 클래스인 EditText 사용
-        val etTitle = dlgView.findViewById<EditText>(R.id.etTitle)
-        val tvDate = dlgView.findViewById<EditText>(R.id.tvDate)
+        val etTitle = dlgView.findViewById<EditText>(R.id.etGoalTitle)
+        val layoutDate = dlgView.findViewById<LinearLayout>(R.id.layoutDateContainer)
+        val tvDate = dlgView.findViewById<TextView>(R.id.tvTargetDate)
+        val btnClose = dlgView.findViewById<ImageButton>(R.id.btnClose)
+        val btnSave = dlgView.findViewById<Button>(R.id.btnSaveGoal)
 
         var selectedDate = LocalDate.now()
-        tvDate.setText(selectedDate.format(dateFormatter))
+        tvDate.text = selectedDate.format(dateFormatter)
 
-        val datePickerListener = DatePickerDialog.OnDateSetListener { _, year, month, day ->
-            selectedDate = LocalDate.of(year, month + 1, day)
-            tvDate.setText(selectedDate.format(dateFormatter))
+        layoutDate.setOnClickListener {
+            val datePicker = MaterialDatePicker.Builder.datePicker()
+                .setSelection(MaterialDatePicker.todayInUtcMilliseconds())
+                .setTheme(R.style.ThemeOverlay_App_DatePicker)
+                .build()
+
+            datePicker.addOnPositiveButtonClickListener { selection ->
+                val instant = Instant.ofEpochMilli(selection)
+                selectedDate = instant.atZone(ZoneId.of("UTC")).toLocalDate()
+                tvDate.text = selectedDate.format(dateFormatter)
+            }
+            datePicker.show(parentFragmentManager, "MATERIAL_DATE_PICKER")
         }
-        
-        // 날짜 선택 탭에서 선택된 날짜를 보여줌 -> tvDate에 저장
-        tvDate.setOnClickListener {
-            DatePickerDialog(
-                contextWrapper,
-                datePickerListener,
-                selectedDate.year,
-                selectedDate.monthValue - 1,
-                selectedDate.dayOfMonth
-            ).show()
-        }
+
+        tvDate.setOnClickListener { layoutDate.performClick() }
 
         val dialog = AlertDialog.Builder(contextWrapper)
             .setView(dlgView)
             .setCancelable(true)
             .create()
 
-        dlgView.findViewById<View>(R.id.btnCancel).setOnClickListener {
-            dialog.dismiss()
-        }
+        btnClose?.setOnClickListener { dialog.dismiss() }
 
-        // XML에서 MaterialButton은 Button을 상속받으므로 그대로 유지 가능
-        dlgView.findViewById<Button>(R.id.btnAdd).setOnClickListener {
+        btnSave.setOnClickListener {
             val title = etTitle.text.toString().trim()
             if (title.isEmpty()) {
                 etTitle.error = "목표를 입력하세요"
                 return@setOnClickListener
             }
-
             vm.addGoal(title, selectedDate)
             dialog.dismiss()
         }
 
         dialog.show()
-
-        // ✅ 추가: 다이얼로그 자체의 배경을 투명하게 설정하여 카드뷰의 모서리가 깎여 보이게 함
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
     }
 
-    private fun updateDateText(tv: TextView, millis: Long) {
-        val fmt = java.text.SimpleDateFormat("yyyy.MM.dd", Locale.KOREAN)
-        tv.text = fmt.format(Date(millis))
-    }
+
 }

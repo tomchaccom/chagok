@@ -10,12 +10,12 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.R
-import com.example.myapplication.data.past.PhotoItem
+import com.example.myapplication.data.present.DailyRecord
 import com.example.myapplication.util.ImageLoader
 
 class PhotoAdapter(
     private val onPhotoClick: (position: Int) -> Unit
-) : ListAdapter<PhotoItem, PhotoAdapter.PhotoVH>(PhotoDiffCallback()) {
+) : ListAdapter<DailyRecord, PhotoAdapter.PhotoVH>(PhotoDiffCallback()) {
 
     private var selectedIndex: Int? = null
 
@@ -38,12 +38,18 @@ class PhotoAdapter(
     }
 
     override fun getItemId(position: Int): Long {
-        return try { getItem(position).imageUri.hashCode().toLong() } catch (_: Exception) { position.toLong() }
+        return try { getItem(position).id.hashCode().toLong() } catch (_: Exception) { position.toLong() }
     }
+
+    // PhotoAdapter.kt 내부의 PhotoVH 클래스
 
     inner class PhotoVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val ivPhoto: ImageView = itemView.findViewById(R.id.ivPhoto)
         private val overlay: View = itemView.findViewById(R.id.overlay)
+
+        // ★ 추가: 최상위 레이아웃인 CardView를 가져옵니다.
+        // (XML에서 root가 MaterialCardView이므로 itemView를 형변환)
+        private val cardRoot = itemView as com.google.android.material.card.MaterialCardView
 
         init {
             itemView.setOnClickListener {
@@ -54,26 +60,40 @@ class PhotoAdapter(
             }
         }
 
-        fun bind(photo: PhotoItem, position: Int) {
+        fun bind(photo: DailyRecord, position: Int) {
             // 썸네일 사이즈로 로드 (이미지뷰 높이 110dp -> 픽셀로 변환)
             val density = itemView.context.resources.displayMetrics.density
             val hPx = (110 * density).toInt()
-            ImageLoader.loadInto(ivPhoto, photo.imageUri, R.drawable.ic_launcher_background, reqWidth = hPx, reqHeight = hPx)
+            ImageLoader.loadInto(ivPhoto, photo.photoUri, R.drawable.ic_launcher_background, reqWidth = hPx, reqHeight = hPx)
             ivPhoto.visibility = View.VISIBLE
 
+            // 선택 여부 확인
             val isSelected = (selectedIndex == position)
-            overlay.isVisible = isSelected
-            overlay.setBackgroundColor(if (isSelected) Color.parseColor("#330000FF") else Color.TRANSPARENT)
+
+            // [수정 1] 사진 위를 덮는 초록색 막은 이제 필요 없으니 숨깁니다.
+            overlay.isVisible = false
+
+            // [수정 2] 테두리 설정 (CardView 속성 이용)
+            if (isSelected) {
+                // 두께를 4 -> 2 로 줄임 (원하시는 두께로 숫자 조절 가능)
+                cardRoot.strokeWidth = (2 * density).toInt()
+
+                // 색상은 그대로 유지
+                cardRoot.strokeColor = Color.parseColor("#80E1A6")
+            } else {
+                // 선택 안 됐을 때는 테두리 없음
+                cardRoot.strokeWidth = 0
+            }
         }
     }
 }
 
-private class PhotoDiffCallback : DiffUtil.ItemCallback<PhotoItem>() {
-    override fun areItemsTheSame(oldItem: PhotoItem, newItem: PhotoItem): Boolean {
-        return oldItem.imageUri == newItem.imageUri
+private class PhotoDiffCallback : DiffUtil.ItemCallback<DailyRecord>() {
+    override fun areItemsTheSame(oldItem: DailyRecord, newItem: DailyRecord): Boolean {
+        return oldItem.id == newItem.id
     }
 
-    override fun areContentsTheSame(oldItem: PhotoItem, newItem: PhotoItem): Boolean {
+    override fun areContentsTheSame(oldItem: DailyRecord, newItem: DailyRecord): Boolean {
         return oldItem == newItem
     }
 }

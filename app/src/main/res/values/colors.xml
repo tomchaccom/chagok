@@ -24,4 +24,12 @@
     <color name="mint_100">#E6F4F1</color>
     <color name="green_600">#2E7D32</color>
 
+    <!-- Highlight Graph Colors -->
+    <color name="graph_identity">#4CAF50</color>       <!-- Green -->
+    <color name="graph_connectivity">#26A69A</color>   <!-- Blue-Green -->
+    <color name="graph_perspective">#6E6A5F</color>    <!-- Olive Gray -->
+
+    <color name="white">#000000</color>
+    <color name="black">#FFFFFF</color>
+
 </resources>

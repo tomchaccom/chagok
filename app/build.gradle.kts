@@ -6,16 +6,15 @@ plugins {
 
 android {
     namespace = "com.example.myapplication"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36 // 문법 수정
 
     defaultConfig {
         applicationId = "com.example.myapplication"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
+        resourceConfigurations.add("ko")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -29,13 +28,19 @@ android {
             )
         }
     }
+
     compileOptions {
+        // 중복 제거 및 버전 통일 (Java 11 추천)
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
+        // compileOptions와 버전을 맞춥니다.
         jvmTarget = "11"
     }
+
     buildFeatures {
         compose = true
         viewBinding = true
@@ -43,6 +48,10 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.work.runtime.ktx)
+    // Desugaring 라이브러리 (KTS 문법: 괄호 사용)
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.3")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -52,15 +61,20 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.appcompat)
+
+    // View 기반 라이브러리들
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.viewpager2:viewpager2:1.1.0")
     implementation("com.google.android.material:material:1.12.0")
+
+    // 유틸리티 및 통신
     implementation("androidx.exifinterface:exifinterface:1.3.7")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
     implementation("androidx.fragment:fragment-ktx:1.8.1")
+    implementation("com.github.PhilJay:MPAndroidChart:v3.1.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -69,4 +83,15 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+    implementation("androidx.work:work-runtime-ktx:2.9.0")
+
+
+    // Retrofit: 네트워크 통신 라이브러리
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+// Converter-Scalars: API 응답이 JSON이 아닌 일반 String(문자열)일 때 필요
+    implementation("com.squareup.retrofit2:converter-scalars:2.11.0")
+// Converter-Gson: JSON 데이터를 Kotlin 객체(Data Class)로 자동 변환
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+// Gson: JSON 파싱 및 Stringify를 위한 구글 라이브러리
+    implementation("com.google.code.gson:gson:2.10.1")
 }

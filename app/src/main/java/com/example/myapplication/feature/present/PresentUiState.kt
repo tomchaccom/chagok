@@ -4,7 +4,7 @@ data class PresentUiState(
     val userProfile: UserProfile = UserProfile(),
     val practices: List<Practice> = emptyList(),
     val practicesLeft: Int = 0,
-    val dailyRecords: List<DailyRecord> = emptyList()
+    val todayRecords: List<DailyRecord> = emptyList() // ⬅️ dailyRecords에서 이름 변경
 )
 
 data class UserProfile(
@@ -24,6 +24,7 @@ data class DailyRecord(
     val photoUri: String, // 사진 URI 또는 파일 경로
     val memo: String = "", // 한 줄 메모 (빈 값 허용)
     val score: Int, // 1 ~ 10
+    val cesMetrics: CesMetrics,
     val meaning: Meaning = Meaning.REMEMBER, // 기억 or 잊기
     val date: String = "", // 날짜 (yyyy-MM-dd)
     val isFeatured: Boolean = false // 오늘의 대표 기억 여부

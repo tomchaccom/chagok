@@ -48,9 +48,6 @@ object ImageLoader {
         // WeakHashMap으로 현재 로드중인 키를 관리
         synchronized(viewKeyMap) { viewKeyMap[imageView] = key }
 
-        // android.resource는 배경 스레드에서 스트림을 열어 디코딩(이미지뷰에서 UI쓰레드 디코딩을 피함)
-        // (빠른 경로로 UI에서 setImageResource 하는 대신, 아래 백그라운드 처리에서 openRawResource로 처리합니다)
-
         // 캐시 조회
         cache.get(key)?.let { bmp ->
             imageView.setImageBitmap(bmp)
@@ -89,18 +86,25 @@ object ImageLoader {
                         else -> null
                     }
                     if (input != null) {
-                        // 이미지뷰 크기에 맞춰 샘플링 (외부에서 명시된 크기 우선)
-                        val (reqW, reqH) = if (reqWidth != null && reqHeight != null) Pair(reqWidth, reqHeight) else getTargetSize(imageView)
-                        val opts = BitmapFactory.Options()
-                        opts.inJustDecodeBounds = true
-                        input.mark(1024 * 1024)
-                        BitmapFactory.decodeStream(input, null, opts)
-                        // 재열기/리셋
-                        input.reset()
+                        // 읽은 바이트로부터 두 번 디코딩: bounds -> actual
+                        val raw = input.readBytes()
 
-                        opts.inSampleSize = calculateInSampleSize(opts, reqW, reqH)
+                        // 원하는 너비/높이 결정
+                        val (reqW, reqH) = if (reqWidth != null && reqHeight != null) Pair(reqWidth, reqHeight) else getTargetSize(imageView)
+
+                        // bounds 조회
+                        val boundsOpts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                        java.io.ByteArrayInputStream(raw).use { bis ->
+                            BitmapFactory.decodeStream(bis, null, boundsOpts)
+                        }
+
+                        val opts = BitmapFactory.Options()
+                        opts.inSampleSize = calculateInSampleSize(boundsOpts, reqW, reqH)
                         opts.inJustDecodeBounds = false
-                        bitmap = BitmapFactory.decodeStream(input, null, opts)
+
+                        java.io.ByteArrayInputStream(raw).use { bis ->
+                            bitmap = BitmapFactory.decodeStream(bis, null, opts)
+                        }
                     }
                 } finally {
                     input?.close()
@@ -116,8 +120,8 @@ object ImageLoader {
                         }
                     }
                 }
-            } catch (_: Exception) {
-                // 실패시 아무 작업 없이 남겨둠(placeholder 유지)
+            } catch (e: Exception) {
+                android.util.Log.e("ImageLoader", "failed to load image: $uriStr", e)
             }
         }
     }

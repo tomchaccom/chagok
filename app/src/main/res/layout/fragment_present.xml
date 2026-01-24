@@ -4,200 +4,165 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background">
+    android:background="#F8F9FA">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingBottom="32dp">
-
-        <!-- ===== Header ===== -->
-
-        <ImageView
-            android:id="@+id/profile_icon"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp"
-            android:background="@drawable/badge_background"
-            android:padding="8dp"
-            android:src="@android:drawable/ic_menu_myplaces"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+        android:orientation="vertical"
+        android:padding="20dp">
 
         <TextView
-            android:id="@+id/greeting_text"
-            android:layout_width="0dp"
+            android:id="@+id/tvUserWelcome"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
             android:text="안녕하세요, 사용자님"
-            android:textColor="@color/text_primary"
-            android:textSize="16sp"
-            app:layout_constraintStart_toEndOf="@id/profile_icon"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/profile_icon" />
+            android:textColor="#1A1A1A"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <TextView
-            android:id="@+id/greeting_prompt"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
             android:text="오늘을 기록할 준비가 되셨나요?"
-            android:textColor="@color/text_secondary"
-            android:textSize="14sp"
-            app:layout_constraintStart_toStartOf="@id/greeting_text"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/greeting_text" />
+            android:textColor="#666666"
+            android:textSize="14sp" />
 
-        <!-- ===== Practices ===== -->
-
-        <TextView
-            android:id="@+id/practices_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="28dp"
-            android:text="오늘의 실천"
-            android:textColor="@color/text_primary"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/profile_icon" />
-
-        <TextView
-            android:id="@+id/practices_left_badge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="16dp"
-            android:background="@drawable/badge_background"
-            android:paddingStart="12dp"
-            android:paddingTop="6dp"
-            android:paddingEnd="12dp"
-            android:paddingBottom="6dp"
-            android:text="0개 남음"
-            android:textColor="@color/badge_text"
-            android:textSize="12sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/practices_title"
-            app:layout_constraintBottom_toBottomOf="@id/practices_title" />
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/practices_recycler_view"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:nestedScrollingEnabled="false"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            app:layout_constraintTop_toBottomOf="@id/practices_title"
-            tools:itemCount="2"
-            tools:listitem="@layout/item_practice" />
+            android:layout_marginTop="32dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="오늘의 실천"
+                android:textColor="#1A1A1A"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+            <TextView
+                android:id="@+id/tvGoalCount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:background="@drawable/bg_count_tag"
+                android:paddingHorizontal="10dp"
+                android:paddingVertical="4dp"
+                android:text="2개 남음"
+                android:textColor="#4CAF50"
+                android:textSize="12sp"
+                android:textStyle="bold" />
+        </RelativeLayout>
 
-        <!-- ===== Records ===== -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvTodayGoals"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            tools:listitem="@layout/item_today_goal" />
 
         <TextView
-            android:id="@+id/records_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
             android:layout_marginTop="32dp"
             android:text="오늘의 기록"
-            android:textColor="@color/text_primary"
-            android:textSize="22sp"
-            android:textStyle="bold"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/practices_recycler_view" />
+            android:textColor="#1A1A1A"
+            android:textSize="18sp"
+            android:textStyle="bold" />
 
-        <!-- Empty State Card (기록 없을 때만 Fragment에서 보이게) -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recordRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:clipToPadding="false"
+            android:orientation="horizontal"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_record" />
 
         <com.google.android.material.card.MaterialCardView
-            android:id="@+id/empty_record_card"
-            android:layout_width="0dp"
+            android:id="@+id/emptyStateLayout"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="16dp"
-            app:cardCornerRadius="16dp"
-            app:cardBackgroundColor="@color/surface"
-            app:strokeColor="@color/border_divider"
-            app:strokeWidth="1dp"
-            app:layout_constraintTop_toBottomOf="@id/records_title"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent">
+            android:layout_marginTop="12dp"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="0dp"
+            app:strokeColor="#E0E0E0"
+            app:strokeWidth="1dp">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:padding="24dp">
-
+                android:paddingBottom="24dp">
                 <ImageView
-                    android:id="@+id/add_record_icon"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:background="@drawable/badge_background"
-                    android:padding="6dp"
-                    android:src="@android:drawable/ic_input_add"
-                    app:tint="@color/secondary_accent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
-
-                <TextView
-                    android:id="@+id/empty_record_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:id="@+id/ivChagokHappy"
+                    android:layout_width="160dp"
+                    android:layout_height="160dp"
                     android:layout_marginTop="16dp"
-                    android:text="아직 기록하지 않으셨나요?"
-                    android:textSize="16sp"
-                    android:textColor="@color/text_primary"
-                    app:layout_constraintTop_toBottomOf="@id/add_record_icon"
+                    android:src="@drawable/chagok_pic2"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
-
+                    app:layout_constraintTop_toTopOf="parent" />
                 <TextView
-                    android:id="@+id/empty_record_subtitle"
+                    android:id="@+id/tvRecordGuide"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:text="하루가 끝나기 전에 순간을 기록해보세요."
-                    android:textSize="14sp"
-                    android:textColor="@color/text_secondary"
-                    app:layout_constraintTop_toBottomOf="@id/empty_record_title"
+                    android:text="아직 기록하지 않으셨나요?"
+                    android:textColor="#1A1A1A"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                    app:layout_constraintTop_toBottomOf="@id/ivChagokHappy" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="하루가 끝나기 전에 순간을 기록해보세요."
+                    android:textColor="#888888"
+                    android:textSize="13sp"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/tvRecordGuide" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- 기록하기 버튼 (항상 같은 위치) -->
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/create_moment_button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginTop="12dp"
-            android:text="이 순간 기록하기"
-            android:textColor="@color/surface"
-            android:backgroundTint="@color/secondary_accent"
-            app:cornerRadius="14dp"
-            app:layout_constraintTop_toBottomOf="@id/empty_record_card"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
-
-        <!-- ⭐ 저장된 기록 (절대 GONE 하지 않음) -->
-
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/records_carousel"
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="220dp"
+            android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            app:layout_constraintTop_toBottomOf="@id/create_moment_button" />
+            android:paddingTop="10dp"
+            android:clipChildren="false"
+            android:clipToPadding="false">
 
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/records_indicator"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toBottomOf="@id/records_carousel"
-            app:tabIndicatorHeight="0dp"
-            app:tabGravity="center" />
+            <android.widget.Button
+                android:id="@+id/btnRecordNow"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_black_button"
+                android:text="또 기록하러 가기"
+                android:textColor="@android:color/white"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:elevation="2dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <ImageView
+                android:id="@+id/ivChagokOnButton"
+                android:layout_width="85dp"
+                android:layout_height="85dp"
+                android:src="@drawable/chagok_pic"
+                android:visibility="gone"
+                android:elevation="50dp"
+                android:translationY="-15dp"
+                android:layout_marginEnd="-5dp"
+                app:layout_constraintBottom_toBottomOf="@+id/btnRecordNow"
+                app:layout_constraintEnd_toEndOf="@+id/btnRecordNow" />
 
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
 </androidx.core.widget.NestedScrollView>

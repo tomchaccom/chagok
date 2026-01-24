@@ -1,47 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_marginTop="12dp"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="84dp">
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="20dp"
+    android:layout_marginVertical="6dp"
+    app:cardBackgroundColor="#F8F9FA"
+    app:cardCornerRadius="24dp"
+    app:cardElevation="0dp"
+    app:strokeColor="#F0F0F0"
+    app:strokeWidth="1dp">
 
-    <!-- 라운드 배경 (간단한 테두리 + radius) -->
-    <LinearLayout
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="horizontal"
-        android:padding="12dp"
-        android:background="@drawable/bg_item_card"
-        android:gravity="center_vertical">
+        android:layout_height="wrap_content"
+        android:padding="12dp">
 
         <ImageView
             android:id="@+id/goal_icon"
             android:layout_width="44dp"
             android:layout_height="44dp"
-            android:layout_marginEnd="12dp"
-            android:src="@android:drawable/ic_menu_compass" />
+            android:src="@drawable/chagok_app2"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <LinearLayout
-            android:orientation="vertical"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1">
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="8dp"
+            android:orientation="vertical"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/iv_arrow_bg"
+            app:layout_constraintStart_toEndOf="@id/goal_icon"
+            app:layout_constraintTop_toTopOf="parent">
 
             <TextView
                 android:id="@+id/goal_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:textColor="#1A1A1A"
                 android:textSize="16sp"
-                android:textStyle="bold" />
+                android:textStyle="bold"
+                tools:text="미래 목표 제목" />
 
             <TextView
                 android:id="@+id/goal_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textColor="#999999"
                 android:textSize="12sp"
-                android:layout_marginTop="6dp" />
-
+                tools:text="2026.12.31" />
         </LinearLayout>
 
-    </LinearLayout>
+        <View
+            android:id="@+id/iv_arrow_bg"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-</FrameLayout>
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            app:layout_constraintBottom_toBottomOf="@id/iv_arrow_bg"
+            app:layout_constraintEnd_toEndOf="@id/iv_arrow_bg"
+            app:layout_constraintStart_toStartOf="@id/iv_arrow_bg"
+            app:layout_constraintTop_toTopOf="@id/iv_arrow_bg"
+            app:tint="#4CAF50" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

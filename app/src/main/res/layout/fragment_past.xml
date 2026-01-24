@@ -1,93 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="16dp">
+    android:background="@android:color/white"
+    android:paddingTop="16dp"
+    android:paddingHorizontal="16dp">
 
     <TextView
         android:id="@+id/tvTitle"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="과거 기록"
-        android:textSize="20sp"
+        android:textSize="24sp"
         android:textStyle="bold"
-        android:paddingBottom="12dp"/>
+        android:textColor="@android:color/black"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvDays"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_weight="1"/>
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvTitle"
+        tools:listitem="@layout/item_day_record_placeholder" />
 
-    <LinearLayout
-        android:id="@+id/detailContainer"
-        android:visibility="gone"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp">
-
-            <ImageButton
-                android:id="@+id/btnBack"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:src="@drawable/ic_arrow_back_24"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="back" />
-
-            <TextView
-                android:id="@+id/tvDetailDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="2002년 9월 7일"
-                android:textSize="18sp"
-                android:layout_gravity="center_vertical"
-                android:paddingStart="8dp"/>
-        </LinearLayout>
-
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvPhotos"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"
-            android:layout_marginBottom="12dp"
-            android:overScrollMode="never"
-            android:nestedScrollingEnabled="false"/>
-
-        <LinearLayout
-            android:id="@+id/memoCard"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:drawable/dialog_holo_light_frame"
-            android:padding="12dp"
-            android:orientation="vertical"
-            android:layout_marginTop="8dp">
-
-            <TextView
-                android:id="@+id/tvMemoTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="오늘 메모"
-                android:textSize="12sp"
-                android:textColor="#888888"/>
-
-            <TextView
-                android:id="@+id/tvMemoContent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="일자별 메모 또는 사진 메모가 여기에 표시됩니다."
-                android:textSize="16sp"
-                android:paddingTop="6dp"/>
-        </LinearLayout>
-
-    </LinearLayout>
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
