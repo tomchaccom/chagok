@@ -37,7 +37,8 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.util.*
+import androidx.appcompat.view.ContextThemeWrapper
+import com.example.myapplication.data.future.GoalRepository
 
 class FutureFragment : Fragment(R.layout.fragment_future) {
 
@@ -52,7 +53,14 @@ class FutureFragment : Fragment(R.layout.fragment_future) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // GoalRepository 초기화: storage 파일이 없으면 assets 또는 더미로 생성하도록 함
         GoalRepository.initialize(requireContext())
+
+        ViewCompat.setOnApplyWindowInsetsListener(view) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(v.paddingLeft, v.paddingTop, v.paddingRight, systemBars.bottom)
+            insets
+        }
 
         val rv = view.findViewById<RecyclerView>(R.id.recyclerGoals)
 

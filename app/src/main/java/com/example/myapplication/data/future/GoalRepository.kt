@@ -3,29 +3,32 @@ package com.example.myapplication.data.future
 import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
+import com.example.myapplication.feature.future.Goal
+import java.io.File
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.File
 import java.time.LocalDate
-import java.util.UUID
-// 🌟 Alias 적용: feature 패키지의 Goal과 혼동되지 않도록 data 패키지의 Goal을 명시합니다.
-import com.example.myapplication.data.future.Goal as DataGoal
 
 @RequiresApi(Build.VERSION_CODES.O)
 object GoalRepository {
-    // 🌟 이제 items는 반드시 id와 isAchieved가 포함된 DataGoal 리스트입니다.
-    private val items = mutableListOf<DataGoal>()
+    private val items = mutableListOf<Goal>()
+
+    // storage file: 초기화 시 설정됨
     private var storageFile: File? = null
 
-    fun getAll(): List<DataGoal> = items.toList()
+    fun getAll(): List<Goal> = items.toList()
+
+    // 객체 생성 시에는 아무 데이터도 로드하지 않음. initialize(context)에서 로드.
 
     /**
-     * 앱 시작 시 초기화 및 로드
+     * 앱 시작 시 호출: 내부 storage 파일을 초기화하고(없으면 생성) 저장된 goals를 로드합니다.
+     * 예: GoalRepository.initialize(context)
      */
     fun initialize(context: Context) {
-        if (storageFile != null) return
+        if (storageFile != null) return // 이미 초기화됨
         storageFile = File(context.filesDir, "goals.json")
 
+        // 1) 내부 저장소에 파일이 있으면 로드
         val loadedFromStorage = loadFromStorage()
         if (loadedFromStorage.isNotEmpty()) {
             items.clear()
@@ -33,7 +36,7 @@ object GoalRepository {
             return
         }
 
-        // 초기 파일 시도 (assets)
+        // 2) 내부 파일이 없거나 비어 있으면 assets에 있는 초기 파일을 시도(assets/past_entries.json은 과거용; goals.json이 assets에 있으면 사용)
         try {
             val assetStream = context.assets.open("goals.json")
             val text = assetStream.bufferedReader().use { it.readText() }
@@ -44,66 +47,68 @@ object GoalRepository {
                 saveToStorage()
                 return
             }
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+            // assets에 없거나 읽기 실패하면 무시
+        }
 
-        // 기본 더미 데이터 로드
+        // 3) 어느 곳에도 없으면 더미 데이터를 로드하고 저장
+        val dummy = createDummyGoals()
         items.clear()
-        items.addAll(createDummyGoals())
+        items.addAll(dummy)
         saveToStorage()
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun createDummyGoals(): List<DataGoal> = listOf(
-        DataGoal(id = UUID.randomUUID().toString(), title = "스페인어 배우기", date = LocalDate.of(2026, 12, 31)),
-        DataGoal(id = UUID.randomUUID().toString(), title = "마라톤 완주하기", date = LocalDate.of(2026, 5, 4)),
-        DataGoal(id = UUID.randomUUID().toString(), title = "일본 여행하기", date = LocalDate.of(2026, 3, 2))
+    private fun createDummyGoals(): List<Goal> = listOf(
+        Goal("스페인어 배우기", LocalDate.of(2026, 12, 31)),
+        Goal("마라톤 완주하기", LocalDate.of(2026, 5, 4)),
+        Goal("일본 여행하기", LocalDate.of(2026, 3, 2)),
+        Goal("토익 990점 달성", LocalDate.of(2026, 2, 2)),
+        Goal("책 50권 읽기", LocalDate.of(2026, 8, 31)),
+        Goal("저축 1천만 원", LocalDate.of(2026, 10, 26)),
+        Goal("사이드 프로젝트 완성", LocalDate.of(2026, 1, 14)),
+        Goal("운동 루틴 정착", LocalDate.of(2026, 1, 30)),
+        Goal("사진 전시회 가기", LocalDate.of(2026, 7, 7))
     )
 
-    fun add(goal: DataGoal) {
+    fun add(goal: Goal) {
+        // 가장 위에 추가되게 0번 인덱스에 삽입
         items.add(0, goal)
-        try { if (storageFile != null) saveToStorage() } catch (_: Exception) {}
-    }
-
-    /**
-     * 🌟 실천 버튼 클릭 시 뷰모델에서 호출하는 함수
-     */
-    fun updateGoalAchieved(goalId: String, isAchieved: Boolean) {
-        val index = items.indexOfFirst { it.id == goalId }
-        if (index != -1) {
-            // copy를 사용하여 불변 객체의 상태를 업데이트합니다.
-            items[index] = items[index].copy(isAchieved = isAchieved)
-            saveToStorage()
+        // storageFile이 초기화되어 있으면 자동 저장
+        try {
+            if (storageFile != null) saveToStorage()
+        } catch (_: Exception) {
+            // 저장 실패는 무시(원하면 로깅 추가)
         }
     }
 
-    // --- Persistence Helpers ---
-    private fun loadFromStorage(): List<DataGoal> {
+    // --- persistence helpers ---
+    private fun loadFromStorage(): List<Goal> {
         val file = storageFile ?: return emptyList()
         try {
             if (!file.exists()) return emptyList()
             val text = file.readText()
-            return if (text.isBlank()) emptyList() else parseJsonToList(text)
+            if (text.isBlank()) return emptyList()
+            return parseJsonToList(text)
         } catch (_: Exception) {
             return emptyList()
         }
     }
 
-    private fun parseJsonToList(text: String): List<DataGoal> {
+    private fun parseJsonToList(text: String): List<Goal> {
         val arr = JSONArray(text)
-        val list = mutableListOf<DataGoal>()
+        val list = mutableListOf<Goal>()
         for (i in 0 until arr.length()) {
             val obj = arr.getJSONObject(i)
-
-            // 🌟 JSON에서 id와 isAchieved를 읽어옵니다. 없으면 기본값을 부여합니다.
-            val id = obj.optString("id", UUID.randomUUID().toString())
             val title = obj.optString("title", "")
-            val isAchieved = obj.optBoolean("isAchieved", false)
-
+            // support both 'targetDate' (legacy) and 'date' keys
             val dateStr = if (obj.has("targetDate")) obj.optString("targetDate", "") else obj.optString("date", "")
             try {
                 val date = if (dateStr.isNotBlank()) LocalDate.parse(dateStr) else LocalDate.now()
-                list.add(DataGoal(id = id, title = title, date = date, isAchieved = isAchieved))
-            } catch (_: Exception) {}
+                list.add(Goal(title, date))
+            } catch (_: Exception) {
+                // parsing 실패면 건너뜀
+            }
         }
         return list
     }
@@ -114,17 +119,15 @@ object GoalRepository {
             val arr = JSONArray()
             for (g in items) {
                 val obj = JSONObject()
-                // 🌟 JSON 저장 시 모든 필드를 포함합니다.
-                obj.put("id", g.id)
                 obj.put("title", g.title)
+                // serialize using 'date' to match Goal.date
                 obj.put("date", g.date.toString())
-                obj.put("isAchieved", g.isAchieved)
                 arr.put(obj)
             }
             file.writeText(arr.toString())
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+            // ignore write errors for now
+        }
     }
-    // GoalRepository.kt 또는 DailyWorker.kt 내 로직
-
 
 }
